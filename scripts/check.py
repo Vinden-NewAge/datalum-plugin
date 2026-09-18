@@ -35,6 +35,8 @@ FRONTMATTER_KEYS = {"name", "description", "license", "compatibility", "metadata
 # Nombres entre comillas invertidas que la Skill usa y que no son herramientas:
 # argumentos, campos de respuesta y códigos de error del servidor.
 NOT_TOOLS = {
+    "agent_context_conflict",
+    "agent_not_selected",
     "concept_id",
     "execution_ref",
     "expires_at",
@@ -42,11 +44,14 @@ NOT_TOOLS = {
     "partial_write",
     "proposals_enabled",
     "rate_limited",
+    "resealed_from_version",
     "retry_after",
     "selection_context",
+    "sello_posterior",
     "snake_case",
     "user_choice_quote",
     "user_request_quote",
+    "zona_utilizable",
 }
 
 errors: list[str] = []
@@ -189,11 +194,15 @@ def main() -> int:
 
     # Cada herramienta que anuncia el servidor aparece en la Skill, y la Skill no
     # nombra herramientas que el servidor ya no anuncia.
-    tools = {
-        line.strip()
-        for line in SERVER_TOOLS.read_text(encoding="utf-8").splitlines()
-        if line.strip() and not line.startswith("#")
-    }
+    tools: set[str] = set()
+    with_confirm: set[str] = set()
+    for line in SERVER_TOOLS.read_text(encoding="utf-8").splitlines():
+        parts = line.split()
+        if not parts or line.startswith("#"):
+            continue
+        tools.add(parts[0])
+        if parts[1:] == ["confirm"]:
+            with_confirm.add(parts[0])
     missing = sorted(t for t in tools if f"`{t}`" not in body)
     # Con guion bajo se distingue un nombre de herramienta de una palabra suelta.
     named = set(re.findall(r"`([a-z]+(?:_[a-z]+)+)`", body))
@@ -205,6 +214,19 @@ def main() -> int:
             "SKILL.md: nombra algo que el servidor no anuncia (si es un argumento, "
             f"agrégalo a NOT_TOOLS en scripts/check.py): {stray}"
         )
+
+    # Los ejemplos de herramientas con vista previa tienen que tener `confirm` de verdad.
+    m = re.search(r"\*\*With a `confirm` argument\*\*(.*?)\*\*Without a `confirm` argument\*\*", body, re.S)
+    if not m:
+        fail("SKILL.md: falta la explicación de herramientas con y sin `confirm`")
+    else:
+        examples = set(re.findall(r"`([a-z]+(?:_[a-z]+)*)`", m.group(1))) & tools
+        wrong = sorted(examples - with_confirm)
+        if wrong:
+            fail(f"SKILL.md: pone como ejemplo de vista previa herramientas sin `confirm`: {wrong}")
+
+    if f"This is version {version} of the Datalum skill." not in body:
+        fail(f"SKILL.md: falta la línea «This is version {version} of the Datalum skill.»")
 
     # Ficha de ChatGPT.
     openai = OPENAI.read_text(encoding="utf-8")

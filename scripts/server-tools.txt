@@ -1,10 +1,11 @@
 # Herramientas que anuncia el servidor de Datalum a una conexión con sesión iniciada.
-# Medido contra la versión publicada v2.229.0 (commit 5ec7117) el 2026-09-18.
-# La Skill tiene que nombrarlas todas; scripts/check.py lo comprueba.
-# Cómo se actualiza: MANTENER.md.
+# Servidor v2.229.0 (commit 5ec7117), medido el 2026-09-18.
+# «confirm» marca las que muestran una vista previa antes de aplicar; las demás que
+# escriben aplican en la primera llamada.
+# scripts/check.py exige que la Skill las nombre todas. Cómo se regenera: MANTENER.md.
 add_agent_document
-apply_batch
-apply_update
+apply_batch confirm
+apply_update confirm
 attach_agent_document
 attach_draft_document
 brain_import
@@ -15,10 +16,10 @@ brain_search
 brain_write
 clone_agent
 compare_template
-curate_table
-delete_my_memories
-describe_connector
-describe_dataset_fields
+curate_table confirm
+delete_my_memories confirm
+describe_connector confirm
+describe_dataset_fields confirm
 describe_table
 detach_agent_document
 detach_draft_document
@@ -50,42 +51,42 @@ list_templates
 port_draft_connector
 profile_table
 propose_agent
-propose_install
-publish_bundle
+propose_install confirm
+publish_bundle confirm
 read_library_document
 release_agent
 remember
 render_chart
 reorder_agent_documents
 reorder_draft_documents
-request_dataset_activation
+request_dataset_activation confirm
 run_dashboard
 run_dataset
 run_metric
 run_query
-save_chart_edit
-save_dashboard_edit
+save_chart_edit confirm
+save_dashboard_edit confirm
 search_model
-set_chart_options
-set_connector_links
-set_relations
-start_agent_edit
+set_chart_options confirm
+set_connector_links confirm
+set_relations confirm
+start_agent_edit confirm
 submit_proposal
-test_chart
-test_custom_dashboard
-test_dashboard
-test_dimension
-test_filter_set
-test_metric
+test_chart confirm
+test_custom_dashboard confirm
+test_dashboard confirm
+test_dimension confirm
+test_filter_set confirm
+test_metric confirm
 toggle_agent_document
 unport_draft_connector
-upsert_chart
-upsert_custom_dashboard
-upsert_dashboard
-upsert_dataset
-upsert_dimension
-upsert_filter_set
-upsert_metric
+upsert_chart confirm
+upsert_custom_dashboard confirm
+upsert_dashboard confirm
+upsert_dataset confirm
+upsert_dimension confirm
+upsert_filter_set confirm
+upsert_metric confirm
 use_agent
 workspace_migrate
 workspace_purge

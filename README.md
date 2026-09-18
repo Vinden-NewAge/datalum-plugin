@@ -4,8 +4,8 @@ Connects AI assistants to [Datalum](https://datalum.ai), a governed data layer. 
 assistant works through an agent that the company's administrator granted to the
 person, and that agent decides which data and which actions are available. The
 assistant reads and runs what is published right away. Changes to the governed catalog
-start as previews, drafts or proposals, and nothing goes live until the person confirms
-it. Activating a dataset happens only in the Datalum panel.
+need the person's approval, and many start as previews, drafts or proposals. Activating
+a dataset happens only in the Datalum panel.
 
 One repository serves every supported product:
 
@@ -31,8 +31,8 @@ Installation steps for customers, in Spanish: [INSTALAR.md](INSTALAR.md).
 
 ## Install
 
-Grok Build: open `/marketplace`, search for **Datalum**, and install. To try it from a
-local checkout:
+Grok Build: once Datalum is listed in the Grok Build marketplace, open `/marketplace`,
+search for **Datalum**, and install. To try it from a local checkout:
 
 ```bash
 grok --plugin-dir /absolute/path/to/datalum-plugin
