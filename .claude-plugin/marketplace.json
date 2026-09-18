@@ -1,0 +1,15 @@
+{
+  "name": "datalum",
+  "description": "Datalum, the governed data layer, for Claude Code: the hosted MCP server plus the skill that explains how to use it.",
+  "owner": {
+    "name": "Vinden",
+    "url": "https://datalum.ai"
+  },
+  "plugins": [
+    {
+      "name": "datalum",
+      "source": "./",
+      "description": "Datalum governed data layer: the hosted MCP server plus the skill that explains how to use it."
+    }
+  ]
+}

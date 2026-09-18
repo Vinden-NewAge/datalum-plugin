@@ -1,0 +1,21 @@
+name: Comprobar plugin
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Comprobar manifiesto, Skill, herramientas y CHANGELOG
+        run: python3 scripts/check.py
+
+      - name: Empaquetar la Skill
+        run: python3 scripts/package.py

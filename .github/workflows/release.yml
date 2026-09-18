@@ -1,0 +1,29 @@
+name: Publicar versión
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Comprobar que la etiqueta coincide con la versión
+        run: python3 scripts/check.py --tag "$GITHUB_REF_NAME"
+
+      - name: Empaquetar la Skill
+        run: python3 scripts/package.py
+
+      - name: Publicar en GitHub con el zip de la Skill
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          python3 scripts/check.py --notes "$version" > notas.md
+          gh release create "$GITHUB_REF_NAME" dist/datalum-skill.zip \
+            --title "Datalum $version" --notes-file notas.md --verify-tag
