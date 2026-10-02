@@ -42,6 +42,7 @@ NOT_TOOLS = {
     "expires_at",
     "page_size",
     "partial_write",
+    "pending_version",
     "proposals_enabled",
     "rate_limited",
     "resealed_from_version",

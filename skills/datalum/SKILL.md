@@ -16,12 +16,12 @@ compatibility: >-
 metadata:
   author: Vinden
   short-description: AI CONTEXT PILL
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Datalum
 
-This is version 1.0.0 of the Datalum skill.
+This is version 1.1.0 of the Datalum skill.
 
 Datalum is a governed data layer. Every connection works through one **agent** that the
 company's administrator granted to the person. The agent decides which data sources
@@ -118,8 +118,7 @@ Later in the conversation:
   Tell the person; calling `use_agent` again with the same agent takes it, and the
   response comes back with `resealed: true` and `resealed_from_version`.
 - Error messages say how to recover; follow them. If a call fails with
-  `agent_not_selected`, the choice expired, the agent went into edit mode or
-  `selection_context` was missing: call `use_agent` again with the same agent and the
+  `agent_not_selected`, the choice expired or `selection_context` was missing: call `use_agent` again with the same agent and the
   person's original words, and keep the new `selection_context`. If a call fails with
   `agent_context_conflict`, repeat it without `selection_context`.
 
@@ -148,7 +147,7 @@ Tools that change something work in one of two ways. Check the input schema befo
 first call.
 
 - **With a `confirm` argument** (most catalog tools: `upsert_metric`, `test_chart`,
-  `save_chart_edit`, `publish_bundle`, `start_agent_edit`, `apply_update` and others):
+  `save_chart_edit`, `request_dataset_activation`, `apply_update` and others):
   call without `confirm` to get a preview that changes nothing, show the person what
   would change in plain words, and call again with `confirm: true` only after they
   agree.
@@ -161,13 +160,22 @@ is covered by the same yes.
 
 Some steps never happen from here:
 
-- Activating a dataset happens only in the Datalum panel. `request_dataset_activation`
-  files the request; it does not activate.
+- Activating anything (metrics, dimensions, datasets, charts, dashboards), approving a
+  pending version and retiring something that is Active happen only in the Datalum
+  panel. A tested object is ready for a person to activate; it is not live.
+  `request_dataset_activation` files a request; it does not activate.
 - A relation cannot be marked as confirmed from here.
 - Many changes are born as proposals or drafts (new metrics, dimensions, datasets and
   agents, for example). People review them in the panel.
+- Editing a metric, dimension or dataset that is Active leaves the change in a pending
+  version (`pending_version` in the response); the approved one keeps being served
+  until a person approves the new one. Charts and dashboards work the same through
+  their working draft.
+- Changing a live agent (its card or its documents) does not take it out of service or
+  cut anyone off. It keeps serving its last saved version until a person saves a new
+  one in the panel.
 
-These erase data for good, change things at once, or cut people off. Call them only
+These erase data for good or change things at once. Call them only
 when the person asks for that action:
 
 | Tool | Effect | Required |
@@ -176,8 +184,33 @@ when the person asks for that action:
 | `workspace_purge` | Permanently empties the workspace trash | `frase` with the person's exact order |
 | `workspace_migrate` | Changes the workspace structure at once | The person agreed to that named change |
 | `workspace_restore` | Returns the workspace schema and data to a restore point | The person asked for that restore point |
-| `start_agent_edit` | Takes a live agent out of service and disconnects whoever is using it | Preview without `confirm` first; show who gets disconnected. Not needed to write or add a document |
-| `apply_update` | Applies a new solution version; can disconnect agents | Preview without `confirm` first |
+| `apply_update` | Applies a new solution version to the company's agents | Preview without `confirm` first |
+
+## Status codes and tools that are leaving
+
+Catalog objects move through four states: Proposed, Tested, Active and Retired. From
+Active they can only go to Retired. Recreating a retired object by its name with its
+`upsert_*` tool brings it back as Proposed.
+
+On 2026-11-04 the codes the tools return change. Until then a response can carry
+either set; read both:
+
+| State | Codes until 2026-11-04 | Code from 2026-11-04 |
+|---|---|---|
+| Proposed | `propuesta`, `borrador` | `propuesto` |
+| Tested | `probada` | `probado` |
+| Active | `activa`, `en edicion` | `activo` |
+| Retired | `deprecada`, `obsoleta`, `retirada` | `retirado` |
+
+Tell the person the state in words (proposed, tested, active, retired), not the code.
+
+Three tools leave the catalog on 2026-11-04 and already do nothing useful. Do not call
+them:
+
+- `start_agent_edit` and `finish_agent_edit`: an agent no longer goes into edit mode.
+  Configure it directly with the tools in "Agents and solutions".
+- `publish_bundle`: it is always refused. A person activates charts, dashboards and
+  metrics in the panel.
 
 ## Which tool for which request
 
@@ -239,7 +272,6 @@ cannot create or edit agents. Tell the person this agent cannot do it.
 | Create a filter set | `upsert_filter_set`, then `test_filter_set` |
 | Build a coded (HTML) dashboard | `upsert_custom_dashboard`, then `test_custom_dashboard` |
 | Apply several catalog changes together | `apply_batch` (all or nothing) |
-| Put tested charts, a dashboard and metrics live | `publish_bundle` (the preview lists anything blocked) |
 | Use a template | `list_templates`, `compare_template`, then `propose_install` |
 
 ### Proposals and memory
@@ -261,7 +293,7 @@ cannot create or edit agents. Tell the person this agent cannot do it.
 | Adjust a draft | `edit_draft_agent`, `attach_draft_document`, `detach_draft_document`, `reorder_draft_documents`, `port_draft_connector`, `unport_draft_connector` |
 | Read a live agent's documents | `list_agent_documents`, then `read_library_document` |
 | Rewrite or add a document of a live agent | `write_agent_document`, `add_agent_document` (the agent stays in service) |
-| Attach, detach, reorder or switch a live agent's documents, or change its card | `start_agent_edit` (disconnects its users; preview first), then `attach_agent_document`, `detach_agent_document`, `reorder_agent_documents`, `toggle_agent_document`, `edit_agent_ficha`, and `finish_agent_edit` to put it back in service |
+| Attach, detach, reorder or switch a live agent's documents, or change its card | `attach_agent_document`, `detach_agent_document`, `reorder_agent_documents`, `toggle_agent_document`, `edit_agent_ficha` (the agent stays in service) |
 | Install or update a solution | `list_solutions`, `install_solution`, `apply_update` |
 
 The agent in use cannot edit itself. A library document can belong to several agents:
