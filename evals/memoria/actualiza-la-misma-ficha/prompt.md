@@ -1,0 +1,8 @@
+---
+description: "Memoria existente del mismo trabajo: la lee completa y actualiza la misma ficha, según el canon del agente."
+tags: [base, memoria]
+max_turns: 18
+allowed_tools: [Skill, Read]
+---
+
+Soy Ana. Hoy terminé el paso de margen del cierre de septiembre; lo del tipo de cambio con Tesorería sigue pendiente. Guarda mi avance en Datalum.

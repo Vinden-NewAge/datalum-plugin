@@ -13,9 +13,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
 
-      - name: Comprobar manifiesto, Skill, herramientas y CHANGELOG
+      - name: Estructura (manifiesto, Skill, hooks, contrato y CHANGELOG)
         run: python3 scripts/check.py
+
+      - name: Pruebas documentales y de la actualización automática
+        run: python3 -m unittest discover -s tests -t . -v
+
+      - name: Pruebas de los controles del cliente
+        run: node --test tests/client/*.test.js
 
       - name: Empaquetar la Skill
         run: python3 scripts/package.py

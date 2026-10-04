@@ -1,0 +1,222 @@
+name: Compatibilidad con Datalum
+
+# Comprueba el plugin contra lo que sirve un despliegue de Datalum y, si el cambio se
+# resuelve solo, publica la versión nueva. Cómo funciona y cómo se recupera de un
+# fallo: MANTENER.md.
+#
+#   workflow_dispatch  el aviso del último paso de un despliegue (o una persona)
+#   schedule           lectura programada de producción: ve un rollback o un
+#                      despliegue del que no llegó aviso
+#   pull_request       ensayo: recorre los mismos pasos sin publicar nada
+
+on:
+  workflow_dispatch:
+    inputs:
+      entorno:
+        description: Entorno desplegado
+        type: choice
+        options: [prod, qa]
+        default: prod
+      sha:
+        description: Commit desplegado (40 caracteres). Vacío = el que sirva el entorno
+        type: string
+        default: ""
+      release:
+        description: Versión desplegada, si tiene etiqueta
+        type: string
+        default: ""
+      corrida:
+        description: Dirección de la corrida de despliegue
+        type: string
+        default: ""
+      contrato:
+        description: Resumen del contrato de ese commit, en JSON
+        type: string
+        default: ""
+      simular:
+        description: Recorrer los pasos sin publicar ni escribir en el repositorio
+        type: boolean
+        default: false
+  schedule:
+    - cron: "17 * * * *"
+  pull_request:
+    paths:
+      - ".github/workflows/compat.yml"
+      - "scripts/**"
+      - "compat/**"
+
+permissions:
+  contents: read
+
+# Un despliegue a la vez por entorno, en orden de llegada. Ninguna corrida se cancela:
+# cada una vuelve a preguntarle al servidor qué sirve, así que un aviso viejo no puede
+# pisar al más reciente.
+concurrency:
+  group: compat-${{ inputs.entorno || 'prod' }}-${{ github.event_name == 'pull_request' && github.ref || 'main' }}
+  cancel-in-progress: false
+
+jobs:
+  comprobar:
+    name: Confirmar el despliegue y comparar su contrato
+    runs-on: ubuntu-latest
+    outputs:
+      accion: ${{ steps.evaluar.outputs.accion }}
+      resultado: ${{ steps.evaluar.outputs.resultado }}
+      pruebas: ${{ steps.pruebas.outputs.pruebas }}
+      huella: ${{ steps.empaquetar.outputs.huella }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+
+      - name: Armar y validar el aviso
+        env:
+          ENTORNO: ${{ inputs.entorno || 'prod' }}
+          ORIGEN: ${{ github.event_name == 'workflow_dispatch' && (inputs.sha != '' && 'aviso' || 'manual') || 'reconciliacion' }}
+          SHA: ${{ inputs.sha }}
+          RELEASE: ${{ inputs.release }}
+          CORRIDA: ${{ inputs.corrida }}
+          CONTRATO: ${{ inputs.contrato }}
+          ACTOR: ${{ github.triggering_actor }}
+          ACTORES: ${{ vars.COMPAT_ACTORES }}
+        run: |
+          python3 scripts/compat.py aviso --entorno "$ENTORNO" --origen "$ORIGEN" \
+            --sha "$SHA" --release "$RELEASE" --corrida "$CORRIDA" --actor "$ACTOR" \
+            --contrato "$CONTRATO" --actores "$ACTORES" --salida "$RUNNER_TEMP/evento.json"
+
+      - name: Confirmar el despliegue contra el servidor y comparar el contrato
+        id: evaluar
+        env:
+          DATALUM_COMPAT_TOKEN: ${{ secrets.DATALUM_COMPAT_TOKEN }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/salida"
+          python3 scripts/compat.py evaluar --evento "$RUNNER_TEMP/evento.json" --salida "$RUNNER_TEMP/salida/evaluacion.json"
+          python3 - "$RUNNER_TEMP/salida/evaluacion.json" >> "$GITHUB_OUTPUT" <<'PY'
+          import json, sys
+          e = json.load(open(sys.argv[1]))
+          print(f"accion={e['accion']}")
+          print(f"resultado={e['resultado'] or ''}")
+          PY
+
+      - name: Probar el plugin con el contrato de ese despliegue
+        id: pruebas
+        if: steps.evaluar.outputs.accion != 'nada'
+        run: |
+          if python3 scripts/check.py \
+            && python3 -m unittest discover -s tests -t . \
+            && node --test tests/client/*.test.js; then
+            echo "pruebas=ok" >> "$GITHUB_OUTPUT"
+          else
+            echo "pruebas=fallaron" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Empaquetar lo probado
+        id: empaquetar
+        if: steps.evaluar.outputs.accion != 'nada'
+        run: |
+          python3 scripts/package.py
+          echo "huella=$(python3 scripts/compat.py huella)" >> "$GITHUB_OUTPUT"
+          git add -A
+          git diff --cached --binary HEAD > "$RUNNER_TEMP/salida/cambios.patch"
+          cp dist/datalum-skill.zip dist/publicacion.json "$RUNNER_TEMP/salida/"
+
+      - name: Guardar lo probado para el cierre
+        if: steps.evaluar.outputs.accion != 'nada'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: probado
+          path: ${{ runner.temp }}/salida
+          retention-days: 14
+
+      - name: Resumen
+        if: always()
+        env:
+          ACCION: ${{ steps.evaluar.outputs.accion }}
+          RESULTADO: ${{ steps.evaluar.outputs.resultado }}
+          PRUEBAS: ${{ steps.pruebas.outputs.pruebas }}
+        run: |
+          {
+            echo "### Compatibilidad con Datalum"
+            echo "- Acción: \`${ACCION:-sin evaluar}\`"
+            echo "- Resultado: \`${RESULTADO:-ninguno}\`"
+            echo "- Pruebas: \`${PRUEBAS:-no corrieron}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  cerrar:
+    name: Publicar si toca y anotar el resultado
+    needs: comprobar
+    if: needs.comprobar.outputs.accion != 'nada' && needs.comprobar.outputs.accion != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    env:
+      SIMULAR: ${{ (github.event_name == 'pull_request' || inputs.simular) && '--simular' || '' }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+          persist-credentials: ${{ github.event_name != 'pull_request' }}
+
+      - name: Traer lo probado
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: probado
+          path: ${{ runner.temp }}/probado
+
+      - name: Aplicar los cambios probados
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ -s "$RUNNER_TEMP/probado/cambios.patch" ]; then
+            git apply --index "$RUNNER_TEMP/probado/cambios.patch"
+          fi
+          mkdir -p dist
+          cp "$RUNNER_TEMP/probado/datalum-skill.zip" "$RUNNER_TEMP/probado/publicacion.json" dist/
+
+      - name: Publicar, anotar y mover main
+        id: cierre
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PROBADO: ${{ needs.comprobar.outputs.huella }}
+          PRUEBAS: ${{ needs.comprobar.outputs.pruebas }}
+        run: |
+          set +e
+          python3 scripts/compat.py cerrar --evaluacion "$RUNNER_TEMP/probado/evaluacion.json" \
+            --probado "$PROBADO" --pruebas "$PRUEBAS" $SIMULAR | tee "$RUNNER_TEMP/cierre.json"
+          estado=${PIPESTATUS[0]}
+          set -e
+          python3 - "$RUNNER_TEMP/cierre.json" >> "$GITHUB_OUTPUT" <<'PY'
+          import json, sys
+          try:
+              entry = json.load(open(sys.argv[1]))
+          except Exception:
+              entry = {"resultado": "publicacion_fallida", "detalle": "el cierre no terminó"}
+          print(f"resultado={entry['resultado']}")
+          print(f"detalle={entry['detalle']}")
+          PY
+          exit "$estado"
+
+      - name: Avisar a una persona si algo no se resolvió solo
+        if: always() && contains(fromJSON('["incompatible","revision_requerida","contrato_no_disponible","contrato_no_coincide","despliegue_no_confirmado","pruebas_fallidas","publicacion_fallida","paquete_no_coincide"]'), steps.cierre.outputs.resultado)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESULTADO: ${{ steps.cierre.outputs.resultado }}
+          DETALLE: ${{ steps.cierre.outputs.detalle }}
+        run: |
+          python3 scripts/compat.py avisar --evaluacion "$RUNNER_TEMP/probado/evaluacion.json" \
+            --resultado "$RESULTADO" --detalle "$DETALLE" $SIMULAR
+
+      - name: Resumen
+        if: always()
+        env:
+          RESULTADO: ${{ steps.cierre.outputs.resultado }}
+          DETALLE: ${{ steps.cierre.outputs.detalle }}
+        run: |
+          {
+            echo "### Cierre"
+            echo "- Resultado: \`${RESULTADO:-sin cierre}\`"
+            echo "- ${DETALLE:-sin detalle}"
+            [ -n "$SIMULAR" ] && echo "- Ensayo: no se publicó ni se escribió nada."
+          } >> "$GITHUB_STEP_SUMMARY"

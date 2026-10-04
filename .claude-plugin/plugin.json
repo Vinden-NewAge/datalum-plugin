@@ -1,7 +1,7 @@
 {
   "name": "datalum",
-  "version": "1.1.0",
-  "description": "Datalum governed data layer (hosted MCP server + skill). Work through the agent your company granted you: read the published data model, run metrics, datasets, charts and dashboards, and draft catalog changes that go live only after a person confirms them. Sign in with a Datalum account on first connection.",
+  "version": "2.0.0",
+  "description": "Datalum governed data layer (hosted MCP server + skill + client-side checks). Connect your Datalum account, choose the agent your company granted you and work with it: the skill loads that agent's brain as Datalum serves it and follows its rules for the task and for memory. Sign in with a Datalum account on first connection.",
   "author": {
     "name": "Vinden",
     "url": "https://datalum.ai"
@@ -9,6 +9,10 @@
   "homepage": "https://datalum.ai",
   "repository": "https://github.com/Vinden-NewAge/datalum-plugin",
   "license": "Proprietary",
-  "keywords": ["datalum", "datalum mcp", "datalum datahub"],
+  "keywords": [
+    "datalum",
+    "datalum mcp",
+    "datalum datahub"
+  ],
   "logo": "skills/datalum/assets/logo.svg"
 }

@@ -1,0 +1,1 @@
+{"agents": [{"agentId": "ag_builder", "name": "Builder", "tagline": "Tableros y gráficas listos para abrir", "family": "creativo", "status": "activo", "version": 5}], "message": "Tienes un agente («Builder»). Dile a la persona cuál es y actívalo con use_agent."}

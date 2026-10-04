@@ -4,12 +4,12 @@ interface:
   icon_small: "./assets/logo.svg"
   icon_large: "./assets/logo-512.png"
   brand_color: "#2E4BFF"
-  default_prompt: "¿Qué agentes tengo en Datalum?"
+  default_prompt: "Quiero trabajar con mis datos en Datalum."
 
 dependencies:
   tools:
     - type: "mcp"
       value: "datalum"
-      description: "Servidor de Datalum: agentes, modelo publicado, indicadores, gráficas y tableros"
+      description: "Servidor de Datalum: los agentes que te otorgó tu empresa, su cerebro y los datos que gobiernan"
       transport: "streamable_http"
       url: "https://mcp.datahub.vinden.cc/mcp"

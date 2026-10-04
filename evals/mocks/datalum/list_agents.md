@@ -1,0 +1,1 @@
+{"agents": [{"agentId": "ag_ventas", "name": "Ventas", "tagline": "Reportes de ventas para la dirección comercial", "family": "institucional", "status": "activo", "version": 3}], "message": "Tienes un agente («Ventas»). Dile a la persona cuál es y actívalo con use_agent."}

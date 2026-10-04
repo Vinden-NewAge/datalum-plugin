@@ -1,0 +1,6 @@
+{
+  "_": "Direcciones de los entornos previos a producción. La de producción no va aquí: es la de .mcp.json, la misma que instala el plugin. Un aviso de un entorno previo prepara y prueba la candidata sin publicar nada.",
+  "qa": {
+    "mcp": null
+  }
+}

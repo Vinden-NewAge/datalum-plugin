@@ -1,0 +1,1 @@
+{"agents": [], "message": "Tienes un agente otorgado («Ventas») que no está activo, así que todavía no se puede usar. El otorgamiento está bien y no hay que repetirlo: pide a quien administra los agentes que lo active desde el panel."}
