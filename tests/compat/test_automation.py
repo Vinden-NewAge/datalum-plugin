@@ -355,6 +355,27 @@ class Flow(unittest.TestCase):
         self.assertFalse(release["latest"])
         self.assertEqual(self.remote_version(), "1.0.0")
 
+    # Defecto de la 2.0.1: la retirada de una publicación incorrecta no se comprobaba.
+    def test_una_retirada_fallida_se_detecta_y_el_reintento_la_recupera(self):
+        tools = tools_with_change()
+        ev, prod = event(SHA_B, summary_of(tools)), FakeProduction(SHA_B, tools)
+        self.repo.forge.corrupt = {"published"}
+        self.repo.forge.fail_on = {"unpublish"}
+        _, entry = self.run_flow(ev, prod)
+        self.assertEqual(entry["resultado"], "retirada_fallida", "la retirada no se dio por hecha")
+        self.assertFalse(self.repo.forge.releases["v1.0.1"]["draft"], "la versión sigue a la vista")
+
+        # Lo publicado ya no está corrupto, pero sigue con los archivos equivocados.
+        self.repo.forge.corrupt = set()
+        bad = {name: "0" * 64 for name in self.repo.forge.releases["v1.0.1"]["assets"]}
+        self.repo.forge.releases["v1.0.1"]["assets"] = bad
+        _, retry = self.run_flow(ev, prod)
+        self.assertEqual(retry["resultado"], "actualizado")
+        release = self.repo.forge.releases["v1.0.1"]
+        self.assertFalse(release["draft"])
+        self.assertNotEqual(release["assets"], bad, "se publicaron los archivos probados")
+        self.assertEqual(self.remote_version(), "1.0.1")
+
     def test_tras_volver_a_borrador_el_reintento_publica_lo_probado(self):
         tools = tools_with_change()
         ev, prod = event(SHA_B, summary_of(tools)), FakeProduction(SHA_B, tools)

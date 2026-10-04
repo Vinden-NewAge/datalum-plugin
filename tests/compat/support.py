@@ -149,6 +149,10 @@ class LocalForge(publish.GhForge):
 
     def unpublish(self, tag):
         self.calls.append("unpublish")
+        if "unpublish" in self.fail_on:
+            # La orden se acepta pero la versión sigue publicada: la retirada falló.
+            self.fail_on.discard("unpublish")
+            return
         self.releases[tag].update(draft=True, latest=False)
 
     def advance_main(self, commit, *, branch, title, body):
