@@ -8,34 +8,84 @@
 // La política sólo hace cumplir lo que el contrato de Datalum ya dice. No decide qué
 // agente usar, qué herramienta resuelve un encargo ni qué se guarda en memoria: eso
 // es del cerebro del agente y de la persona.
+//
+// Dos reglas sostienen el resto:
+// - Dejar pasar una llamada no es autorizarla. El cliente nunca aprueba por la persona:
+//   cuando hace falta su consentimiento, o lo hay de una fuente confiable (lo que ella
+//   eligió o aprobó en la aplicación) o se lo pide la aplicación.
+// - Una operación se identifica por el agente que la hace, su ámbito, su destino, su
+//   operación y su contenido. El estado guarda huellas de esas partes, no el texto.
 
 const crypto = require('crypto');
 
+const STATE_VERSION = 2;
 const MAX_ITEMS = 40;
 const MAX_FAILURES = 3;
 const FAILURE_WINDOW_MS = 10 * 60 * 1000;
 const WRITE_WINDOW_MS = 30 * 60 * 1000;
+const PENDING_MS = 15 * 60 * 1000;
 const MAX_PREVIEWS = 200;
-const MEMORY_WRITES = new Set(['remember', 'brain_write', 'forget']);
-const MEMORY_READS = new Set(['list_memories', 'brain_read', 'brain_index']);
 const START_TOOLS = new Set(['list_agents', 'use_agent', 'release_agent']);
+const DELETES = new Set(['delete_my_memories', 'workspace_purge']);
+// Modos en que un «preguntar» de un hook llega a la persona como diálogo de la
+// aplicación. En `dontAsk` la aplicación lo deniega sola; en `bypassPermissions` no
+// pregunta nada.
+const ASKING_MODES = new Set(['default', 'acceptEdits', 'plan', 'auto']);
+const NO_AGENT = 'sin-agente';
+// Argumentos con palabras de la persona: no forman parte de la identidad de una
+// operación ni se guardan.
+const QUOTE_ARGS = ['user_choice_quote', 'user_request_quote', 'frase'];
 
 function newState(pluginVersion) {
   return {
-    v: 1,
+    v: STATE_VERSION,
     plugin_version: pluginVersion || null,
     server: null,
-    seal: null,
+    seal: null, // {agent_id, agent_name, version, family, selection_context, expires_at, sealed_at}
     seal_state: 'none', // none | sealed | expired | conflict
     newer_version: null,
     retired: [],
     keyring: null, // [{id, name}] de la última respuesta de list_agents
+    keyring_at: null,
+    authorized: {}, // agente → {via, at}: la persona eligió trabajar con él en esta conversación
+    pending: {}, // llamadas en las que el cliente pidió a la aplicación que preguntara
+    approved: {}, // operación → at: aprobada por la persona y todavía reintentable
     reads: {},
     listings: {},
     previews: {},
-    writes: {},
+    ops: {}, // escrituras, por identidad de operación
+    seen: {}, // destino de memoria → último memory_id visto
     failures: {},
+    legacy: { writes: {}, previews: {} }, // lo que traía un estado de la 2.0.0
   };
+}
+
+// ── Estados de la 2.0.0 ─────────────────────────────────────────────────────────
+// Un estado de la 2.0.0 guardaba la frase con que se eligió el agente y llaves de
+// escritura sin agente. Se migra sin perder las escrituras pendientes, el agente
+// elegido ni la continuidad de la conversación.
+function migrate(raw, pluginVersion) {
+  if (!raw || typeof raw !== 'object') return newState(pluginVersion);
+  if (raw.v === STATE_VERSION) return raw;
+  if (raw.v !== 1) return newState(pluginVersion);
+  const state = newState(raw.plugin_version || pluginVersion);
+  for (const key of ['server', 'seal_state', 'newer_version', 'retired', 'keyring', 'reads', 'listings']) {
+    if (raw[key] !== undefined) state[key] = raw[key];
+  }
+  if (raw.seal) {
+    const seal = Object.assign({}, raw.seal);
+    delete seal.quote;
+    state.seal = seal;
+    // La conversación ya trabajaba con ese agente: la elección se conserva.
+    state.authorized[seal.agent_id] = { via: 'migrado', at: seal.sealed_at || null };
+  }
+  const owner = (raw.seal && raw.seal.agent_id) || NO_AGENT;
+  for (const [key, write] of Object.entries(raw.writes || {})) {
+    // Sin el nombre ni el título: sólo lo que hace falta para seguir bloqueando.
+    state.legacy.writes[key] = { status: write.status, at: write.at, tool: write.tool, agent: owner };
+  }
+  for (const [key, at] of Object.entries(raw.previews || {})) state.legacy.previews[key] = { at, agent: owner };
+  return state;
 }
 
 // ── Reconocer las herramientas de Datalum ───────────────────────────────────────
@@ -57,11 +107,23 @@ function isDatalum(state, toolName) {
 function normalize(text) {
   return String(text || '')
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[̀-ͯ]/g, '')
     .replace(/[«»“”"'‘’]/g, '')
     .replace(/\s+/g, ' ')
     .trim()
     .toLowerCase();
+}
+
+// El nombre con que Datalum guarda una memoria: minúsculas, sin acentos, «_» en lugar
+// de lo que no sea letra o número, sin «_» repetidos ni en los extremos, 80 caracteres.
+function slugify(text) {
+  return String(text || '')
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 80);
 }
 
 function stable(value) {
@@ -72,11 +134,16 @@ function stable(value) {
   return JSON.stringify(value === undefined ? null : value);
 }
 
-function callKey(tool, input) {
-  const args = Object.assign({}, input || {});
-  delete args.selection_context;
-  delete args.confirm;
-  return tool + ':' + crypto.createHash('sha256').update(stable(args)).digest('hex').slice(0, 24);
+function digest(text) {
+  return crypto.createHash('sha256').update(String(text)).digest('hex').slice(0, 24);
+}
+
+// Líneas significativas de un texto, para reconocer un cuerpo dentro de otro.
+function lines(text) {
+  return String(text || '')
+    .split('\n')
+    .map((l) => l.replace(/\s+/g, ' ').trim())
+    .filter(Boolean);
 }
 
 function trim(map, max) {
@@ -84,42 +151,191 @@ function trim(map, max) {
   for (const key of keys.slice(0, Math.max(0, keys.length - (max || MAX_ITEMS)))) delete map[key];
 }
 
-// Una vista previa vale para aplicar durante la misma ventana que protege una
-// escritura; las viejas se descartan antes de recortar por número.
-function keepPreview(state, key, now) {
-  for (const [k, at] of Object.entries(state.previews)) {
-    if (now - at > WRITE_WINDOW_MS) delete state.previews[k];
+function currentAgent(state) {
+  return (state.seal && state.seal.agent_id) || NO_AGENT;
+}
+
+// La llave de la 2.0.0, sólo para reconocer lo migrado.
+function legacyKey(tool, input) {
+  const args = Object.assign({}, input || {});
+  delete args.selection_context;
+  delete args.confirm;
+  return tool + ':' + crypto.createHash('sha256').update(stable(args)).digest('hex').slice(0, 24);
+}
+
+// ── Identidad de una operación ──────────────────────────────────────────────────
+// agente · operación · ámbito · destino · contenido. El agente sale del sello que
+// devolvió Datalum, nunca del contexto de la conversación: renovar el contexto del
+// mismo agente no cambia la identidad de sus operaciones.
+
+function memoryPath(conceptId) {
+  const m = /^agents\/[^/]+\/(memoria|memoria-compartida)\/([^/]+)$/.exec(String(conceptId || ''));
+  return m ? { scope: m[1] === 'memoria' ? 'personal' : 'compartida', name: m[2] } : null;
+}
+
+function operation(state, tool, input, facts) {
+  const agent = currentAgent(state);
+  const args = Object.assign({}, input || {});
+  delete args.selection_context;
+  delete args.confirm;
+  const quoteArg = ((facts && facts.citas_humanas) || {})[tool];
+  for (const arg of QUOTE_ARGS.concat(quoteArg ? [quoteArg] : [])) delete args[arg];
+  let kind = 'other';
+  let op = tool;
+  let scope = '';
+  let target = '';
+  let memory = null;
+  if (tool === 'remember') {
+    kind = 'memory';
+    op = 'memoria.escribir';
+    scope = input.scope === 'compartida' ? 'compartida' : 'personal';
+    target = slugify(input.slug || input.title);
+    memory = { title: input.title, body: input.body_md };
+  } else if (tool === 'brain_write' && memoryPath(input.concept_id)) {
+    const path = memoryPath(input.concept_id);
+    kind = 'memory';
+    op = 'memoria.escribir';
+    scope = path.scope;
+    target = slugify(path.name);
+    memory = { title: input.title, body: input.body_md };
+  } else if (tool === 'brain_write') {
+    // Un agente nuevo por la puerta del paquete: se aplica en la primera llamada.
+    kind = 'write';
+    op = 'agente.proponer';
+    target = String(input.concept_id || '');
+  } else if (tool === 'forget') {
+    kind = 'memory';
+    op = 'memoria.retirar';
+    scope = 'personal';
+    target = slugify(input.memory);
+  } else {
+    // Cualquier otra herramienta: la vista previa y la aplicación de un mismo cambio
+    // comparten identidad, porque `confirm` no forma parte de ella.
+    kind = input.confirm === true || DELETES.has(tool) ? 'catalog' : 'tool';
+    scope = String(input.tenant || '');
+    // El destino lo dice el contrato (client/contract-facts.json); sin él, `name`.
+    const field = ((facts && facts.destinos) || {})[tool] || 'name';
+    target = input[field] !== undefined ? `${field}=${stable(input[field])}` : '';
   }
-  state.previews[key] = now;
-  trim(state.previews, MAX_PREVIEWS);
+  const targetKey = [agent, op, scope, digest(target)].join('|');
+  return {
+    kind,
+    agent,
+    op,
+    scope,
+    targetKey,
+    key: targetKey + '|' + digest(stable(args)),
+    memory,
+  };
 }
 
-function sameAgent(seal, agent) {
-  const wanted = normalize(agent);
-  return !!seal && (wanted === normalize(seal.agent_id) || wanted === normalize(seal.agent_name));
+// Huellas del contenido que se intentó escribir en una memoria: con ellas se reconoce
+// el resultado al leerla después, sin guardar el texto.
+function memoryEvidence(memory) {
+  if (!memory) return null;
+  const body = lines(memory.body);
+  return {
+    title_h: memory.title ? digest(normalize(memory.title)) : null,
+    body_h: body.length ? digest(body.join('\n')) : null,
+    body_n: body.length,
+  };
 }
 
-// Lo que dijo la persona: sus mensajes y sus respuestas a preguntas del asistente.
-// `human` es [{text, at}] en orden. Lo pegado desde otro sitio no cuenta como suyo.
+function containsBody(block, evidence) {
+  if (!evidence.body_h) return false;
+  const have = lines(block);
+  for (let i = 0; i + evidence.body_n <= have.length; i++) {
+    if (digest(have.slice(i, i + evidence.body_n).join('\n')) === evidence.body_h) return true;
+  }
+  return false;
+}
+
+// ── Consentimiento de la persona ────────────────────────────────────────────────
+// Lo que la persona escribió o eligió, como lo registró la aplicación: `human` es
+// [{text, at, kind}] con kind 'message' (un mensaje suyo) o 'answer' (lo que eligió
+// en una pregunta de la aplicación). Lo pegado desde otro sitio no cuenta como suyo.
 function ownWords(text) {
   return String(text || '')
     .replace(/<pasted_content\b[^>]*>[\s\S]*?<\/pasted_content[^>]*>/g, ' ')
     .replace(/<system-reminder>[\s\S]*?<\/system-reminder>/g, ' ');
 }
 
-function findQuote(human, quote, after) {
-  const wanted = normalize(quote);
-  if (!wanted) return false;
-  return (human || []).some((m) => (!after || (m.at && m.at > after)) && normalize(ownWords(m.text)).includes(wanted));
+function agentEntry(state, agent) {
+  const wanted = normalize(agent);
+  return (state.keyring || []).find((a) => normalize(a.id) === wanted || normalize(a.name) === wanted) || null;
+}
+
+// El id estable de un agente nombrado por id o por nombre: de la lista de agentes,
+// del sello vigente o de una elección anterior en esta conversación.
+function agentIdOf(state, agent) {
+  const entry = agentEntry(state, agent);
+  if (entry && entry.id) return entry.id;
+  const wanted = normalize(agent);
+  if (state.seal && (normalize(state.seal.agent_id) === wanted || normalize(state.seal.agent_name) === wanted)) {
+    return state.seal.agent_id;
+  }
+  for (const [id, auth] of Object.entries(state.authorized || {})) {
+    if (normalize(id) === wanted || normalize(auth.name) === wanted) return id;
+  }
+  return String(agent || '');
+}
+
+// ¿Hay evidencia confiable de que la persona eligió este agente? Una cita que lo
+// menciona no lo es: «No uses Finanzas» también menciona a Finanzas. Cuenta lo que la
+// persona eligió en una pregunta de la aplicación, o un mensaje suyo que es sólo el
+// nombre del agente, después de que el asistente obtuvo la lista de agentes; y, con
+// un único agente, el contrato de Datalum, que manda usarlo.
+function selectionEvidence(state, agent, human) {
+  const entry = agentEntry(state, agent);
+  if (state.keyring && state.keyring.length === 1 && entry) return 'unico';
+  const names = new Set([normalize(agent)]);
+  if (entry) {
+    if (entry.name) names.add(normalize(entry.name));
+    if (entry.id) names.add(normalize(entry.id));
+  }
+  for (const m of human || []) {
+    if (state.keyring_at && m.at && m.at < state.keyring_at) continue;
+    if (names.has(normalize(ownWords(m.text)))) return m.kind === 'answer' ? 'pregunta' : 'mensaje';
+  }
+  return null;
+}
+
+// Pide que la aplicación le pregunte a la persona y anota qué se preguntó, para
+// reconocer después su respuesta. En un modo sin diálogos niega: nadie vería la pregunta.
+function askPerson(state, ctx, entry, reason, modelReason) {
+  if (ctx && ctx.mode === 'bypassPermissions') {
+    return { decision: 'deny', reason: modelReason };
+  }
+  expectOutcome(state, ctx, entry);
+  return { decision: 'ask', reason };
+}
+
+function expectOutcome(state, ctx, entry) {
+  const id = (ctx && ctx.toolUseId) || `${entry.kind}:${normalize(entry.agent)}:${entry.op || ''}`;
+  state.pending[id] = Object.assign({ at: (ctx && ctx.now) || Date.now(), mode: (ctx && ctx.mode) || null }, entry);
+  trim(state.pending);
+}
+
+function takePending(state, ctx, fallback) {
+  const ids = [ctx && ctx.toolUseId, fallback].filter(Boolean);
+  for (const id of ids) {
+    const entry = state.pending[id];
+    if (entry) {
+      delete state.pending[id];
+      const now = (ctx && ctx.now) || Date.now();
+      return now - entry.at <= PENDING_MS ? entry : null;
+    }
+  }
+  return null;
 }
 
 // ── Antes de una llamada ────────────────────────────────────────────────────────
-// Devuelve {decision: 'pass'|'deny'|'ask', reason, input, context}. `input` viene sólo
-// si la llamada tiene que salir con argumentos distintos de los que mandó el modelo.
+// Devuelve {decision: 'pass'|'deny'|'ask', reason, input}. `pass` sólo quiere decir
+// que el cliente no se opone: la aplicación y Datalum aplican después sus propios
+// permisos. `input` viene si la llamada tiene que salir con otros argumentos.
 function preToolUse(state, tool, input, facts, ctx) {
   input = input || {};
   const now = (ctx && ctx.now) || Date.now();
-  const human = ctx && ctx.human;
   const out = { decision: 'pass' };
 
   if (state.retired.includes(tool)) {
@@ -131,36 +347,86 @@ function preToolUse(state, tool, input, facts, ctx) {
     };
   }
 
-  const quoteArg = (facts.citas_humanas || {})[tool];
-  if (quoteArg && typeof input[quoteArg] === 'string' && input[quoteArg].trim()) {
-    const verdict = checkQuote(state, tool, input, quoteArg, human);
-    if (verdict) return verdict;
+  if (tool === 'use_agent') return preSelect(state, input, ctx, now);
+
+  if (DELETES.has(tool)) {
+    const context = withContext(state, tool, input, facts, out);
+    if (context.decision !== 'pass') return context;
+    const op = operation(state, tool, input, facts);
+    const approvedAt = state.approved[op.key];
+    if (approvedAt && now - approvedAt <= PENDING_MS) return out;
+    const verdict = askPerson(
+      state,
+      ctx,
+      { kind: 'borrar', agent: op.agent, op: op.key },
+      'Esta acción borra datos de Datalum para siempre. ¿La autorizas?',
+      'This deletes data for good and this app is running without permission prompts, so the person cannot confirm it here. ' +
+        'Do not run it. Tell the person it needs their confirmation in an app or mode that asks for it.'
+    );
+    return Object.assign(verdict, out.input && verdict.decision !== 'deny' ? { input: out.input } : {});
   }
 
-  if (tool === 'use_agent') {
-    const next = Object.assign({}, input);
-    if (state.seal_state === 'conflict' || state.seal_state === 'expired') {
-      // El contexto guardado ya no sirve: el servidor acuña o resuelve el suyo.
-      if ('selection_context' in next) {
-        delete next.selection_context;
-        out.input = next;
-      }
-    } else if (state.seal && state.seal_state === 'sealed' && next.selection_context !== state.seal.selection_context) {
-      next.selection_context = state.seal.selection_context;
-      out.input = next;
+  const context = withContext(state, tool, input, facts, out);
+  if (context.decision !== 'pass') return context;
+
+  const op = operation(state, tool, input, facts);
+
+  const failure = state.failures[op.key];
+  if (failure && failure.count >= MAX_FAILURES && now - failure.at < FAILURE_WINDOW_MS) {
+    return {
+      decision: 'deny',
+      reason:
+        `This same call failed ${failure.count} times in a row. Stop retrying. Tell the person what could not be done ` +
+        'and what they can do next.',
+    };
+  }
+
+  if (op.kind === 'memory' && op.scope === 'compartida') {
+    return Object.assign(
+      askPerson(
+        state,
+        ctx,
+        { kind: 'compartida', agent: op.agent, op: op.key },
+        'Esto propone una memoria para todas las personas que usan este agente, no sólo para ti. ¿Lo autorizas?',
+        'Shared memory reaches everyone who uses this agent and this app cannot ask the person to confirm it. Do not use it.'
+      ),
+      out.input ? { input: out.input } : {}
+    );
+  }
+
+  const isApply = input.confirm === true;
+  if (isApply && op.kind === 'catalog') {
+    const preview = state.previews[op.key];
+    const legacy = state.legacy.previews[legacyKey(tool, input)];
+    const fresh = (p) => p && now - p <= WRITE_WINDOW_MS;
+    if (!fresh(preview) && !(legacy && legacy.agent === op.agent && fresh(legacy.at))) {
+      return {
+        decision: 'deny',
+        reason:
+          'Ask for the preview first: make this same call without `confirm`, show the person in plain words what would change, ' +
+          'and send `confirm: true` only after they agree.',
+      };
     }
-    return out;
   }
 
-  if ((facts.sin_selection_context || []).includes(tool)) return out;
+  if (op.kind === 'memory' || op.kind === 'write' || (isApply && op.kind === 'catalog')) {
+    const verdict = checkRepeat(state, tool, input, op, ctx, now);
+    if (verdict) return Object.assign(verdict, out.input && verdict.decision !== 'deny' ? { input: out.input } : {});
+  }
+  return out;
+}
 
+// Fija el contexto de la conversación y frena las llamadas mientras la selección no
+// es válida.
+function withContext(state, tool, input, facts, out) {
+  if ((facts.sin_selection_context || []).includes(tool)) return out;
   if (state.seal_state === 'expired') {
     return {
       decision: 'deny',
       reason:
         `The agent selection for this conversation expired. Before any other Datalum call, select the same agent again ` +
         `(${state.seal ? state.seal.agent_name : 'the one the person chose'}) with use_agent, quoting the person's own words. ` +
-        'If their last message does not ask to continue, ask them first. Never continue under a different agent.',
+        'Never continue under a different agent.',
     };
   }
   if (state.seal_state === 'conflict') {
@@ -171,122 +437,128 @@ function preToolUse(state, tool, input, facts, ctx) {
         'it could run under the other conversation\'s agent. Ask the person which agent to continue with and call use_agent again.',
     };
   }
-
   if (state.seal_state === 'sealed' && input.selection_context !== state.seal.selection_context) {
     // La llamada sale siempre con el contexto de ESTA conversación, lo mande o no el
     // modelo, y nunca con el de otra.
     out.input = Object.assign({}, input, { selection_context: state.seal.selection_context });
   }
-
-  const key = callKey(tool, input);
-
-  const failure = state.failures[key];
-  if (failure && failure.count >= MAX_FAILURES && now - failure.at < FAILURE_WINDOW_MS) {
-    return {
-      decision: 'deny',
-      reason:
-        `This same call failed ${failure.count} times in a row. Stop retrying. Tell the person what could not be done ` +
-        'and what they can do next.',
-    };
-  }
-
-  if (tool === 'remember' || tool === 'brain_write') {
-    const shared = input.scope === 'compartida' || /\/memoria-compartida\//.test(String(input.concept_id || ''));
-    if (shared) {
-      return {
-        decision: 'ask',
-        reason:
-          'Esto propone una memoria para todas las personas que usan este agente, no sólo para ti. ¿Lo autorizas?',
-        input: out.input,
-      };
-    }
-  }
-
-  const isApply = input.confirm === true && !quoteArg;
-  const preview = state.previews[key];
-  if (isApply && (!preview || now - preview > WRITE_WINDOW_MS)) {
-    return {
-      decision: 'deny',
-      reason:
-        'Ask for the preview first: make this same call without `confirm`, show the person in plain words what would change, ' +
-        'and send `confirm: true` only after they agree.',
-    };
-  }
-
-  if (isApply || MEMORY_WRITES.has(tool)) {
-    const previous = state.writes[key];
-    if (previous && now - previous.at < WRITE_WINDOW_MS) {
-      if (previous.status === 'confirmed') {
-        return {
-          decision: 'deny',
-          reason:
-            'This exact write was already confirmed in this conversation. Do not repeat it. If a later read failed, ' +
-            'read again; the write itself is done.',
-        };
-      }
-      if (previous.status === 'uncertain' && !previous.checked) {
-        return {
-          decision: 'deny',
-          reason:
-            'The result of this write is uncertain: it may have been applied. Before repeating it, read the target ' +
-            '(for a memory, list_memories with its name) to see whether it is there.',
-        };
-      }
-    }
-  }
   return out;
 }
 
-function checkQuote(state, tool, input, quoteArg, human) {
-  const quote = input[quoteArg];
-  if (human === null || human === undefined) {
-    // Sin acceso a lo que dijo la persona no se puede comprobar: decide ella.
-    return { decision: 'ask', reason: askText(tool, input) };
-  }
-  if (tool !== 'use_agent') {
-    return findQuote(human, quote) ? null : { decision: 'ask', reason: askText(tool, input) };
-  }
-  const same = sameAgent(state.seal, input.agent);
-  if (state.seal && !same && normalize(quote) === normalize(state.seal.quote)) {
-    // Las palabras con las que eligió un agente no eligen otro.
-    return { decision: 'ask', reason: askText(tool, input) };
-  }
-  if (state.seal && same && state.seal_state === 'sealed' && state.newer_version) {
-    // Pasar a una versión nueva del agente es volver a elegirlo: tiene que pedirlo
-    // la persona después de saber que existe.
-    if (!findQuote(human, quote, state.newer_version.seen_at)) {
-      return {
-        decision: 'ask',
-        reason: `Hay una versión nueva del agente «${state.seal.agent_name}». ¿Quieres pasar a ella ahora?`,
-      };
+function preSelect(state, input, ctx, now) {
+  const out = { decision: 'pass' };
+  const next = Object.assign({}, input);
+  if (state.seal_state === 'conflict' || state.seal_state === 'expired') {
+    // El contexto guardado ya no sirve: el servidor acuña o resuelve el suyo.
+    if ('selection_context' in next) {
+      delete next.selection_context;
+      out.input = next;
     }
+  } else if (state.seal && state.seal_state === 'sealed' && next.selection_context !== state.seal.selection_context) {
+    next.selection_context = state.seal.selection_context;
+    out.input = next;
+  }
+  const withInput = (verdict) => Object.assign(verdict, out.input && verdict.decision !== 'deny' ? { input: out.input } : {});
+
+  const agentId = agentIdOf(state, input.agent);
+  const name = (agentEntry(state, input.agent) || {}).name || input.agent;
+  const same = !!state.seal && (state.seal.agent_id === agentId || normalize(state.seal.agent_name) === normalize(input.agent));
+
+  // Volver a elegir el mismo agente cuando hay una versión nueva es adoptarla: lo
+  // decide la persona, aunque ya lo hubiera elegido antes.
+  if (same && state.newer_version) {
+    return withInput(
+      askPerson(
+        state,
+        ctx,
+        { kind: 'adoptar', agent: agentId },
+        `Hay una versión nueva del agente «${name}». ¿Pasar a ella ahora?`,
+        'Selecting the agent again would switch to its newer version, and this app cannot ask the person to confirm it. ' +
+          'Keep working with the current version and tell the person a newer one exists.'
+      )
+    );
+  }
+
+  const authorization = state.authorized[agentId];
+  if (authorization) return out; // La persona ya eligió este agente en esta conversación.
+
+  const via = selectionEvidence(state, input.agent, ctx && ctx.human);
+  if (via) {
+    expectOutcome(state, ctx, { kind: 'elegir', agent: agentId, via });
+    return out;
+  }
+  return withInput(
+    askPerson(
+      state,
+      ctx,
+      { kind: 'elegir', agent: agentId, via: 'anfitrion' },
+      `Datalum va a trabajar con el agente «${name}». ¿Lo eliges tú?`,
+      'The person has not chosen this agent in a way this app can confirm, and it cannot show them a confirmation here. ' +
+        'Ask the person which agent to use, with a multiple-choice question offering the agent names if you can, and select ' +
+        'only the one they pick.'
+    )
+  );
+}
+
+// ¿Se puede repetir esta escritura? Una escritura confirmada con el mismo contenido
+// no se repite. Una incierta sólo se repite cuando una lectura del mismo destino
+// demostró que no se aplicó, o cuando la persona lo aprueba en la aplicación.
+function checkRepeat(state, tool, input, op, ctx, now) {
+  const exact = state.ops[op.key];
+  if (exact && exact.status === 'confirmed' && now - exact.at < WRITE_WINDOW_MS) return duplicate();
+  const legacy = state.legacy.writes[legacyKey(tool, input)];
+  const legacyLive = legacy && legacy.agent === op.agent && now - legacy.at < WRITE_WINDOW_MS;
+  if (legacyLive && legacy.status === 'confirmed') return duplicate();
+  // La persona aprobó repetir esta operación y la llamada falló: no se le vuelve a preguntar.
+  if (state.approved[op.key] && now - state.approved[op.key] <= PENDING_MS) return null;
+  if (legacyLive && (legacy.status === 'uncertain' || legacy.status === 'partial')) return askRetry(state, ctx, op);
+
+  const pending = Object.entries(state.ops).find(
+    ([key, rec]) => key.startsWith(op.targetKey + '|') && ['uncertain', 'absent', 'retrying'].includes(rec.status) && now - rec.at < WRITE_WINDOW_MS
+  );
+  if (!pending) return null;
+  const [, rec] = pending;
+  if (rec.status === 'absent') {
+    // Una lectura demostró que no se aplicó: se permite un reintento, uno solo.
+    rec.status = 'retrying';
+    rec.at = now;
     return null;
   }
-  if (!findQuote(human, quote)) return { decision: 'ask', reason: askText(tool, input) };
-  if (state.keyring && state.keyring.length > 1 && !namesAgent(state.keyring, input.agent, quote)) {
-    // Con varios agentes, las palabras de la persona tienen que señalar a éste: un
-    // mensaje cualquiera suyo no es una elección.
-    return { decision: 'ask', reason: askText(tool, input) };
+  if (rec.status === 'retrying') {
+    return {
+      decision: 'deny',
+      reason: 'A retry of this write is already under way. Wait for its result before writing this memory again.',
+    };
   }
-  return null;
+  if (op.kind === 'memory' && !rec.inconclusive) {
+    return {
+      decision: 'deny',
+      reason:
+        'It is not known whether an earlier write to this same memory was applied. Before writing it again, read that memory by ' +
+        'its name (list_memories with `memory`) so the result can be checked. Until then, tell the person it is not confirmed.',
+    };
+  }
+  return askRetry(state, ctx, op);
 }
 
-function namesAgent(keyring, agent, quote) {
-  const wanted = normalize(agent);
-  const entry = keyring.find((a) => normalize(a.id) === wanted || normalize(a.name) === wanted);
-  const said = normalize(quote);
-  const names = entry ? [entry.name, entry.id] : [agent];
-  return names.some((name) => {
-    const n = normalize(name);
-    return n && new RegExp(`(^|[^a-z0-9])${n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^a-z0-9]|$)`).test(said);
-  });
+function duplicate() {
+  return {
+    decision: 'deny',
+    reason:
+      'This exact write was already confirmed in this conversation for this agent. Do not repeat it. If a later read failed, ' +
+      'read again; the write itself is done.',
+  };
 }
 
-function askText(tool, input) {
-  if (tool === 'use_agent') {
-    return `Datalum va a trabajar con el agente «${input.agent}». La elección tiene que ser tuya: ¿lo elegiste tú?`;
-  }
-  return 'Esta acción borra datos para siempre y tiene que pedirla la persona con sus palabras. ¿La pediste tú?';
+function askRetry(state, ctx, op) {
+  return askPerson(
+    state,
+    ctx,
+    { kind: 'reintentar', agent: op.agent, op: op.key },
+    'No se pudo comprobar si el cambio anterior se guardó. Repetirlo puede duplicarlo. ¿Lo repito?',
+    'It is not known whether the earlier write was applied, and this app cannot ask the person whether to repeat it. ' +
+      'Do not repeat it. Tell the person the result is not confirmed.'
+  );
 }
 
 // ── Leer lo que contestó Datalum ────────────────────────────────────────────────
@@ -361,44 +633,124 @@ function errorFromText(text) {
   return { code: 'unknown' };
 }
 
+// ── Lo que una lectura de memoria demuestra ─────────────────────────────────────
+// Sólo una lectura del MISMO destino (agente, ámbito y nombre), hecha después de la
+// escritura incierta y completa, puede resolverla:
+//   aplicada    la memoria viva trae el título y el cuerpo que se intentó escribir
+//   no aplicada no existe, o sigue viva la misma memoria (mismo id) que había antes
+//   incierta    cualquier otra cosa: cortada, fallida, otro destino o un id nuevo con
+//               otro contenido
+function memoryRead(tool, input) {
+  if (tool === 'list_memories' && input.memory) {
+    return { scope: 'personal', target: slugify(input.memory) };
+  }
+  if (tool === 'brain_read' && memoryPath(input.concept_id)) {
+    const path = memoryPath(input.concept_id);
+    return { scope: path.scope, target: slugify(path.name) };
+  }
+  return null;
+}
+
+function resolveFromRead(state, tool, input, outcome, now) {
+  const read = memoryRead(tool, input);
+  if (!read) return;
+  const agent = currentAgent(state);
+  const targetKey = [agent, 'memoria.escribir', read.scope, digest(read.target)].join('|');
+  const body = outcome.data || {};
+  // Si Datalum sirvió una memoria de otro ámbito (una compartida con el mismo nombre),
+  // es otro destino: no dice nada de esta escritura.
+  const otherScope = outcome.ok && body.scope && normalize(body.scope) !== read.scope;
+  if (outcome.ok && !otherScope && body.memory_id && body.mode === 'detail') {
+    state.seen[targetKey] = { id: body.memory_id, at: now };
+    trim(state.seen);
+  }
+  for (const [key, rec] of Object.entries(state.ops)) {
+    if (!key.startsWith(targetKey + '|') || rec.status !== 'uncertain' || now < rec.at) continue;
+    const verdict = otherScope ? 'uncertain' : judge(rec, outcome, body);
+    if (verdict === 'applied') {
+      state.ops[key] = { status: 'confirmed', at: now, agent: rec.agent, op: rec.op };
+    } else if (verdict === 'absent') {
+      state.ops[key] = Object.assign({}, rec, { status: 'absent', at: now });
+    } else {
+      rec.inconclusive = true;
+    }
+  }
+}
+
+function judge(rec, outcome, body) {
+  if (outcome.notFound) return 'absent';
+  if (!outcome.ok) return 'uncertain';
+  const truncated =
+    body.truncado === true || body.truncated === true ||
+    (body.next_offset !== undefined && body.next_offset !== null) ||
+    (body.next_cursor !== undefined && body.next_cursor !== null);
+  if (truncated) return 'uncertain';
+  const text = body.block !== undefined ? body.block : body.body;
+  if (text === undefined) return 'uncertain';
+  const state = String(body.state || (body.frontmatter && body.frontmatter.state) || '').toLowerCase();
+  if (state && !/viva|live|activ/.test(state)) return 'uncertain';
+  const title = body.title !== undefined ? body.title : body.frontmatter && body.frontmatter.title;
+  const titleOk = !rec.title_h || (title !== undefined && digest(normalize(title)) === rec.title_h);
+  if (titleOk && containsBody(text, rec)) return 'applied';
+  if (rec.prior_id && body.memory_id && body.memory_id === rec.prior_id) return 'absent';
+  return 'uncertain';
+}
+
 // ── Después de una llamada ──────────────────────────────────────────────────────
 // Actualiza el estado y devuelve, si hace falta, una nota para el modelo.
-function postToolUse(state, tool, input, response, ctx) {
+function postToolUse(state, tool, input, response, ctx, facts) {
   input = input || {};
   const now = (ctx && ctx.now) || Date.now();
   const at = (ctx && ctx.at) || new Date(now).toISOString();
   const { data, error, isError } = readResponse(response);
-  if (error || isError) return applyError(state, tool, input, error || { code: 'unknown' }, now);
+  if (error || isError) return applyError(state, tool, input, error || { code: 'unknown' }, ctx, facts);
 
-  const key = callKey(tool, input);
-  delete state.failures[key];
+  const op = operation(state, tool, input, facts);
+  delete state.failures[op.key];
   const notes = [];
   const body = data || {};
+  const asked = takePending(state, ctx, null);
 
   if (ctx && ctx.server) learnServer(state, ctx.server, tool, body);
 
   if (tool === 'list_agents' && Array.isArray(body.agents)) {
     state.keyring = body.agents.map((a) => ({ id: a.agentId || a.id || null, name: a.name || null }));
+    state.keyring_at = at;
   }
 
   if (tool === 'use_agent' && body.selection_context) {
     const before = state.seal;
     const agent = body.agent || {};
+    const agentId = agent.id || agentIdOf(state, input.agent);
     state.seal = {
-      agent_id: agent.id || input.agent,
+      agent_id: agentId,
       agent_name: agent.name || input.agent,
       version: agent.version === undefined ? null : agent.version,
       family: agent.family || null,
       selection_context: body.selection_context,
       expires_at: body.expires_at || null,
-      quote: input.user_choice_quote || '',
       sealed_at: at,
     };
     state.seal_state = 'sealed';
     state.retired = Array.isArray(agent.herramientasRetiradas) ? agent.herramientasRetiradas.slice() : [];
     state.newer_version = null;
-    const moved = before && sameAgent(before, state.seal.agent_id) && before.version !== state.seal.version;
-    if (!before || !sameAgent(before, state.seal.agent_id) || moved) {
+    // Elegir un agente deja sin efecto la elección de cualquier otro.
+    const kept = state.authorized[agentId];
+    state.authorized = {};
+    const named = [agentId, input.agent, agent.name].map(normalize);
+    const fallback =
+      asked ||
+      named.map((n) => takePending(state, ctx, `elegir:${n}:`)).find(Boolean) ||
+      named.map((n) => takePending(state, ctx, `adoptar:${n}:`)).find(Boolean);
+    if (kept) state.authorized[agentId] = kept;
+    if (fallback && fallback.kind === 'elegir' && named.includes(normalize(fallback.agent))) {
+      // Con evidencia de la persona, o aprobada en un diálogo de la aplicación. En un
+      // modo que no pregunta, que la llamada haya pasado no dice nada de la persona.
+      const approvedHere = fallback.via !== 'anfitrion' || ASKING_MODES.has(fallback.mode || 'default');
+      if (approvedHere) state.authorized[agentId] = { via: fallback.via, at, name: state.seal.agent_name };
+    }
+    const moved = before && before.agent_id === agentId && before.version !== state.seal.version;
+    if (!before || before.agent_id !== agentId || moved) {
       state.reads = {};
       state.listings = {};
     }
@@ -422,6 +774,7 @@ function postToolUse(state, tool, input, response, ctx) {
     state.newer_version = null;
     state.reads = {};
     state.listings = {};
+    state.authorized = {}; // Soltar el agente retira la elección.
   }
 
   if (body.sello_posterior && typeof body.sello_posterior === 'object' && state.seal) {
@@ -439,7 +792,7 @@ function postToolUse(state, tool, input, response, ctx) {
     }
   }
 
-  if (tool === 'brain_read' && input.concept_id) {
+  if (tool === 'brain_read' && input.concept_id && !memoryPath(input.concept_id)) {
     const partial = body.next_offset !== undefined && body.next_offset !== null;
     state.reads[input.concept_id] = { complete: !partial, next_offset: partial ? body.next_offset : null };
     trim(state.reads);
@@ -450,7 +803,7 @@ function postToolUse(state, tool, input, response, ctx) {
     }
   }
 
-  if (tool === 'brain_index' || tool === 'list_memories') {
+  if (tool === 'brain_index' || (tool === 'list_memories' && !input.memory)) {
     const cursor = body.next_cursor || (body.memory && body.memory.next_cursor) || null;
     const where = tool === 'brain_index' ? (input.path || '(root)') : 'memory index';
     state.listings[tool + ':' + where] = { complete: !cursor };
@@ -458,21 +811,24 @@ function postToolUse(state, tool, input, response, ctx) {
     if (cursor) notes.push(`This listing of ${where} is partial: continue with the cursor it returned before concluding that something is missing.`);
   }
 
-  markChecked(state, tool, input);
+  resolveFromRead(state, tool, input, { ok: true, data: body }, now);
 
-  const applied = input.confirm === true;
-  if (MEMORY_WRITES.has(tool) || applied) {
+  const written = op.kind === 'memory' || op.kind === 'write' || (op.kind === 'catalog' && input.confirm === true) || DELETES.has(tool);
+  if (written) {
+    delete state.approved[op.key];
     const proposed = body.outcome === 'propuesta';
-    state.writes[key] = {
-      status: 'confirmed',
-      at: now,
-      tool,
-      name: body.slug || body.concept_id || input.slug || input.memory || input.title || null,
-      proposed,
-    };
-    trim(state.writes);
-    delete state.previews[key];
-    if (tool !== 'forget') {
+    state.ops[op.key] = { status: 'confirmed', at: now, agent: op.agent, op: op.op };
+    // Una escritura confirmada en el mismo destino resuelve las inciertas anteriores.
+    for (const [key, rec] of Object.entries(state.ops)) {
+      if (key !== op.key && key.startsWith(op.targetKey + '|') && rec.status !== 'confirmed') delete state.ops[key];
+    }
+    trim(state.ops);
+    if (op.kind === 'memory' && body.memory_id) {
+      state.seen[op.targetKey] = { id: body.memory_id, at: now };
+      trim(state.seen);
+    }
+    delete state.previews[op.key];
+    if (op.kind === 'memory' && op.op === 'memoria.escribir') {
       notes.push(
         proposed
           ? 'This was filed as a proposal for a person to approve. It is not saved as a memory: say so.'
@@ -480,26 +836,20 @@ function postToolUse(state, tool, input, response, ctx) {
       );
     }
   } else {
-    keepPreview(state, key, now);
+    keepPreview(state, op.key, now);
   }
 
   return { context: notes.join('\n') || null };
 }
 
-// Una escritura incierta queda comprobada cuando después se leyó algo que muestra si
-// se aplicó: la memoria se comprueba leyendo la memoria; un cambio del catálogo, con
-// cualquier lectura posterior de la misma herramienta sin aplicar (su vista previa
-// muestra el estado actual) o con una lectura del catálogo.
-function markChecked(state, tool, input) {
-  if (input.confirm === true || MEMORY_WRITES.has(tool)) return;
-  const memoryRead =
-    tool === 'list_memories' ||
-    (MEMORY_READS.has(tool) && /\/memoria(-compartida)?(\/|$)/.test(String(input.concept_id || input.path || '')));
-  for (const write of Object.values(state.writes)) {
-    if (write.status !== 'uncertain' || write.checked) continue;
-    const isMemory = MEMORY_WRITES.has(write.tool);
-    if (isMemory ? memoryRead : write.tool === tool || /^(get_|list_|brain_)/.test(tool)) write.checked = true;
+// Una vista previa vale para aplicar durante la misma ventana que protege una
+// escritura; las viejas se descartan antes de recortar por número.
+function keepPreview(state, key, now) {
+  for (const [k, when] of Object.entries(state.previews)) {
+    if (now - when > WRITE_WINDOW_MS) delete state.previews[k];
   }
+  state.previews[key] = now;
+  trim(state.previews, MAX_PREVIEWS);
 }
 
 function learnServer(state, server, tool, body) {
@@ -510,21 +860,41 @@ function learnServer(state, server, tool, body) {
   if (looksLikeDatalum) state.server = server;
 }
 
-function postToolUseFailure(state, tool, input, errorText, ctx) {
-  const now = (ctx && ctx.now) || Date.now();
-  return applyError(state, tool, input || {}, errorFromText(errorText), now);
+function postToolUseFailure(state, tool, input, errorText, ctx, facts) {
+  return applyError(state, tool, input || {}, errorFromText(errorText), ctx, facts);
 }
 
-function applyError(state, tool, input, error, now) {
-  const key = callKey(tool, input);
+// La aplicación denegó la llamada sin preguntar (por ejemplo, el clasificador del
+// modo automático). Lo que se había pedido para esa llamada queda sin efecto.
+function permissionDenied(state, tool, input, ctx) {
+  const entry = takePending(state, ctx, null);
+  if (entry && entry.kind === 'elegir' && entry.agent) delete state.authorized[entry.agent];
+  return { context: null };
+}
+
+function applyError(state, tool, input, error, ctx, facts) {
+  const now = (ctx && ctx.now) || Date.now();
+  const op = operation(state, tool, input, facts);
   const code = error.code;
-  const writeLike = MEMORY_WRITES.has(tool) || input.confirm === true;
+  const asked = takePending(state, ctx, null);
+  if (asked && asked.op && ASKING_MODES.has(asked.mode || 'default')) {
+    // La persona aprobó la llamada en la aplicación y falló después: su aprobación
+    // sigue valiendo para reintentar esa misma operación un rato.
+    state.approved[asked.op] = now;
+    trim(state.approved);
+  }
+  if (asked && asked.kind === 'elegir' && asked.agent && (asked.via !== 'anfitrion' || ASKING_MODES.has(asked.mode || 'default'))) {
+    state.authorized[asked.agent] = { via: asked.via, at: new Date(now).toISOString() };
+  }
+  const writeLike = op.kind === 'memory' || op.kind === 'write' || input.confirm === true || DELETES.has(tool);
   const count = () => {
-    const previous = state.failures[key];
+    const previous = state.failures[op.key];
     const fresh = previous && now - previous.at < FAILURE_WINDOW_MS;
-    state.failures[key] = { count: fresh ? previous.count + 1 : 1, at: now };
+    state.failures[op.key] = { count: fresh ? previous.count + 1 : 1, at: now };
     trim(state.failures);
   };
+
+  resolveFromRead(state, tool, input, { ok: false, notFound: code === 'not_found' }, now);
 
   if (code === 'agent_not_selected') {
     if (state.seal) {
@@ -553,17 +923,27 @@ function applyError(state, tool, input, error, now) {
     return { context: `Nothing was executed. Wait ${wait} and retry this same call once.` };
   }
   if (code === 'partial_write') {
-    state.writes[key] = { status: 'partial', at: now, tool };
+    state.ops[op.key] = { status: 'partial', at: now, agent: op.agent, op: op.op };
     return { context: 'The write was applied in part. Repeat this same call to complete it, then check the result.' };
   }
-  if (writeLike && (code === 'transport_uncertain' || code === 'backend_timeout' || code === 'athena_timeout' || code === 'internal_error' || code === 'unknown')) {
-    state.writes[key] = { status: 'uncertain', at: now, tool, checked: false, name: input.slug || input.memory || input.title || null };
-    trim(state.writes);
+  const uncertain = ['transport_uncertain', 'backend_timeout', 'athena_timeout', 'internal_error', 'unknown'].includes(code);
+  if (writeLike && uncertain) {
+    const evidence = memoryEvidence(op.memory);
+    const prior = state.seen[op.targetKey];
+    // Un resultado incierto nuevo en el mismo destino reemplaza a los anteriores.
+    for (const [key, rec] of Object.entries(state.ops)) {
+      if (key !== op.key && key.startsWith(op.targetKey + '|') && rec.status !== 'confirmed') delete state.ops[key];
+    }
+    state.ops[op.key] = Object.assign(
+      { status: 'uncertain', at: now, agent: op.agent, op: op.op, prior_id: prior ? prior.id : null },
+      evidence || {}
+    );
+    trim(state.ops);
     count();
     return {
       context:
-        'It is not known whether this write was applied. Do not repeat it yet. Read the target first; repeat only if it is not there. ' +
-        'Until then, tell the person the result is not confirmed.',
+        'It is not known whether this write was applied. Do not repeat it yet. Read the same target by its name first; repeat ' +
+        'only if that read shows it is not there. Until then, tell the person the result is not confirmed.',
     };
   }
   count();
@@ -595,27 +975,31 @@ function resumeContext(state) {
   if (partial.length) {
     lines.push(`- Left half-read: ${partial.map((id) => `${id} (continue at offset ${state.reads[id].next_offset})`).join(', ')}.`);
   }
-  const writes = Object.values(state.writes);
-  const confirmed = writes.filter((w) => w.status === 'confirmed' && w.name).map((w) => w.name);
-  const uncertain = writes.filter((w) => w.status === 'uncertain').map((w) => w.name || w.tool);
-  if (confirmed.length) lines.push(`- Writes already confirmed: ${confirmed.join(', ')}. Do not repeat them.`);
-  if (uncertain.length) lines.push(`- Writes with an uncertain result: ${uncertain.join(', ')}. Read the target before repeating.`);
+  const agent = currentAgent(state);
+  const mine = Object.values(state.ops).filter((rec) => rec.agent === agent);
+  const confirmed = mine.filter((rec) => rec.status === 'confirmed').length;
+  const uncertain = mine.filter((rec) => rec.status === 'uncertain').length;
+  if (confirmed) lines.push(`- ${confirmed} write(s) already confirmed for this agent. The plugin blocks repeating them.`);
+  if (uncertain) lines.push(`- ${uncertain} write(s) with an uncertain result. Read each target by its name before repeating.`);
   lines.push('- If the work was tracked in memory, recover it with list_memories before continuing, following the agent\'s memory rules.');
   return lines.join('\n');
 }
 
 module.exports = {
+  STATE_VERSION,
   newState,
+  migrate,
   isDatalum,
   parseToolName,
   preToolUse,
   postToolUse,
   postToolUseFailure,
+  permissionDenied,
   resumeContext,
   readResponse,
   errorFromText,
-  findQuote,
   ownWords,
   normalize,
-  callKey,
+  slugify,
+  operation,
 };

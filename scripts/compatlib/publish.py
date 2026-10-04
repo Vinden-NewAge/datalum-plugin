@@ -59,7 +59,9 @@ def publish(forge, *, tag: str, commit: str, digest: str, title: str, notes: str
         raise PackageMismatch(f"los archivos del borrador de {tag} no son los que se probaron")
     forge.publish(tag)
     if forge.release_assets(tag) != expected:
-        forge.demote(tag)
+        # Vuelve a borrador: deja de verse y deja de ser «la última». No queda a la
+        # vista una versión con archivos que no se probaron.
+        forge.unpublish(tag)
         raise PackageMismatch(f"los archivos publicados de {tag} no son los que se probaron")
     return {"estado": "publicada", "activos": expected}
 
@@ -120,8 +122,8 @@ class GhForge:
     def publish(self, tag: str) -> None:
         self._run("gh", "release", "edit", tag, "--draft=false", "--latest")
 
-    def demote(self, tag: str) -> None:
-        self._run("gh", "release", "edit", tag, "--prerelease", "--latest=false", check=False)
+    def unpublish(self, tag: str) -> None:
+        self._run("gh", "release", "edit", tag, "--draft=true", check=False)
 
     def advance_main(self, commit: str, *, branch: str, title: str, body: str) -> str:
         """Lleva `main` al commit. Si las reglas del repositorio no dejan empujar,

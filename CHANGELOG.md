@@ -4,6 +4,54 @@ Cada versión del plugin de Datalum dice qué cambia para quien usa la Skill, co
 versión del servidor se comprobó y qué hay que hacer para recibirla. La más reciente va
 primero.
 
+## [2.0.1] - 2026-10-05
+
+Corrige cuatro defectos de los controles del cliente de la 2.0.0. La Skill cambia en dos
+párrafos; el contrato con Datalum no cambia.
+
+### Corregido
+
+- Leer una memoria liberaba las escrituras inciertas de otras memorias. Ahora sólo las
+  resuelve una lectura completa del mismo destino, del mismo agente y posterior a la
+  escritura. Si muestra lo que se intentó escribir, la escritura cuenta como aplicada; si
+  la memoria no existe o sigue la misma de antes, se permite un reintento; con cualquier
+  otra lectura sigue incierta y repetirla lo decide la persona.
+- Una cita auténtica bastaba para elegir un agente o borrar: «No uses el agente Finanzas»
+  permitía elegir Finanzas y «hola» permitía un borrado. Ahora cuenta como elección lo que
+  la persona eligió en una pregunta de la aplicación, un mensaje suyo que es sólo el
+  nombre del agente, el único agente de su lista o lo que aprobó en el diálogo de la
+  aplicación. Adoptar una versión nueva y cada borrado se le preguntan a la persona; si
+  aprobó un borrado y la llamada falló, esa misma operación se puede reintentar durante
+  15 minutos sin volver a preguntar.
+- Proponer un agente por `brain_write` vuelve a estar protegido contra duplicados, como
+  en la 1.x.
+- El estado del cliente guardaba la frase con que se eligió el agente. Ya no guarda
+  palabras de la persona, ni nombres o títulos de lo escrito, y el registro de errores ya
+  no copia la entrada. Los estados de la 2.0.0 se migran al leerlos sin perder el agente
+  ni las escrituras pendientes.
+- Los mismos argumentos con otro agente se bloqueaban como duplicado. Ahora una operación
+  se identifica por agente, ámbito, destino, operación y contenido. Renovar el contexto
+  del mismo agente conserva la protección.
+- Si los archivos de una versión publicada no coincidían con los probados, la versión se
+  quedaba a la vista como versión preliminar. Ahora vuelve a borrador.
+
+### Cambiado
+
+- Con varios agentes, la Skill pide preguntar con opciones cuando la aplicación lo
+  permite, y advierte que la aplicación puede pedir a la persona que confirme.
+- `CONTROLES.md` explica qué cuenta como consentimiento, cómo se resuelve un resultado
+  incierto, qué guarda el cliente y los límites de cada modo de permisos.
+
+### Servidor
+
+- Sin cambios de contrato: comprobada contra la misma producción que la 2.0.0, v2.243.0
+  (contrato `11e81846335d`).
+
+### Cómo recibirla
+
+- Los pasos por aplicación están en `ACTUALIZAR.md`. En Claude Code las conversaciones
+  abiertas conservan su agente: el estado de la 2.0.0 se migra solo.
+
 ## [2.0.0] - 2026-10-03
 
 El plugin deja de explicar el oficio. Conecta a la persona, le pregunta con qué agente

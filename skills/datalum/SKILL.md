@@ -18,12 +18,12 @@ compatibility: >-
 metadata:
   author: Vinden
   short-description: AI CONTEXT PILL
-  version: "2.0.0"
+  version: "2.0.1"
 ---
 
 # Datalum
 
-This is version 2.0.0 of the Datalum skill.
+This is version 2.0.1 of the Datalum skill.
 
 Datalum is a governed data layer. A person works in it through one agent that their
 company's administrator granted them. This skill gets the person connected, loads the
@@ -83,10 +83,16 @@ the person is not connected, do not answer Datalum questions from another source
 
 Call `list_agents`. It returns the agents the person can use now.
 
-With several agents, show their names with what each is for, ask "Elige el agente con el
-que quieres trabajar." and wait for the answer. With one agent, tell the person which
-one it is and use it. If the person already named an agent that is in the list, use it
-without asking again.
+With several agents, ask "Elige el agente con el que quieres trabajar." and wait for the
+answer. If your host lets you ask the person a question with options, use it, with one
+option per agent and what each is for; otherwise list them in your message. With one
+agent, tell the person which one it is and use it. If the person already named an agent
+that is in the list, use it without asking again.
+
+The app may show the person a confirmation before Datalum starts with an agent, before
+switching to a newer version or before erasing data. That confirmation is the app's own
+check of the person's choice. Do not try to avoid it, and if it is refused, the person
+did not choose that.
 
 Then call `use_agent` with `agent` exactly as `list_agents` returned it, and
 `user_choice_quote` holding the person's own words, copied as they wrote them: the
@@ -179,7 +185,8 @@ changes covers the steps that job needs, within what they described. Ask again w
 job would touch something they did not mention, reach other people, or erase data.
 Tools with a `confirm` argument preview first: call without it, tell the person what
 would change, and send `confirm: true` after they agree. Tools that ask for the
-person's exact words get them copied from the person, the same way as the agent choice.
+person's exact words get them copied from the person, the same way as the agent choice;
+the words are a record, not the approval, and the app may still ask the person.
 
 Before a change, check what you are about to send: the active agent, the target, who
 will see the result, and that the arguments are the ones you previewed. Afterwards, read

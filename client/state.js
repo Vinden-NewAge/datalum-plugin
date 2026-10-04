@@ -22,10 +22,13 @@ function file(sessionId) {
   return path.join(dir(), safe + '.json');
 }
 
+// Un estado de la 2.0.0 se migra al leerlo: sin la frase con que se eligió el agente
+// y con sus escrituras pendientes asignadas al agente que estaba elegido. Quien lo
+// guarde después, dentro del candado, deja escrita la versión migrada.
 function load(sessionId, pluginVersion) {
   try {
-    const state = JSON.parse(fs.readFileSync(file(sessionId), 'utf8'));
-    if (state && state.v === 1) return state;
+    const raw = JSON.parse(fs.readFileSync(file(sessionId), 'utf8'));
+    if (raw && (raw.v === 1 || raw.v === policy.STATE_VERSION)) return policy.migrate(raw, pluginVersion);
   } catch (_) {
     // Sin estado guardado o ilegible: se empieza de cero.
   }

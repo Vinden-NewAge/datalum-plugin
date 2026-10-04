@@ -344,14 +344,28 @@ class Flow(unittest.TestCase):
         self.assertNotIn("publish", self.repo.forge.calls)
         self.assertEqual(self.remote_version(), "1.0.0")
 
-    def test_paquete_publicado_distinto_se_retira_de_ultima_version(self):
+    def test_paquete_publicado_distinto_vuelve_a_borrador(self):
         tools = tools_with_change()
         self.repo.forge.corrupt = {"published"}
         _, entry = self.run_flow(event(SHA_B, summary_of(tools)), FakeProduction(SHA_B, tools))
         self.assertEqual(entry["resultado"], "paquete_no_coincide")
-        self.assertIn("demote", self.repo.forge.calls)
-        self.assertFalse(self.repo.forge.releases["v1.0.1"]["latest"])
+        self.assertIn("unpublish", self.repo.forge.calls)
+        release = self.repo.forge.releases["v1.0.1"]
+        self.assertTrue(release["draft"], "no queda a la vista")
+        self.assertFalse(release["latest"])
         self.assertEqual(self.remote_version(), "1.0.0")
+
+    def test_tras_volver_a_borrador_el_reintento_publica_lo_probado(self):
+        tools = tools_with_change()
+        ev, prod = event(SHA_B, summary_of(tools)), FakeProduction(SHA_B, tools)
+        self.repo.forge.corrupt = {"published"}
+        self.run_flow(ev, prod)
+        self.repo.forge.corrupt = set()
+        _, retry = self.run_flow(ev, prod)
+        self.assertEqual(retry["resultado"], "actualizado")
+        self.assertFalse(self.repo.forge.releases["v1.0.1"]["draft"])
+        self.assertEqual(self.repo.remote_tags(), ["v1.0.1"])
+        self.assertEqual(self.remote_version(), "1.0.1")
 
     def test_contenido_cambiado_despues_de_probar_no_se_publica(self):
         tools = tools_with_change()

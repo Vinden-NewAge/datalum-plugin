@@ -148,9 +148,19 @@ def derive_facts(summary: dict, requirements: dict) -> dict:
         for name, arg in sorted(requirements.get("citas_humanas", {}).items())
         if name in tools and arg in tools[name]["p"]
     }
+    # El argumento que nombra el destino de cada herramienta: `name` si es obligatorio;
+    # si no, el primer obligatorio. Los controles del cliente lo usan para reconocer la
+    # misma operación sin conocer los objetos del catálogo.
+    skip = {"tenant", "confirm", "selection_context"} | set(requirements.get("citas_humanas", {}).values())
+    targets = {}
+    for entry in summary["herramientas"]:
+        required = [arg for arg in entry["r"] if arg not in skip]
+        if required:
+            targets[entry["n"]] = "name" if "name" in required else required[0]
     return {
         "_": "Derivado del contrato de producción por scripts/compat.py. No se edita a mano.",
         "citas_humanas": quotes,
+        "destinos": dict(sorted(targets.items())),
         "sin_selection_context": sorted(
             entry["n"] for entry in summary["herramientas"] if "selection_context" not in entry["p"]
         ),

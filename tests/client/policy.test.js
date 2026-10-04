@@ -33,26 +33,32 @@ function sealedResponse(over) {
   );
 }
 
+// El flujo real: Datalum devuelve un solo agente, el cliente no se opone a elegirlo y
+// la selección se confirma. Así queda registrada la elección de la persona.
 function sealed(over) {
   const state = policy.newState('2.0.0');
-  policy.postToolUse(state, 'use_agent', { agent: 'Ventas', user_choice_quote: 'usa el agente de ventas' }, sealedResponse(over), {
-    now: T0,
-    server: 'plugin_datalum_datalum',
-  });
+  policy.postToolUse(state, 'list_agents', {}, { agents: [{ agentId: 'ag-ventas', name: 'Ventas' }], message: '' }, { now: T0 - 2000 });
+  const input = { agent: 'Ventas', user_choice_quote: 'usa el agente de ventas' };
+  policy.preToolUse(state, 'use_agent', input, FACTS, { now: T0 - 1000, human: [] });
+  policy.postToolUse(state, 'use_agent', input, sealedResponse(over), { now: T0, server: 'plugin_datalum_datalum' });
   return state;
 }
 
 const pre = (state, tool, input, human, now) => policy.preToolUse(state, tool, input, FACTS, { human, now: now || T0 });
 
 // ── La elección de agente es de la persona ──────────────────────────────────────
-test('la cita que está en un mensaje de la persona pasa', () => {
+test('un mensaje de la persona que es sólo el nombre del agente lo elige; una frase que lo menciona, no', () => {
   const state = policy.newState('2.0.0');
+  policy.postToolUse(state, 'list_agents', {}, KEYRING, { now: T0 - 60000, at: new Date(T0 - 60000).toISOString() });
+  assert.equal(pre(state, 'use_agent', { agent: 'Ventas', user_choice_quote: 'Ventas' }, said('Ventas')).decision, 'pass');
+  // Antes de la 2.0.1 bastaba con que la cita estuviera en un mensaje de la persona.
   const verdict = pre(state, 'use_agent', { agent: 'Ventas', user_choice_quote: 'usa el agente de ventas' }, said('Hola, usa el agente de Ventas por favor'));
-  assert.equal(verdict.decision, 'pass');
+  assert.equal(verdict.decision, 'ask');
 });
 
 test('con un solo agente vale el mensaje con el que la persona pidió el trabajo', () => {
   const state = policy.newState('2.0.0');
+  policy.postToolUse(state, 'list_agents', {}, { agents: [{ agentId: 'ag-ventas', name: 'Ventas' }], message: '' }, { now: T0 - 60000 });
   const message = 'Necesito las ventas de septiembre de Datalum';
   assert.equal(pre(state, 'use_agent', { agent: 'Ventas', user_choice_quote: message }, said(message)).decision, 'pass');
 });
@@ -83,18 +89,25 @@ test('las palabras con las que eligió un agente no eligen otro', () => {
   assert.equal(verdict.decision, 'ask');
 });
 
-test('pasar a una versión nueva exige un mensaje de la persona posterior al aviso', () => {
+test('pasar a una versión nueva lo aprueba la persona en la aplicación, no una frase suya', () => {
   const state = sealed();
   const notice = { sello_posterior: { version_servida: 3, version_sellada: 4, aviso: 'hay v4' } };
   const seen = policy.postToolUse(state, 'brain_index', {}, notice, { now: T0 + 5 * 60000, at: new Date(T0 + 5 * 60000).toISOString() });
   assert.match(seen.context, /newer version/);
   assert.equal(state.seal.version, 3, 'la conversación sigue en la versión sellada');
 
-  const before = said('usa el agente de ventas');
-  assert.equal(pre(state, 'use_agent', { agent: 'Ventas', user_choice_quote: 'usa el agente de ventas' }, before).decision, 'ask');
-
-  const after = before.concat([{ text: 'sí, pásame a la versión nueva', at: new Date(T0 + 9 * 60000).toISOString() }]);
-  assert.equal(pre(state, 'use_agent', { agent: 'Ventas', user_choice_quote: 'sí, pásame a la versión nueva' }, after).decision, 'pass');
+  // Antes de la 2.0.1 bastaba con citar un mensaje posterior al aviso.
+  const after = said('usa el agente de ventas').concat([{ text: 'sí, pásame a la versión nueva', at: new Date(T0 + 9 * 60000).toISOString(), kind: 'message' }]);
+  const ctx = { human: after, now: T0 + 10 * 60000, toolUseId: 'toolu_adoptar', mode: 'default' };
+  const input = { agent: 'Ventas', user_choice_quote: 'sí, pásame a la versión nueva' };
+  const asked = policy.preToolUse(state, 'use_agent', input, FACTS, ctx);
+  assert.equal(asked.decision, 'ask');
+  assert.match(asked.reason, /versión nueva/);
+  // La persona aprueba en el diálogo de la aplicación y la selección se confirma en v4.
+  const moved = sealedResponse({ agent: { id: 'ag-ventas', name: 'Ventas', version: 4, herramientasRetiradas: [] }, resealed: true });
+  policy.postToolUse(state, 'use_agent', input, moved, { now: T0 + 11 * 60000, toolUseId: 'toolu_adoptar' });
+  assert.equal(state.seal.version, 4);
+  assert.ok(state.authorized['ag-ventas'], 'la elección del agente sigue en pie');
 });
 
 test('el aviso de versión nueva se da una sola vez', () => {
@@ -104,11 +117,12 @@ test('el aviso de versión nueva se da una sola vez', () => {
   assert.equal(policy.postToolUse(state, 'brain_read', { concept_id: 'a' }, notice, { now: T0 }).context, null);
 });
 
-test('borrar la memoria pide las palabras de la persona', () => {
+test('borrar la memoria lo aprueba la persona en la aplicación, diga lo que diga la cita', () => {
   const state = sealed();
   const input = { confirm: true, user_request_quote: 'borra todo lo que sabes de mí' };
+  // Antes de la 2.0.1 bastaba con que la cita estuviera en un mensaje de la persona.
+  assert.equal(pre(state, 'delete_my_memories', input, said('Borra todo lo que sabes de mí')).decision, 'ask');
   assert.equal(pre(state, 'delete_my_memories', input, said('guarda mi avance')).decision, 'ask');
-  assert.equal(pre(state, 'delete_my_memories', input, said('Borra todo lo que sabes de mí')).decision, 'pass');
 });
 
 // ── Cada llamada corre en el agente de su conversación ──────────────────────────
@@ -242,8 +256,10 @@ test('un resultado incierto se comprueba leyendo antes de repetir', () => {
   assert.match(noted.context, /not known whether this write was applied/);
   const blind = pre(state, 'remember', AVANCE, undefined, T0 + 1000);
   assert.equal(blind.decision, 'deny');
-  assert.match(blind.reason, /uncertain/);
-  policy.postToolUse(state, 'list_memories', { memory: 'cierre_septiembre' }, { mode: 'index', total: 0 }, { now: T0 + 2000 });
+  assert.match(blind.reason, /not known whether an earlier write/);
+  // Leerla por su nombre y que no exista demuestra que no se aplicó.
+  const missing = { isError: true, content: [{ type: 'text', text: JSON.stringify({ code: 'not_found', category: 'not_found', retryable: false }) }] };
+  policy.postToolUse(state, 'list_memories', { memory: 'cierre_septiembre' }, missing, { now: T0 + 2000 });
   assert.equal(pre(state, 'remember', AVANCE, undefined, T0 + 3000).decision, 'pass');
 });
 
@@ -318,10 +334,13 @@ test('el resumen para retomar dice el agente, lo leído y lo escrito, sin identi
   assert.match(text, /Selected agent: Ventas v3/);
   assert.match(text, /read in full[^\n]*agents\/ventas\/reglas/);
   assert.match(text, /agents\/ventas\/formato \(continue at offset 8192\)/);
-  assert.match(text, /already confirmed: cierre_septiembre/);
-  assert.match(text, /uncertain result: otra_ficha/);
+  assert.match(text, /1 write\(s\) already confirmed/);
+  assert.match(text, /1 write\(s\) with an uncertain result/);
   assert.equal(text.includes('ctx-de-esta-conversacion'), false);
   assert.equal(text.includes('mem-1'), false);
+  // Desde la 2.0.1 el estado no guarda nombres ni títulos de lo escrito.
+  assert.equal(text.includes('cierre_septiembre'), false);
+  assert.equal(text.includes('otra_ficha'), false);
 });
 
 test('sin agente elegido no hay nada que retomar', () => {
@@ -376,31 +395,45 @@ test('con varios agentes, un mensaje cualquiera de la persona no elige', () => {
   assert.equal(verdict.decision, 'ask');
 });
 
-test('con varios agentes vale la respuesta que nombra al agente, con o sin acentos', () => {
+test('con varios agentes vale lo que la persona eligió en la pregunta de la aplicación, con o sin acentos', () => {
   const state = policy.newState('2.0.0');
-  policy.postToolUse(state, 'list_agents', {}, KEYRING, { now: T0 });
-  const human = said('¿qué tengo?', 'el de fínanzas, porfa');
-  assert.equal(pre(state, 'use_agent', { agent: 'ag_finanzas', user_choice_quote: 'el de fínanzas, porfa' }, human).decision, 'pass');
-  assert.equal(pre(state, 'use_agent', { agent: 'ag_ventas', user_choice_quote: 'el de fínanzas, porfa' }, human).decision, 'ask', 'nombrar otro agente no elige éste');
+  policy.postToolUse(state, 'list_agents', {}, KEYRING, { now: T0 - 60000, at: new Date(T0 - 60000).toISOString() });
+  const human = [{ text: '¿qué tengo?', at: new Date(T0).toISOString(), kind: 'message' }, { text: 'Fínanzas', at: new Date(T0 + 1000).toISOString(), kind: 'answer' }];
+  assert.equal(pre(state, 'use_agent', { agent: 'ag_finanzas', user_choice_quote: 'Fínanzas' }, human).decision, 'pass');
+  assert.equal(pre(state, 'use_agent', { agent: 'ag_ventas', user_choice_quote: 'Fínanzas' }, human).decision, 'ask', 'elegir otro agente no elige éste');
+  // Antes de la 2.0.1 bastaba una frase que lo mencionara.
+  const loose = said('¿qué tengo?', 'el de fínanzas, porfa');
+  assert.equal(pre(state, 'use_agent', { agent: 'ag_finanzas', user_choice_quote: 'el de fínanzas, porfa' }, loose).decision, 'ask');
 });
 
-test('una lectura cualquiera del cerebro no comprueba una escritura de memoria incierta', () => {
+test('ni una lectura del cerebro ni el índice de la memoria comprueban una escritura incierta', () => {
   const state = sealed();
+  // La persona leyó antes la ficha: Datalum dio su id.
+  policy.postToolUse(state, 'list_memories', { memory: 'cierre_septiembre' }, { mode: 'detail', memory_id: 'mem-3', title: 'Cierre · 2 de 4', block: 'viejo' }, { now: T0 - 1000 });
   policy.postToolUseFailure(state, 'remember', AVANCE, 'timeout', { now: T0 });
   policy.postToolUse(state, 'brain_read', { concept_id: 'agents/ventas/superpoderes/cierre_mensual' }, { body: 'x' }, { now: T0 + 1000 });
   assert.equal(pre(state, 'remember', AVANCE, undefined, T0 + 2000).decision, 'deny');
+  // Antes de la 2.0.1 el índice de la rama de memoria bastaba.
   policy.postToolUse(state, 'brain_index', { path: 'agents/ventas/memoria' }, { memory: { text: '' } }, { now: T0 + 3000 });
-  assert.equal(pre(state, 'remember', AVANCE, undefined, T0 + 4000).decision, 'pass');
+  assert.equal(pre(state, 'remember', AVANCE, undefined, T0 + 4000).decision, 'deny');
+  // Sigue viva la misma ficha que había antes: no se aplicó, y se puede repetir.
+  policy.postToolUse(state, 'list_memories', { memory: 'cierre_septiembre' }, { mode: 'detail', memory_id: 'mem-3', title: 'Cierre · 2 de 4', block: 'viejo' }, { now: T0 + 5000 });
+  assert.equal(pre(state, 'remember', AVANCE, undefined, T0 + 6000).decision, 'pass');
 });
 
-test('un cambio del catálogo incierto se libera al leer su estado', () => {
+test('un cambio del catálogo incierto se repite sólo si la persona lo aprueba', () => {
   const state = sealed();
   const apply = Object.assign({ confirm: true }, METRIC);
   policy.postToolUse(state, 'upsert_metric', METRIC, { preview: true }, { now: T0 });
   policy.postToolUseFailure(state, 'upsert_metric', apply, 'MCP error: request timed out', { now: T0 + 1000 });
-  assert.equal(pre(state, 'upsert_metric', apply, undefined, T0 + 2000).decision, 'deny');
-  policy.postToolUse(state, 'upsert_metric', METRIC, { preview: true, changes: [] }, { now: T0 + 3000 });
-  assert.equal(pre(state, 'upsert_metric', apply, undefined, T0 + 4000).decision, 'pass');
+  // Antes de la 2.0.1 cualquier lectura posterior del catálogo lo liberaba. El cliente
+  // no sabe leer el estado de cada objeto del catálogo: decide la persona.
+  policy.postToolUse(state, 'upsert_metric', METRIC, { preview: true, changes: [] }, { now: T0 + 2000 });
+  const verdict = policy.preToolUse(state, 'upsert_metric', apply, FACTS, { now: T0 + 3000, toolUseId: 'toolu_reintento', mode: 'default' });
+  assert.equal(verdict.decision, 'ask');
+  assert.match(verdict.reason, /duplicarlo/);
+  policy.postToolUse(state, 'upsert_metric', apply, { status: 'propuesta' }, { now: T0 + 4000, toolUseId: 'toolu_reintento' });
+  assert.equal(pre(state, 'upsert_metric', apply, undefined, T0 + 5000).decision, 'deny', 'ya confirmado, no se repite');
 });
 
 test('muchas lecturas entre la vista previa y la aprobación no la borran', () => {

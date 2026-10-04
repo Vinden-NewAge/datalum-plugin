@@ -79,14 +79,15 @@ function handleLocked(event) {
   const input = event.tool_input || {};
   const note = versionNote(state, current);
 
+  const facts = contractFacts();
+  const base = { now, at: new Date(now).toISOString(), toolUseId: event.tool_use_id || null, mode: event.permission_mode || null };
+
   if (name === 'PreToolUse') {
-    const facts = contractFacts();
-    const needsHuman = Boolean((facts.citas_humanas || {})[parsed.tool]);
-    const verdict = policy.preToolUse(state, parsed.tool, input, facts, {
-      now,
-      human: needsHuman ? human.read(event.transcript_path) : undefined,
-    });
-    if (note) store.save(sessionId, state);
+    // Para elegir agente hace falta saber qué eligió la persona en la aplicación.
+    const verdict = policy.preToolUse(state, parsed.tool, input, facts, Object.assign({}, base, {
+      human: parsed.tool === 'use_agent' ? human.read(event.transcript_path) : undefined,
+    }));
+    store.save(sessionId, state);
     const output = { hookEventName: 'PreToolUse' };
     if (verdict.decision === 'deny' || verdict.decision === 'ask') {
       output.permissionDecision = verdict.decision;
@@ -99,12 +100,14 @@ function handleLocked(event) {
   }
 
   let result = null;
-  const ctx = { now, at: new Date(now).toISOString(), server: parsed.server };
+  const ctx = Object.assign({}, base, { server: parsed.server });
   if (name === 'PostToolUse') {
-    result = policy.postToolUse(state, parsed.tool, input, event.tool_response, ctx);
+    result = policy.postToolUse(state, parsed.tool, input, event.tool_response, ctx, facts);
   } else if (name === 'PostToolUseFailure') {
     if (event.is_interrupt) return null;
-    result = policy.postToolUseFailure(state, parsed.tool, input, event.error, ctx);
+    result = policy.postToolUseFailure(state, parsed.tool, input, event.error, ctx, facts);
+  } else if (name === 'PermissionDenied') {
+    result = policy.permissionDenied(state, parsed.tool, input, ctx);
   } else {
     return null;
   }
@@ -122,8 +125,10 @@ function main() {
       const output = handle(JSON.parse(raw));
       if (output) process.stdout.write(JSON.stringify(output));
     } catch (error) {
-      // El detalle va al registro de depuración de la aplicación, no a la conversación.
-      process.stderr.write(`datalum: control omitido (${error && error.message})\n`);
+      // Al registro de depuración va sólo la clase del error: su mensaje puede citar
+      // la entrada, y la entrada puede traer palabras de la persona.
+      const kind = (error && (error.code || error.name)) || 'Error';
+      process.stderr.write(`datalum: control omitido (${kind})\n`);
     }
     process.exit(0);
   });
