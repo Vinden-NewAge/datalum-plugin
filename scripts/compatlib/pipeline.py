@@ -138,13 +138,14 @@ def evaluate(
     if not health["confirmado"]:
         served = health.get("sha")
         if not health.get("ok"):
-            detail = "el servidor no pasa su comprobación de salud" + (
-                f": {health['error']}" if health.get("error") else ""
-            )
+            # El motivo no lleva el texto del error: cambia de una hora a otra y haría
+            # parecer novedad lo que es la misma caída.
+            reason = "el servidor no pasa su comprobación de salud"
+            detail = reason + (f": {health['error']}" if health.get("error") else "")
         else:
-            detail = f"el servidor sirve {served[:12]} y el aviso decía {event['sha'][:12]}"
+            reason = detail = f"el servidor sirve {served[:12]} y el aviso decía {event['sha'][:12]}"
         deployment["sha"] = event["sha"] or served
-        evaluation["motivos"] = [detail]
+        evaluation["motivos"] = [reason]
         return stop("despliegue_no_confirmado", "avisar", detail)
     deployment["sha"] = health["sha"]
     deployment["release"] = health["release"] or event["release"]

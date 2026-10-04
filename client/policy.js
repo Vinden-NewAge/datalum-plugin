@@ -15,6 +15,7 @@ const MAX_ITEMS = 40;
 const MAX_FAILURES = 3;
 const FAILURE_WINDOW_MS = 10 * 60 * 1000;
 const WRITE_WINDOW_MS = 30 * 60 * 1000;
+const MAX_PREVIEWS = 200;
 const MEMORY_WRITES = new Set(['remember', 'brain_write', 'forget']);
 const MEMORY_READS = new Set(['list_memories', 'brain_read', 'brain_index']);
 const START_TOOLS = new Set(['list_agents', 'use_agent', 'release_agent']);
@@ -28,6 +29,7 @@ function newState(pluginVersion) {
     seal_state: 'none', // none | sealed | expired | conflict
     newer_version: null,
     retired: [],
+    keyring: null, // [{id, name}] de la última respuesta de list_agents
     reads: {},
     listings: {},
     previews: {},
@@ -54,7 +56,8 @@ function isDatalum(state, toolName) {
 // ── Utilidades ──────────────────────────────────────────────────────────────────
 function normalize(text) {
   return String(text || '')
-    .normalize('NFC')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
     .replace(/[«»“”"'‘’]/g, '')
     .replace(/\s+/g, ' ')
     .trim()
@@ -76,9 +79,19 @@ function callKey(tool, input) {
   return tool + ':' + crypto.createHash('sha256').update(stable(args)).digest('hex').slice(0, 24);
 }
 
-function trim(map) {
+function trim(map, max) {
   const keys = Object.keys(map);
-  for (const key of keys.slice(0, Math.max(0, keys.length - MAX_ITEMS))) delete map[key];
+  for (const key of keys.slice(0, Math.max(0, keys.length - (max || MAX_ITEMS)))) delete map[key];
+}
+
+// Una vista previa vale para aplicar durante la misma ventana que protege una
+// escritura; las viejas se descartan antes de recortar por número.
+function keepPreview(state, key, now) {
+  for (const [k, at] of Object.entries(state.previews)) {
+    if (now - at > WRITE_WINDOW_MS) delete state.previews[k];
+  }
+  state.previews[key] = now;
+  trim(state.previews, MAX_PREVIEWS);
 }
 
 function sameAgent(seal, agent) {
@@ -190,7 +203,8 @@ function preToolUse(state, tool, input, facts, ctx) {
   }
 
   const isApply = input.confirm === true && !quoteArg;
-  if (isApply && !state.previews[key]) {
+  const preview = state.previews[key];
+  if (isApply && (!preview || now - preview > WRITE_WINDOW_MS)) {
     return {
       decision: 'deny',
       reason:
@@ -248,7 +262,24 @@ function checkQuote(state, tool, input, quoteArg, human) {
     }
     return null;
   }
-  return findQuote(human, quote) ? null : { decision: 'ask', reason: askText(tool, input) };
+  if (!findQuote(human, quote)) return { decision: 'ask', reason: askText(tool, input) };
+  if (state.keyring && state.keyring.length > 1 && !namesAgent(state.keyring, input.agent, quote)) {
+    // Con varios agentes, las palabras de la persona tienen que señalar a éste: un
+    // mensaje cualquiera suyo no es una elección.
+    return { decision: 'ask', reason: askText(tool, input) };
+  }
+  return null;
+}
+
+function namesAgent(keyring, agent, quote) {
+  const wanted = normalize(agent);
+  const entry = keyring.find((a) => normalize(a.id) === wanted || normalize(a.name) === wanted);
+  const said = normalize(quote);
+  const names = entry ? [entry.name, entry.id] : [agent];
+  return names.some((name) => {
+    const n = normalize(name);
+    return n && new RegExp(`(^|[^a-z0-9])${n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^a-z0-9]|$)`).test(said);
+  });
 }
 
 function askText(tool, input) {
@@ -346,6 +377,10 @@ function postToolUse(state, tool, input, response, ctx) {
 
   if (ctx && ctx.server) learnServer(state, ctx.server, tool, body);
 
+  if (tool === 'list_agents' && Array.isArray(body.agents)) {
+    state.keyring = body.agents.map((a) => ({ id: a.agentId || a.id || null, name: a.name || null }));
+  }
+
   if (tool === 'use_agent' && body.selection_context) {
     const before = state.seal;
     const agent = body.agent || {};
@@ -423,11 +458,7 @@ function postToolUse(state, tool, input, response, ctx) {
     if (cursor) notes.push(`This listing of ${where} is partial: continue with the cursor it returned before concluding that something is missing.`);
   }
 
-  if (MEMORY_READS.has(tool)) {
-    for (const write of Object.values(state.writes)) {
-      if (write.status === 'uncertain') write.checked = true;
-    }
-  }
+  markChecked(state, tool, input);
 
   const applied = input.confirm === true;
   if (MEMORY_WRITES.has(tool) || applied) {
@@ -448,12 +479,27 @@ function postToolUse(state, tool, input, response, ctx) {
           : 'Write confirmed. Check once that it can be read back. If that read fails, report it as saved but not yet verified; do not write it again.'
       );
     }
-  } else if (input.confirm !== true) {
-    state.previews[key] = now;
-    trim(state.previews);
+  } else {
+    keepPreview(state, key, now);
   }
 
   return { context: notes.join('\n') || null };
+}
+
+// Una escritura incierta queda comprobada cuando después se leyó algo que muestra si
+// se aplicó: la memoria se comprueba leyendo la memoria; un cambio del catálogo, con
+// cualquier lectura posterior de la misma herramienta sin aplicar (su vista previa
+// muestra el estado actual) o con una lectura del catálogo.
+function markChecked(state, tool, input) {
+  if (input.confirm === true || MEMORY_WRITES.has(tool)) return;
+  const memoryRead =
+    tool === 'list_memories' ||
+    (MEMORY_READS.has(tool) && /\/memoria(-compartida)?(\/|$)/.test(String(input.concept_id || input.path || '')));
+  for (const write of Object.values(state.writes)) {
+    if (write.status !== 'uncertain' || write.checked) continue;
+    const isMemory = MEMORY_WRITES.has(write.tool);
+    if (isMemory ? memoryRead : write.tool === tool || /^(get_|list_|brain_)/.test(tool)) write.checked = true;
+  }
 }
 
 function learnServer(state, server, tool, body) {

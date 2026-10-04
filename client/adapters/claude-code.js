@@ -46,6 +46,15 @@ function versionNote(state, current) {
 }
 
 function handle(event) {
+  if (!event || !event.session_id) return null;
+  // Las llamadas que no son de Datalum se descartan antes de tocar el disco.
+  if (event.hook_event_name !== 'SessionStart' && !policy.isDatalum(store.load(event.session_id, null), event.tool_name)) {
+    return null;
+  }
+  return store.withLock(event.session_id, () => handleLocked(event));
+}
+
+function handleLocked(event) {
   const name = event.hook_event_name;
   const sessionId = event.session_id;
   const current = pluginVersion();

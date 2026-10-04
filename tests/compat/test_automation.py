@@ -133,6 +133,28 @@ class Flow(unittest.TestCase):
         self.assertEqual(entry["resultado"], "despliegue_no_confirmado")
         self.assertIn("salud", entry["detalle"])
 
+    def test_servidor_caido_en_la_lectura_de_cada_hora_se_anota(self):
+        prod = FakeProduction(SHA_B, base_tools())
+        prod.down = True
+        back = {"entorno": "prod", "origen": "reconciliacion", "sha": None}
+        _, entry = self.run_flow(back, prod)
+        self.assertEqual(entry["resultado"], "despliegue_no_confirmado")
+        self.assertNotIn("sha", entry["despliegue"])
+        self.assertEqual(entry["main"], "ok")
+        self.assertEqual(self.remote_ledger()[-1]["resultado"], "despliegue_no_confirmado")
+
+    def test_la_misma_caida_con_otro_texto_de_error_no_es_novedad(self):
+        prod = FakeProduction(SHA_B, base_tools())
+        prod.down = True
+        back = {"entorno": "prod", "origen": "reconciliacion", "sha": None}
+        self.run_flow(back, prod)
+        lines = len(self.remote_ledger())
+        prod.health = lambda: (_ for _ in ()).throw(support.production.ProductionError("connection reset"))
+        evaluation, entry = self.run_flow(back, prod)
+        self.assertEqual(evaluation["accion"], "nada")
+        self.assertIsNone(entry)
+        self.assertEqual(len(self.remote_ledger()), lines)
+
     def test_aviso_de_un_commit_que_el_servidor_no_sirve_no_cuenta(self):
         tools = tools_with_change()
         _, entry = self.run_flow(event(SHA_B, summary_of(tools)), FakeProduction(SHA_A, base_tools()))

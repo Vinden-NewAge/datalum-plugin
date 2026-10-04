@@ -17,7 +17,7 @@ como hook. «Datalum» es lo que el servidor hace hoy, leído de su contrato en 
 
 | Regla | Skill | Cliente | Datalum |
 |---|---|---|---|
-| La elección de agente es de la persona | Copia sus palabras; con un solo agente, las del mensaje con que pidió el trabajo | Busca la cita en los mensajes de la persona. Si no está, la pregunta le llega a la persona en el diálogo de permisos | Exige una cita no vacía. No mira su contenido |
+| La elección de agente es de la persona | Copia sus palabras; con un solo agente, las del mensaje con que pidió el trabajo | Busca la cita en los mensajes de la persona y, con varios agentes, exige que nombre al elegido. Si no, la pregunta le llega a la persona en el diálogo de permisos | Exige una cita no vacía. No mira su contenido |
 | Lo pegado o leído de un documento no elige agente | Lo trata como dato | Lo pegado y lo que devuelve una herramienta no cuentan como palabras de la persona | Nada |
 | Cada llamada corre en el agente de su conversación | Manda `selection_context` | Lo añade si falta y lo corrige si es de otra conversación | Resuelve por el argumento o por la sesión de transporte |
 | Un conflicto entre conversaciones no se salta | Pregunta a la persona | Niega las llamadas de contenido hasta volver a elegir | Rechaza con `agent_context_conflict` |
@@ -26,9 +26,9 @@ como hook. «Datalum» es lo que el servidor hace hoy, leído de su contrato en 
 | No se mezclan lecturas de dos versiones | Vuelve a abrir lo que necesita | Olvida lo leído cuando cambia la versión y lo dice | Sirve siempre la versión elegida |
 | Herramienta retirada para el agente | No la llama | Niega la llamada | Contesta que no existe |
 | Una lectura con continuación no está completa | Sigue los cursores | Avisa al modelo de cada lectura o listado parcial | Marca el corte y da la continuación |
-| Vista previa antes de aplicar | La pide y la muestra | Niega `confirm: true` sin una vista previa de esos mismos argumentos | Sin `confirm` sólo previsualiza. No exige la vista previa |
+| Vista previa antes de aplicar | La pide y la muestra | Niega `confirm: true` sin una vista previa de esos mismos argumentos de los últimos 30 minutos | Sin `confirm` sólo previsualiza. No exige la vista previa |
 | Una escritura confirmada no se repite | Lee de nuevo en vez de reescribir | Niega la misma escritura durante 30 minutos | No tiene clave de idempotencia en memoria |
-| Un resultado incierto se comprueba leyendo | Lee antes de repetir | Niega repetir hasta que haya una lectura | No define recuperación para memoria |
+| Un resultado incierto se comprueba leyendo | Lee antes de repetir | Niega repetir hasta que haya una lectura que muestre si se aplicó: la memoria para una memoria, el catálogo o la vista previa para un cambio del catálogo | No define recuperación para memoria |
 | La memoria compartida no se usa por defecto | Sólo si la persona lo pide | Pregunta a la persona cada vez | La convierte en propuesta que aprueba una persona |
 | Borrar para siempre lo pide la persona | Copia sus palabras | Busca la cita en sus mensajes | Exige `confirm` y una cita no vacía |
 | Reintentos con límite | Se detiene al tercero | Niega el cuarto intento seguido durante 10 minutos | Devuelve `retry_after` real |
@@ -62,7 +62,8 @@ aplicación.
 ## Lo que guarda el cliente
 
 Un archivo por sesión en el directorio de datos del plugin, legible sólo por el usuario
-del sistema: qué agente y versión eligió la conversación, su contexto, qué documentos
+del sistema y protegido con un candado, porque la aplicación puede lanzar a la vez los
+controles de varias llamadas paralelas: qué agente y versión eligió la conversación, su contexto, qué documentos
 del cerebro se leyeron, qué escrituras quedaron confirmadas o inciertas y la cuenta de
 fallos. No guarda cifras, filas, mensajes de la persona ni credenciales. Para comprobar
 una cita lee la transcripción que entrega la aplicación y no copia nada de ella. Los

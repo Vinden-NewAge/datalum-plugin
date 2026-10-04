@@ -151,6 +151,10 @@ def cmd_cerrar(args: argparse.Namespace) -> int:
         entry["simulacion"] = forge.steps
     print(json.dumps(entry, ensure_ascii=False, indent=2))
     failed = entry["resultado"] in ("publicacion_fallida", "paquete_no_coincide", "pruebas_fallidas")
+    if str(entry.get("main", "")).startswith("pendiente"):
+        # El resultado no llegó a main: la corrida queda en rojo para que alguien lo vea.
+        print(f"main no avanzó: {entry['main']}", file=sys.stderr)
+        failed = True
     return 1 if failed else 0
 
 

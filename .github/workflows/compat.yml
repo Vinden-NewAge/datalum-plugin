@@ -48,28 +48,56 @@ on:
 permissions:
   contents: read
 
-# Un despliegue a la vez por entorno, en orden de llegada. Ninguna corrida se cancela:
-# cada una vuelve a preguntarle al servidor qué sirve, así que un aviso viejo no puede
-# pisar al más reciente.
+# Un despliegue a la vez por entorno. Ninguna corrida en curso se cancela, y cada una
+# vuelve a preguntarle al servidor qué sirve, así que un aviso viejo no puede pisar al
+# más reciente. GitHub deja una sola corrida en espera por grupo; la lectura de cada
+# hora va en su propio grupo para no desplazar a un aviso que espera con su contrato.
 concurrency:
-  group: compat-${{ inputs.entorno || 'prod' }}-${{ github.event_name == 'pull_request' && github.ref || 'main' }}
+  group: compat-${{ inputs.entorno || 'prod' }}-${{ github.event_name == 'pull_request' && github.ref || (github.event_name == 'schedule' && 'reconciliacion' || 'main') }}
   cancel-in-progress: false
 
 jobs:
   comprobar:
     name: Confirmar el despliegue y comparar su contrato
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
     outputs:
+      base: ${{ steps.base.outputs.base }}
       accion: ${{ steps.evaluar.outputs.accion }}
       resultado: ${{ steps.evaluar.outputs.resultado }}
       pruebas: ${{ steps.pruebas.outputs.pruebas }}
       huella: ${{ steps.empaquetar.outputs.huella }}
     steps:
+      # Fuera de un PR se parte del main de este momento, no del commit con el que se
+      # disparó la corrida: una corrida que esperó en la fila tiene que ver el registro
+      # que dejó la anterior.
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
+          ref: ${{ github.event_name != 'pull_request' && 'main' || '' }}
           persist-credentials: false
 
+      - name: Fijar el punto de partida
+        id: base
+        run: echo "base=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Ceder el turno si otra comprobación está en marcha
+        id: turno
+        if: github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          otras=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow compat.yml --limit 20 \
+            --json databaseId,status --jq "[.[] | select(.databaseId != $RUN_ID and .status != \"completed\")] | length")
+          if [ "$otras" != "0" ]; then
+            echo "Hay otra comprobación en marcha; la lectura de la hora siguiente la retoma."
+            echo "ceder=1" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Armar y validar el aviso
+        if: steps.turno.outputs.ceder != '1'
         env:
           ENTORNO: ${{ inputs.entorno || 'prod' }}
           ORIGEN: ${{ github.event_name == 'workflow_dispatch' && (inputs.sha != '' && 'aviso' || 'manual') || 'reconciliacion' }}
@@ -86,6 +114,7 @@ jobs:
 
       - name: Confirmar el despliegue contra el servidor y comparar el contrato
         id: evaluar
+        if: steps.turno.outputs.ceder != '1'
         env:
           DATALUM_COMPAT_TOKEN: ${{ secrets.DATALUM_COMPAT_TOKEN }}
         run: |
@@ -100,7 +129,7 @@ jobs:
 
       - name: Probar el plugin con el contrato de ese despliegue
         id: pruebas
-        if: steps.evaluar.outputs.accion != 'nada'
+        if: steps.evaluar.outputs.accion != 'nada' && steps.evaluar.outputs.accion != ''
         run: |
           if python3 scripts/check.py \
             && python3 -m unittest discover -s tests -t . \
@@ -112,7 +141,7 @@ jobs:
 
       - name: Empaquetar lo probado
         id: empaquetar
-        if: steps.evaluar.outputs.accion != 'nada'
+        if: steps.evaluar.outputs.accion != 'nada' && steps.evaluar.outputs.accion != ''
         run: |
           python3 scripts/package.py
           echo "huella=$(python3 scripts/compat.py huella)" >> "$GITHUB_OUTPUT"
@@ -121,7 +150,7 @@ jobs:
           cp dist/datalum-skill.zip dist/publicacion.json "$RUNNER_TEMP/salida/"
 
       - name: Guardar lo probado para el cierre
-        if: steps.evaluar.outputs.accion != 'nada'
+        if: steps.evaluar.outputs.accion != 'nada' && steps.evaluar.outputs.accion != ''
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: probado
@@ -154,8 +183,11 @@ jobs:
     env:
       SIMULAR: ${{ (github.event_name == 'pull_request' || inputs.simular) && '--simular' || '' }}
     steps:
+      # El mismo commit del que partió la comprobación. Si main se movió mientras
+      # tanto, el empuje final falla y la corrida queda en rojo en vez de pisar nada.
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
+          ref: ${{ github.event_name != 'pull_request' && needs.comprobar.outputs.base || '' }}
           fetch-depth: 0
           persist-credentials: ${{ github.event_name != 'pull_request' }}
 

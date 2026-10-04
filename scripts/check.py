@@ -122,12 +122,6 @@ def parse_frontmatter(text: str) -> tuple[dict, str]:
     return fields, "\n".join(lines[end + 1:])
 
 
-def changelog_section(version: str) -> str | None:
-    text = CHANGELOG.read_text(encoding="utf-8")
-    m = re.search(rf"^## \[{re.escape(version)}\][^\n]*\n(.*?)(?=^## \[|\Z)", text, re.M | re.S)
-    return m.group(1).strip() if m else None
-
-
 def check_manifest() -> tuple[str, str]:
     manifest = load_json(MANIFEST)
     marketplace = load_json(MARKETPLACE)
@@ -288,7 +282,7 @@ def main() -> int:
     args = parser.parse_args()
 
     if args.notes:
-        section = changelog_section(args.notes)
+        section = versioning.changelog_section(ROOT, args.notes)
         if section is None:
             print(f"CHANGELOG.md no tiene la sección [{args.notes}]", file=sys.stderr)
             return 1

@@ -5,7 +5,7 @@ algo se ejecutó y dio ese resultado. Lo que sólo consta en la documentación d
 producto se marca «Sin comprobar».
 
 Todo lo de esta página se midió sobre el contenido del plugin con huella
-`5b3a234d2dd6` (versión 2.0.0), entre el 3 y el 4 de octubre de 2026, salvo donde
+`4b8e6a59cbd9` (versión 2.0.0), entre el 3 y el 4 de octubre de 2026, salvo donde
 dice otra cosa.
 
 ## Servidor
@@ -20,9 +20,8 @@ Cómo se comprobó:
 - Las instrucciones del servidor y la versión del protocolo se leyeron del `initialize`
   de producción y coinciden con las del contrato.
 - El catálogo de herramientas se calculó del código del servidor en el commit
-  desplegado, con una sonda que no escribe en ese repositorio. La sonda y el cálculo
-  del plugin dan la misma huella. Los 94 nombres coinciden con los que anuncia el
-  conector a una sesión iniciada.
+  desplegado, con la sonda de `integracion-servidor/`, sin escribir en ese repositorio.
+  Los 94 nombres coinciden con los que anuncia el conector a una sesión iniciada.
 - La comparación con `compat/requisitos.json` la hizo `scripts/compat.py evaluar`
   contra producción. Quedó en la primera línea de `compat/registro.jsonl`.
 
@@ -46,12 +45,13 @@ Tres clases de prueba. Ninguna sustituye a otra.
 | Clase | Qué | Resultado |
 |---|---|---|
 | Documental | `tests/docs/`: que la Skill, las guías y los flujos digan lo que tienen que decir | 23 pruebas, todas pasan |
-| De código | `tests/compat/`: la actualización automática, con git real contra un remoto local y un servidor y unas versiones de GitHub de mentira | 38 pruebas, todas pasan |
-| De código | `tests/client/`: la política de los controles y su adaptador, lanzado como lo lanza la aplicación | 47 pruebas, todas pasan |
-| De código | 32 mutantes: cada uno quita una regla de la automatización o de los controles | Las pruebas detectan los 32 |
-| Con modelo real | `evals/` y `evals-sin-conector/` con Sonnet 5.5, 3 corridas por caso | 22 de 22 casos pasan en sus 3 corridas (66 de 66 corridas) |
+| De código | `tests/compat/`: la actualización automática, con git real contra un remoto local y un servidor y unas versiones de GitHub de mentira | 40 pruebas, todas pasan |
+| De código | `tests/client/`: la política de los controles y su adaptador, lanzado como lo lanza la aplicación, también con varios procesos a la vez | 54 pruebas, todas pasan |
+| De código | 40 mutantes: cada uno quita una regla de la automatización o de los controles | Las pruebas detectan los 40 |
+| Con modelo real | `evals/` y `evals-sin-conector/` con Sonnet 5.5, 3 corridas por caso, antes de los arreglos de la revisión de código | 22 de 22 casos pasan en sus 3 corridas (66 de 66 corridas) |
 | Con modelo real | Los mismos casos con Opus 5.5, una corrida por caso, sobre el contenido anterior a los dos últimos ajustes | 22 de 22 casos pasan en su última corrida |
 | Real, sólo lectura | `/health`, `initialize` y `tools/list` sin sesión contra producción; `compat.py evaluar` contra producción | El despliegue se confirma y el contrato coteja |
+| Revisión de código | Una pasada sobre el PR completo y otra sobre sus arreglos | 10 hallazgos, todos arreglados y cubiertos por pruebas y mutantes |
 | En GitHub, sobre el PR | `check.yml` completo y el primer job de `compat.yml`, que le pregunta a producción qué sirve | Pasan. El zip que arma GitHub tiene el mismo sha256 que el anotado en el registro, y el flujo reconoce el despliegue como ya procesado |
 | Ensayo | La automatización de punta a punta en un clon, contra producción y sin publicar | Detecta el despliegue ya procesado, cierra en ensayo, rechaza un aviso de un commit que producción no sirve y uno de un actor no autorizado |
 
@@ -61,8 +61,15 @@ modelo cumplió esas tres veces, no que siempre lo hará.
 
 Las corridas con Opus 5.5 son del desarrollo. Después de ellas cambiaron dos cosas: la
 descripción con la que se activa la Skill y el texto con que los controles niegan una
-herramienta retirada. La corrida final con Opus 5.5 sobre el contenido definitivo no
-cuenta: la cuenta llegó a su límite de uso de la sesión a media corrida. Todas las
+herramienta retirada. Dos intentos de la corrida final con Opus 5.5 no cuentan: el
+primero lo cortó el límite de uso de la sesión y el segundo, la sesión de Claude Code
+caducada en esta máquina.
+
+Después de las corridas con modelo, la revisión de código cambió los controles del
+cliente: con varios agentes la cita tiene que nombrar al elegido, una escritura
+incierta se libera sólo con una lectura que muestre si se aplicó, las vistas previas
+caducan a los 30 minutos y el estado lleva un candado. La Skill no cambió. Esos
+arreglos están medidos con pruebas de código y mutantes; con modelo real, no. Todas las
 evaluaciones de esta tarea, entre desarrollo y corrida final, sumaron unos 24 dólares a
 precio de lista.
 
@@ -71,7 +78,7 @@ Lo que no se ejecutó:
 - Los flujos de GitHub con permisos de escritura. `compat.yml` y `release.yml` no han
   publicado nunca: eso ocurre después de fundir, con la aprobación de quien administra
   el repositorio.
-- El paso de aviso del despliegue, que no está aplicado en el servidor.
+- El job de aviso del servidor, que no está aplicado.
 - La actualización de una instalación en ninguna aplicación.
 - El acceso a memoria compartida entre personas, que queda fuera de uso.
 - Una compactación a mitad de una conversación con modelo real. El estado que los

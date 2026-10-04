@@ -364,3 +364,54 @@ test('distingue en un error de transporte lo incierto de lo rechazado', () => {
   assert.equal(policy.errorFromText('{"code":"rate_limited","category":"quota","retry_after":5}').retry_after, 5);
   assert.equal(policy.errorFromText('Esta conversación… agent_not_selected …').code, 'agent_not_selected');
 });
+
+// ── Revisión de la 2.0.0 ────────────────────────────────────────────────────────
+const KEYRING = { agents: [{ agentId: 'ag_ventas', name: 'Ventas' }, { agentId: 'ag_finanzas', name: 'Finanzas' }, { agentId: 'ag_builder', name: 'Builder' }], message: '' };
+
+test('con varios agentes, un mensaje cualquiera de la persona no elige', () => {
+  const state = policy.newState('2.0.0');
+  policy.postToolUse(state, 'list_agents', {}, KEYRING, { now: T0 });
+  const human = said('Ayúdame con mis datos de Datalum');
+  const verdict = pre(state, 'use_agent', { agent: 'Finanzas', user_choice_quote: 'Ayúdame con mis datos de Datalum' }, human);
+  assert.equal(verdict.decision, 'ask');
+});
+
+test('con varios agentes vale la respuesta que nombra al agente, con o sin acentos', () => {
+  const state = policy.newState('2.0.0');
+  policy.postToolUse(state, 'list_agents', {}, KEYRING, { now: T0 });
+  const human = said('¿qué tengo?', 'el de fínanzas, porfa');
+  assert.equal(pre(state, 'use_agent', { agent: 'ag_finanzas', user_choice_quote: 'el de fínanzas, porfa' }, human).decision, 'pass');
+  assert.equal(pre(state, 'use_agent', { agent: 'ag_ventas', user_choice_quote: 'el de fínanzas, porfa' }, human).decision, 'ask', 'nombrar otro agente no elige éste');
+});
+
+test('una lectura cualquiera del cerebro no comprueba una escritura de memoria incierta', () => {
+  const state = sealed();
+  policy.postToolUseFailure(state, 'remember', AVANCE, 'timeout', { now: T0 });
+  policy.postToolUse(state, 'brain_read', { concept_id: 'agents/ventas/superpoderes/cierre_mensual' }, { body: 'x' }, { now: T0 + 1000 });
+  assert.equal(pre(state, 'remember', AVANCE, undefined, T0 + 2000).decision, 'deny');
+  policy.postToolUse(state, 'brain_index', { path: 'agents/ventas/memoria' }, { memory: { text: '' } }, { now: T0 + 3000 });
+  assert.equal(pre(state, 'remember', AVANCE, undefined, T0 + 4000).decision, 'pass');
+});
+
+test('un cambio del catálogo incierto se libera al leer su estado', () => {
+  const state = sealed();
+  const apply = Object.assign({ confirm: true }, METRIC);
+  policy.postToolUse(state, 'upsert_metric', METRIC, { preview: true }, { now: T0 });
+  policy.postToolUseFailure(state, 'upsert_metric', apply, 'MCP error: request timed out', { now: T0 + 1000 });
+  assert.equal(pre(state, 'upsert_metric', apply, undefined, T0 + 2000).decision, 'deny');
+  policy.postToolUse(state, 'upsert_metric', METRIC, { preview: true, changes: [] }, { now: T0 + 3000 });
+  assert.equal(pre(state, 'upsert_metric', apply, undefined, T0 + 4000).decision, 'pass');
+});
+
+test('muchas lecturas entre la vista previa y la aprobación no la borran', () => {
+  const state = sealed();
+  policy.postToolUse(state, 'upsert_metric', METRIC, { preview: true }, { now: T0 });
+  for (let i = 0; i < 120; i++) policy.postToolUse(state, 'brain_read', { concept_id: `doc/${i}` }, { body: 'x' }, { now: T0 + i });
+  assert.equal(pre(state, 'upsert_metric', Object.assign({ confirm: true }, METRIC), undefined, T0 + 60000).decision, 'pass');
+});
+
+test('una vista previa vieja ya no autoriza aplicar', () => {
+  const state = sealed();
+  policy.postToolUse(state, 'upsert_metric', METRIC, { preview: true }, { now: T0 });
+  assert.equal(pre(state, 'upsert_metric', Object.assign({ confirm: true }, METRIC), undefined, T0 + 31 * 60000).decision, 'deny');
+});

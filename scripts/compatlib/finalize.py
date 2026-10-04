@@ -70,24 +70,32 @@ def finalize(
             where["ledger"],
             pipeline.ledger_entry(evaluation, now=now, plugin=plugin_info, result=result, detail=detail),
         )
-        served = evaluation["despliegue"].get("release") or evaluation["despliegue"]["sha"][:12]
-        commit = git.commit_all(f"Compatibilidad: {served} de {evaluation['despliegue']['entorno']}, {entry['resultado']}")
+        deployment = evaluation["despliegue"]
+        # Un despliegue que no se pudo confirmar puede no tener commit conocido.
+        short = (deployment.get("sha") or "desconocido")[:12]
+        served = deployment.get("release") or short
+        commit = git.commit_all(f"Compatibilidad: {served} de {deployment['entorno']}, {entry['resultado']}")
         entry["main"] = forge.advance_main(
             commit or git.head(),
-            branch=f"auto/compat-{evaluation['despliegue']['sha'][:12]}",
+            branch=f"auto/compat-{short}-{entry['secuencia']}",
             title=f"Compatibilidad con el despliegue {served}",
             body=f"Resultado: `{entry['resultado']}`. {entry['detalle'].capitalize()}.",
         )
         entry.update(extra)
         return entry
 
-    def fail(result: str, detail: str) -> dict:
-        # Nada de la versión nueva llega a `main`: sólo queda la línea del fallo.
+    def discard_keeping_evidence() -> None:
+        # Se vuelve al árbol de partida, pero los contratos e instrucciones cotejados
+        # se conservan: sirven para reintentar y para comprobar un rollback.
         kept = {p: p.read_bytes() for p in _evidence(where)}
         git.discard(base)
         for path, content in kept.items():
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(content)
+
+    def fail(result: str, detail: str) -> dict:
+        # Nada de la versión nueva llega a `main`: sólo queda la línea del fallo.
+        discard_keeping_evidence()
         return close(result, detail, plugin(version))
 
     if evaluation["despliegue"]["entorno"] != "prod":
@@ -96,11 +104,7 @@ def finalize(
         info = plugin(evaluation.get("version_nueva") or version)
         if evaluation["resultado"] == "candidata_lista":
             info["candidata"] = True
-        kept = {p: p.read_bytes() for p in _evidence(where)}
-        git.discard(base)
-        for path, content in kept.items():
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_bytes(content)
+        discard_keeping_evidence()
         if not tests_passed:
             return close("pruebas_fallidas", "las pruebas del plugin no pasan con el contrato del entorno previo", info)
         return close(None, None, info)
@@ -152,11 +156,7 @@ def _evidence(where: dict) -> list:
 
 
 def _notes(root: Path, version: str) -> str:
-    import re
-
-    text = (root / "CHANGELOG.md").read_text(encoding="utf-8")
-    match = re.search(rf"^## \[{re.escape(version)}\][^\n]*\n(.*?)(?=^## \[|\Z)", text, re.M | re.S)
-    return match.group(1).strip() if match else f"Versión {version}."
+    return versioning.changelog_section(root, version) or f"Versión {version}."
 
 
 def _reason(error: Exception) -> str:

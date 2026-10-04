@@ -156,3 +156,22 @@ test('los hooks declarados apuntan al adaptador y sólo a herramientas de Datalu
     }
   }
 });
+
+test('hooks lanzados a la vez no se pisan el estado', async () => {
+  const box = sandbox();
+  box.run({ hook_event_name: 'PostToolUse', tool_name: TOOL('use_agent'), tool_input: { agent: 'Ventas', user_choice_quote: 'usa ventas' }, tool_response: JSON.stringify(SEAL) });
+  const { spawn } = require('node:child_process');
+  const runAsync = (event) =>
+    new Promise((resolve) => {
+      const child = spawn(process.execPath, [ADAPTER], { env: Object.assign({}, process.env, { CLAUDE_PLUGIN_DATA: box.dir }) });
+      child.on('close', resolve);
+      child.stdin.end(JSON.stringify(Object.assign({ session_id: 'sesion-1', transcript_path: box.transcript }, event)));
+    });
+  const reads = Array.from({ length: 12 }, (_, i) =>
+    runAsync({ hook_event_name: 'PostToolUse', tool_name: TOOL('brain_read'), tool_input: { concept_id: `doc/${i}` }, tool_response: '{"body":"x"}' })
+  );
+  await Promise.all(reads);
+  const state = JSON.parse(fs.readFileSync(path.join(box.dir, 'sessions', 'sesion-1.json'), 'utf8'));
+  assert.equal(Object.keys(state.reads).length, 12);
+  assert.equal(fs.existsSync(path.join(box.dir, 'sessions', 'sesion-1.json.lock')), false);
+});

@@ -81,7 +81,9 @@ hora siguiente vuelve a intentarlo.
 |---|---|
 | Tomar un push, una etiqueta o el inicio de un despliegue por «producción cambió» | Sólo cuenta lo que contesta el servidor desplegado |
 | Un aviso falso que apunte a otro servidor | La dirección sale del repositorio |
-| Un despliegue viejo que pise al más reciente | Las corridas van en fila por entorno y cada una vuelve a preguntar qué se sirve |
+| Un despliegue viejo que pise al más reciente | Las corridas van en fila por entorno, parten del `main` del momento y cada una vuelve a preguntar qué se sirve |
+| Que la lectura de cada hora desplace un aviso en espera | Va en su propio grupo y cede el turno si hay otra comprobación en marcha |
+| Dos corridas que escriben a la vez | El cierre parte del mismo commit que la comprobación. Si `main` se movió, no lo pisa: deja una rama, abre el PR si puede y la corrida termina en rojo |
 | Dos versiones por el mismo despliegue | Un despliegue cerrado no se vuelve a procesar; una etiqueta que existe se reutiliza |
 | Cambiar una versión publicada | Una etiqueta o una versión con otro contenido detiene todo |
 | Publicar algo distinto de lo probado | Se compara la huella del contenido antes de etiquetar, y la de los archivos antes y después de publicar |
@@ -128,6 +130,7 @@ gh workflow run compat.yml -f entorno=prod -f sha=<commit de 40 caracteres> -f c
 | `pruebas_fallidas` | Corre las pruebas en local con el contrato de `compat/contratos/<commit>.json`. El fallo dice qué supuesto del plugin dejó de valer |
 | `publicacion_fallida` | Vuelve a lanzar el flujo. Reconoce la etiqueta y el borrador que quedaron y sigue desde ahí. Si el detalle dice que la etiqueta existe con otro contenido, alguien publicó esa versión a mano: sube la versión por PR |
 | `paquete_no_coincide` | No se publicó, o se retiró de «última versión». Vuelve a lanzar. Si se repite, compara el zip de la versión con `python3 scripts/package.py` en la etiqueta |
+| La corrida terminó en rojo con «main no avanzó» | Otra corrida movió `main` mientras ésta trabajaba. Vuelve a lanzar la corrida desde Actions con «Re-run»: conserva las entradas, contrato incluido, y parte del `main` nuevo. Si había publicado una versión, la reconoce y no la duplica. Borra después la rama `auto/compat-…` que quedó |
 
 Tras un rollback de producción la lectura de cada hora ve el commit anterior, usa su
 contrato guardado y comprueba el plugin contra él. Si el contenido derivado cambia,

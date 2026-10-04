@@ -74,3 +74,10 @@ def add_changelog(root: Path, version: str, date: str, body: str) -> None:
         raise ValueError("CHANGELOG.md no tiene ninguna versión")
     section = f"## [{version}] - {date}\n\n{body.strip()}\n\n"
     path.write_text(text[: marker.start()] + section + text[marker.start():], encoding="utf-8")
+
+
+def changelog_section(root: Path, version: str):
+    """El texto de la sección de esa versión en CHANGELOG.md, o None si no está."""
+    text = (Path(root) / "CHANGELOG.md").read_text(encoding="utf-8")
+    m = re.search(rf"^## \[{re.escape(version)}\][^\n]*\n(.*?)(?=^## \[|\Z)", text, re.M | re.S)
+    return m.group(1).strip() if m else None
