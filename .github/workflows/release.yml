@@ -1,5 +1,10 @@
 name: Publicar versión
 
+# El camino manual: una persona fundió el PR de una versión y puso su etiqueta. Publica
+# con las mismas comprobaciones que el camino automático (compat.yml): borrador,
+# descarga y cotejo, publicación, segunda descarga y cotejo. Volver a correrlo sobre
+# una etiqueta ya publicada no duplica ni cambia nada.
+
 on:
   push:
     tags: ["v*"]
@@ -16,14 +21,12 @@ jobs:
       - name: Comprobar que la etiqueta coincide con la versión
         run: python3 scripts/check.py --tag "$GITHUB_REF_NAME"
 
-      - name: Empaquetar la Skill
-        run: python3 scripts/package.py
+      - name: Pruebas
+        run: |
+          python3 -m unittest discover -s tests -t .
+          node --test tests/client/*.test.js
 
       - name: Publicar en GitHub con el zip de la Skill
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          version="${GITHUB_REF_NAME#v}"
-          python3 scripts/check.py --notes "$version" > notas.md
-          gh release create "$GITHUB_REF_NAME" dist/datalum-skill.zip \
-            --title "Datalum $version" --notes-file notas.md --verify-tag
+        run: python3 scripts/compat.py publicar --tag "$GITHUB_REF_NAME"

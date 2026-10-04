@@ -1,0 +1,1 @@
+{"path": "agents/builder/superpoderes", "groups": [{"type": "Skill", "entries": [{"concept_id": "agents/builder/superpoderes/tablero_html", "title": "Tablero en HTML", "desc": "Cómo construir y entregar un tablero"}]}], "subdirs": [], "docs": 1, "entries_servidas": 1}

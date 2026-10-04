@@ -1,48 +1,56 @@
 # Datalum plugin
 
-Connects AI assistants to [Datalum](https://datalum.ai), a governed data layer. The
-assistant works through an agent that the company's administrator granted to the
-person, and that agent decides which data and which actions are available. The
-assistant reads and runs what is published right away. Changes to the governed catalog
-need the person's approval, and many start as previews, drafts or proposals. Activating
-a dataset happens only in the Datalum panel.
+Connects AI assistants to [Datalum](https://datalum.ai), a governed data layer. A person
+connects their Datalum account, chooses the agent their company's administrator granted
+them and asks for the work. The assistant loads that agent's brain from Datalum each
+time and follows it: its procedures, its limits, its output formats and its rules for
+memory.
+
+The plugin connects the person, prepares the session, recovers context and sends each
+request to the agent's procedure. Business rules and the tool catalog stay with Datalum,
+which validates every call it receives.
 
 One repository serves every supported product:
 
 | Product | What it uses |
 |---|---|
-| Grok Build | The plugin: `.claude-plugin/plugin.json`, `.mcp.json` and `skills/datalum/` |
-| Claude Code | The same plugin, through `.claude-plugin/marketplace.json` |
+| Claude Code | The plugin: `.claude-plugin/`, `.mcp.json`, `skills/datalum/`, `hooks/` and `client/` |
+| Grok Build | The same plugin, read from `.claude-plugin/plugin.json` |
 | Claude (web and desktop) | The skill as a zip, plus the Datalum custom connector |
 | ChatGPT | The skill as a zip (with `agents/openai.yaml`), plus the Datalum connector |
-
-The plugin has no hooks, no commands, no local executables and no dependencies. The
-`scripts/` folder only checks and packages this repository.
 
 Installation steps for customers, in Spanish: [INSTALAR.md](INSTALAR.md).
 
 ## Components
 
 - `.mcp.json`: the hosted Datalum MCP server (streamable HTTP).
-- `skills/datalum/SKILL.md`: when and how to call the Datalum tools. The same skill for
-  every product.
+- `skills/datalum/SKILL.md`: how to connect, choose the agent, load its brain, keep the
+  conversation on it and use memory by the agent's own rules. The same skill for every
+  product.
 - `skills/datalum/agents/openai.yaml`: display name, icon and connector dependency for
   ChatGPT.
+- `hooks/hooks.json` and `client/`: checks that run on the person's machine in products
+  that load plugin hooks. They only act on Datalum tools. They need Node 18 or later; if
+  Node is missing the plugin works without them. What each check does and where it
+  runs: [CONTROLES.md](CONTROLES.md) (Spanish).
+
+The checks use no network and install nothing. `scripts/`, `tests/`, `evals/` and
+`compat/` are for maintaining this repository and are not part of the skill package.
 
 ## Install
-
-Grok Build: once Datalum is listed in the Grok Build marketplace, open `/marketplace`,
-search for **Datalum**, and install. To try it from a local checkout:
-
-```bash
-grok --plugin-dir /absolute/path/to/datalum-plugin
-```
 
 Claude Code:
 
 ```
 /plugin marketplace add Vinden-NewAge/datalum-plugin
 /plugin install datalum@datalum
+```
+
+Grok Build: once Datalum is listed in the Grok Build marketplace, open `/marketplace`,
+search for **Datalum**, and install. To try it from a local checkout:
+
+```bash
+grok --plugin-dir /absolute/path/to/datalum-plugin
 ```
 
 Claude (web and desktop) and ChatGPT: download
@@ -74,17 +82,23 @@ The plugin calls no other host.
 ## Credentials and permissions
 
 - A Datalum account in a company that uses Datalum.
-- At least one agent granted to that account by the company's administrator. With no
-  agent granted, the tools answer that access has to be requested.
-- The token only reaches what the chosen agent allows. Catalog changes need the person's
-  confirmation, and some of them (activating a dataset, confirming a relation) only happen
-  in the Datalum panel.
+- At least one active agent granted to that account by the company's administrator.
+  Installing the plugin creates no accounts, companies or grants.
+- The token only reaches what the chosen agent allows. Activating anything, approving a
+  pending change and saving a version of an agent happen in the Datalum panel, by a
+  person.
 
-## Versions
+## Versions and updates
 
 Every release is listed in [CHANGELOG.md](CHANGELOG.md) (in Spanish) and published under
 [Releases](https://github.com/Vinden-NewAge/datalum-plugin/releases) with the skill zip.
-How releases are made: [MANTENER.md](MANTENER.md).
+
+After each Datalum deployment to production, a workflow in this repository checks the
+plugin against the contract that deployment serves, publishes a patch version when a
+compatible change needs one, and records the result in `compat/registro.jsonl`. How it
+works, what it needs and how to recover from a failure: [MANTENER.md](MANTENER.md). How
+each product receives a new version: [ACTUALIZAR.md](ACTUALIZAR.md). What has been
+checked against what: [COMPATIBILIDAD.md](COMPATIBILIDAD.md).
 
 ## License
 

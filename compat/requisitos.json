@@ -1,0 +1,121 @@
+{
+  "_": "Lo que el plugin usa del contrato MCP de Datalum. Se edita a mano junto con la Skill y los controles; scripts/compat.py lo compara con cada despliegue. Qué significa cada clave: MANTENER.md.",
+  "citas_humanas": {
+    "delete_my_memories": "user_request_quote",
+    "use_agent": "user_choice_quote",
+    "workspace_purge": "frase"
+  },
+  "definiciones_revisadas": {
+    "brain_index": [
+      "16c19bb9306cfd83b6f0116498ff81d736cb82efb4a6148d1d73e7ed159884a1"
+    ],
+    "brain_read": [
+      "201a4172406fc1e955c60e13a2640b318d53ab093c778d7e186b4bcf13b6fe4f"
+    ],
+    "forget": [
+      "650aa001afd624f286b81844bf1882eea3be0e42589840121a9a55846a7423e1"
+    ],
+    "list_agents": [
+      "48a62ab647c7ce9acba97c6702b810b5c1efa59174baa700f7f094cb42eca4ed"
+    ],
+    "list_memories": [
+      "1f3c4aaa79c06b3b8f660187de2eabbfbb77416499edcdcf3b6f78889372aa00"
+    ],
+    "release_agent": [
+      "cfa64031dde39437baf7b1e32d7a09e26517a62e2b7e889d5f88da783f20806f"
+    ],
+    "remember": [
+      "5b076eb5e6161454d63ed795fae84c0e1411467754a942c5222c8039ce9c31c2"
+    ],
+    "use_agent": [
+      "1c6a9d12b6fc335ee6bb6f7473501bf22a1e080c77baa7cd82d26902dde5ccf3"
+    ]
+  },
+  "esquema": 1,
+  "herramientas": {
+    "brain_index": {
+      "obligatorios": [],
+      "usa": [
+        "path",
+        "cursor",
+        "limit",
+        "tenant",
+        "unit",
+        "selection_context"
+      ]
+    },
+    "brain_read": {
+      "obligatorios": [
+        "concept_id"
+      ],
+      "usa": [
+        "concept_id",
+        "offset",
+        "max_bytes",
+        "tenant",
+        "unit",
+        "selection_context"
+      ]
+    },
+    "forget": {
+      "obligatorios": [
+        "memory"
+      ],
+      "usa": [
+        "memory",
+        "selection_context"
+      ]
+    },
+    "list_agents": {
+      "obligatorios": [],
+      "usa": []
+    },
+    "list_memories": {
+      "obligatorios": [],
+      "usa": [
+        "cursor",
+        "kind",
+        "memory",
+        "selection_context"
+      ]
+    },
+    "release_agent": {
+      "obligatorios": [],
+      "usa": [
+        "selection_context"
+      ]
+    },
+    "remember": {
+      "obligatorios": [
+        "kind",
+        "title",
+        "body_md"
+      ],
+      "usa": [
+        "kind",
+        "title",
+        "body_md",
+        "slug",
+        "scope",
+        "selection_context"
+      ]
+    },
+    "use_agent": {
+      "obligatorios": [
+        "agent",
+        "user_choice_quote"
+      ],
+      "usa": [
+        "agent",
+        "user_choice_quote",
+        "selection_context"
+      ]
+    }
+  },
+  "instrucciones_revisadas": [
+    "3faf86c24e3a8800ccb0696ca2888adc1fc48e9b128cec2ecc3a41cd17fa2320"
+  ],
+  "protocolos": [
+    "2025-06-18"
+  ]
+}

@@ -1,0 +1,1 @@
+{"metric": "ventas_netas", "periodo_efectivo": {"desde": "2026-09-01", "hasta": "2026-09-30"}, "unidad": "MXN", "rows": [{"region": "Norte", "ventas_netas": 4210500}, {"region": "Centro", "ventas_netas": 6380200}, {"region": "Sur", "ventas_netas": 2145300}], "total": 12736000, "execution_ref": "ej-sintetica-01"}

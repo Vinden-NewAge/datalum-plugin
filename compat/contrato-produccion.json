@@ -1,0 +1,1369 @@
+{
+  "esquema": 1,
+  "herramientas": [
+    {
+      "h": "33e4470e9e33bedbec7ce558036e0658bed92af82d205f40a403706cfad5b20d",
+      "n": "add_agent_document",
+      "p": [
+        "agentId",
+        "body",
+        "description",
+        "kind",
+        "selection_context",
+        "title"
+      ],
+      "r": [
+        "agentId",
+        "body",
+        "description",
+        "kind",
+        "title"
+      ]
+    },
+    {
+      "h": "cbbb2a5cf5822aefa531005369b47b8cda2ee6e3a3074e72b2a8e643ec0e0bea",
+      "n": "apply_batch",
+      "p": [
+        "confirm",
+        "operations",
+        "selection_context",
+        "tenant"
+      ],
+      "r": [
+        "operations",
+        "tenant"
+      ]
+    },
+    {
+      "h": "a827586f697bae4fb4c534c779a0388bc7a29b3f330d9c6df9f6646393b90ee1",
+      "n": "apply_update",
+      "p": [
+        "confirm",
+        "selection_context",
+        "solution"
+      ],
+      "r": [
+        "solution"
+      ]
+    },
+    {
+      "h": "115e4a2e1e47736af977ebb71e644bc2eeeab82029c86f72d45ddbb858a8c0e8",
+      "n": "attach_agent_document",
+      "p": [
+        "agentId",
+        "documentId",
+        "selection_context",
+        "sort"
+      ],
+      "r": [
+        "agentId",
+        "documentId"
+      ]
+    },
+    {
+      "h": "066686672825a6fa60554bf16a9a82c1265d8917b2702ec113d810d67cd59736",
+      "n": "attach_draft_document",
+      "p": [
+        "agentId",
+        "documentId",
+        "segment",
+        "selection_context",
+        "sort"
+      ],
+      "r": [
+        "agentId",
+        "documentId",
+        "segment"
+      ]
+    },
+    {
+      "h": "1efffad12fcefc14533a04f1f318c44c1aa60165f25d1788823d7e13396d95ec",
+      "n": "brain_import",
+      "p": [
+        "files"
+      ],
+      "r": [
+        "files"
+      ]
+    },
+    {
+      "h": "16c19bb9306cfd83b6f0116498ff81d736cb82efb4a6148d1d73e7ed159884a1",
+      "n": "brain_index",
+      "p": [
+        "cursor",
+        "include_drafts",
+        "limit",
+        "locale",
+        "mode",
+        "path",
+        "selection_context",
+        "tenant",
+        "unit",
+        "version"
+      ],
+      "r": []
+    },
+    {
+      "h": "ba8ceab4c60c25af4cdd17ff53636ea96641dfe0e81645755e48ab0c552b9b6f",
+      "n": "brain_manifest",
+      "p": [
+        "include_drafts",
+        "locale",
+        "mode",
+        "selection_context",
+        "tenant",
+        "unit",
+        "version"
+      ],
+      "r": [
+        "tenant"
+      ]
+    },
+    {
+      "h": "201a4172406fc1e955c60e13a2640b318d53ab093c778d7e186b4bcf13b6fe4f",
+      "n": "brain_read",
+      "p": [
+        "concept_id",
+        "include_drafts",
+        "locale",
+        "max_bytes",
+        "mode",
+        "offset",
+        "selection_context",
+        "tenant",
+        "unit",
+        "version"
+      ],
+      "r": [
+        "concept_id"
+      ]
+    },
+    {
+      "h": "3abda3ac54bcd2255a2102e2060e013eeca1cfd900b7b03dd053a8bcb4fa3de8",
+      "n": "brain_search",
+      "p": [
+        "include_drafts",
+        "limit",
+        "locale",
+        "mode",
+        "q",
+        "selection_context",
+        "tag",
+        "tenant",
+        "type",
+        "unit",
+        "version"
+      ],
+      "r": [
+        "tenant"
+      ]
+    },
+    {
+      "h": "e4c52979c147d96b471c3021577460ffe868c686a5e6550dc5b1c0d12ce5936b",
+      "n": "brain_write",
+      "p": [
+        "body_md",
+        "concept_id",
+        "documents",
+        "kind",
+        "scope",
+        "selection_context",
+        "tagline",
+        "title"
+      ],
+      "r": [
+        "concept_id",
+        "title"
+      ]
+    },
+    {
+      "h": "46197b9bc37f5fb584e956cec33da99564d6f0663e1657c4d0445451a65ee73d",
+      "n": "clone_agent",
+      "p": [
+        "name",
+        "selection_context",
+        "templateAgentId"
+      ],
+      "r": [
+        "templateAgentId"
+      ]
+    },
+    {
+      "h": "40b794f4d93486972fb7054bffa6a082f41dbd142cc32b913b66c79a697f8361",
+      "n": "compare_template",
+      "p": [
+        "selection_context",
+        "template_id",
+        "tenant",
+        "version"
+      ],
+      "r": [
+        "template_id",
+        "tenant"
+      ]
+    },
+    {
+      "h": "ce455807bdcbc249808f695972daaef3f74ab647621721b47bce9c4a27d419b8",
+      "n": "curate_table",
+      "p": [
+        "compact",
+        "confirm",
+        "selection_context",
+        "tables",
+        "tenant"
+      ],
+      "r": [
+        "tables",
+        "tenant"
+      ]
+    },
+    {
+      "h": "89d7d9f0201439be24622363aab8c8b42a80844acfc183ba2f8c94ef449b38c8",
+      "n": "delete_my_memories",
+      "p": [
+        "confirm",
+        "selection_context",
+        "user_request_quote"
+      ],
+      "r": [
+        "confirm",
+        "user_request_quote"
+      ]
+    },
+    {
+      "h": "e400b9cbbe574949061d1216e130dbcd56c467e57967a3ee503631e1fe53b9bf",
+      "n": "describe_connector",
+      "p": [
+        "confirm",
+        "description",
+        "selection_context",
+        "tenant"
+      ],
+      "r": [
+        "description",
+        "tenant"
+      ]
+    },
+    {
+      "h": "d8f4d16c5dd3438b2750b1388204ac8ccbfa8e1c509842ffe9a2a53816627d3b",
+      "n": "describe_dataset_fields",
+      "p": [
+        "confirm",
+        "dataset",
+        "selection_context",
+        "tenant"
+      ],
+      "r": [
+        "dataset",
+        "tenant"
+      ]
+    },
+    {
+      "h": "fdae0d4ffa3718d5e210f135955bb752bc7efa2d6997d44ffb9efc9a903b9424",
+      "n": "describe_table",
+      "p": [
+        "selection_context",
+        "table",
+        "tenant"
+      ],
+      "r": [
+        "table",
+        "tenant"
+      ]
+    },
+    {
+      "h": "ce40698449eca086a0eb255293a835a39a57e966bbc6c12305746fa1fdf3b893",
+      "n": "detach_agent_document",
+      "p": [
+        "agentId",
+        "documentId",
+        "selection_context"
+      ],
+      "r": [
+        "agentId",
+        "documentId"
+      ]
+    },
+    {
+      "h": "4be18e814346b558a51aaad7f9d24d9bb61e40d4c4ad8ecf2f79ce61405eedd4",
+      "n": "detach_draft_document",
+      "p": [
+        "agentId",
+        "documentId",
+        "selection_context"
+      ],
+      "r": [
+        "agentId",
+        "documentId"
+      ]
+    },
+    {
+      "h": "839d349fe31af51cc9872018dcc5dc09c0b2a395afa6034c5b410ab6495b9207",
+      "n": "edit_agent_ficha",
+      "p": [
+        "agentId",
+        "herramientasRetiradas",
+        "icon",
+        "name",
+        "proposalsEnabled",
+        "selection_context",
+        "tagline"
+      ],
+      "r": [
+        "agentId"
+      ]
+    },
+    {
+      "h": "f44f529df0bb1e9cab74803cbbca7f066d8237fd1d098ad281da4ad0153fdace",
+      "n": "edit_draft_agent",
+      "p": [
+        "agentId",
+        "icon",
+        "name",
+        "proposalsEnabled",
+        "selection_context",
+        "tagline"
+      ],
+      "r": [
+        "agentId"
+      ]
+    },
+    {
+      "h": "36ff04fdcc06941dac68a78bc570103448a9bb0ddd00e76906782222d9b29b82",
+      "n": "export_brain",
+      "p": [
+        "connector",
+        "connectors",
+        "format",
+        "include_drafts",
+        "locale",
+        "mode",
+        "scope",
+        "selection_context",
+        "tenant",
+        "version"
+      ],
+      "r": [
+        "tenant"
+      ]
+    },
+    {
+      "h": "ab0690d5ad47dcf925821e05e97eb434f53e677e8e4e4ff300e82bad21e6f3d1",
+      "n": "export_chart_csv",
+      "p": [
+        "chart",
+        "drill",
+        "filters",
+        "params",
+        "selection_context",
+        "tenant",
+        "time_grain",
+        "version_id"
+      ],
+      "r": [
+        "chart",
+        "tenant"
+      ]
+    },
+    {
+      "h": "3e4de3368b813c1b1614cacfec64c7c39dc7926e05f928a139c5e2ea1b238c92",
+      "n": "finish_agent_edit",
+      "p": [
+        "agentId",
+        "selection_context"
+      ],
+      "r": [
+        "agentId"
+      ]
+    },
+    {
+      "h": "650aa001afd624f286b81844bf1882eea3be0e42589840121a9a55846a7423e1",
+      "n": "forget",
+      "p": [
+        "memory",
+        "selection_context"
+      ],
+      "r": [
+        "memory"
+      ]
+    },
+    {
+      "h": "1fe2a68f94e66dad13f5684211beac83bf8cca892c52d91c28dd72de02d722bf",
+      "n": "get_catalog_state",
+      "p": [
+        "selection_context",
+        "tenant"
+      ],
+      "r": []
+    },
+    {
+      "h": "1db48b808ba4754092ee3049d412db56eed5f1b8deda1a9d51d5a0d931945165",
+      "n": "get_chart",
+      "p": [
+        "chart",
+        "mode",
+        "selection_context",
+        "tenant",
+        "version"
+      ],
+      "r": [
+        "chart",
+        "tenant"
+      ]
+    },
+    {
+      "h": "16e56033902820610095dccbcfb9a6eef919635954adc95bf3b79a036a52116f",
+      "n": "get_dashboard",
+      "p": [
+        "dashboard",
+        "mode",
+        "selection_context",
+        "tenant",
+        "version"
+      ],
+      "r": [
+        "dashboard",
+        "tenant"
+      ]
+    },
+    {
+      "h": "f3b77e63a86a2625addafa9ac31deaaeca75e217fe76e18bcf5fbd986d47a972",
+      "n": "get_execution_sql",
+      "p": [
+        "execution_ref",
+        "selection_context",
+        "tenant"
+      ],
+      "r": [
+        "execution_ref",
+        "tenant"
+      ]
+    },
+    {
+      "h": "f89eacdf254bdd859d0b88b5df83fa1a3ae50a2de08b5cadbb6864a81c11fa46",
+      "n": "get_filter_set",
+      "p": [
+        "filter_set",
+        "selection_context",
+        "tenant"
+      ],
+      "r": [
+        "filter_set",
+        "tenant"
+      ]
+    },
+    {
+      "h": "44fcc769b4892304c385aa74daee9baaeeec233306164dfde823a53a16a8570f",
+      "n": "get_model",
+      "p": [
+        "include_drafts",
+        "locale",
+        "selection_context",
+        "tenant",
+        "version"
+      ],
+      "r": [
+        "tenant"
+      ]
+    },
+    {
+      "h": "1e1e75a021689cbae726533a15792b86722bbba02337ff39762f1cf77e8e7d09",
+      "n": "install_solution",
+      "p": [
+        "acuerdoRef",
+        "selection_context",
+        "solutionVersionId"
+      ],
+      "r": [
+        "solutionVersionId"
+      ]
+    },
+    {
+      "h": "cc935062cd3c3fa6acfe186a04495e8dedb18819ef1107e08e4353d127a8fde3",
+      "n": "list_agent_documents",
+      "p": [
+        "agentId",
+        "selection_context"
+      ],
+      "r": [
+        "agentId"
+      ]
+    },
+    {
+      "h": "48a62ab647c7ce9acba97c6702b810b5c1efa59174baa700f7f094cb42eca4ed",
+      "n": "list_agents",
+      "p": [],
+      "r": []
+    },
+    {
+      "h": "052f761543045b683e90a899b2eb6127a9b71e8e21fb97c7d531f3cbcdff96c4",
+      "n": "list_dimension_values",
+      "p": [
+        "cap",
+        "cursor",
+        "dimension",
+        "search",
+        "selection_context",
+        "tenant"
+      ],
+      "r": [
+        "dimension",
+        "tenant"
+      ]
+    },
+    {
+      "h": "f750f1c2a42575311ab50885741cd19c5e874b60cc74f11c39dc187b6aa7ad24",
+      "n": "list_filter_sets",
+      "p": [
+        "selection_context",
+        "tenant"
+      ],
+      "r": [
+        "tenant"
+      ]
+    },
+    {
+      "h": "1f3c4aaa79c06b3b8f660187de2eabbfbb77416499edcdcf3b6f78889372aa00",
+      "n": "list_memories",
+      "p": [
+        "cursor",
+        "kind",
+        "memory",
+        "selection_context"
+      ],
+      "r": []
+    },
+    {
+      "h": "f7d1ba04372c439da41c7c220546128d5d2c75102d6f52176de5320f510c4204",
+      "n": "list_my_attempts",
+      "p": [
+        "limit",
+        "only_failed",
+        "selection_context"
+      ],
+      "r": []
+    },
+    {
+      "h": "ecd91c1f7e11cfce97ea62e190267de6901be3a295387a1ac9e32a7957bc48ae",
+      "n": "list_my_curations",
+      "p": [
+        "selection_context"
+      ],
+      "r": []
+    },
+    {
+      "h": "7445a43a9b0fea03c416c592b1e5f57682698f260c912cea0d1fc2c60b1f3165",
+      "n": "list_my_proposals",
+      "p": [
+        "selection_context"
+      ],
+      "r": []
+    },
+    {
+      "h": "b6da1c57043cd7c1d4a8ea3cba506a729805838dacdca88bac8fedd2fc76bc5e",
+      "n": "list_organization_agents",
+      "p": [
+        "selection_context"
+      ],
+      "r": []
+    },
+    {
+      "h": "1fe944b46f727898c0d540498a383652da542ae35edd6f4aef9abe142c443ba6",
+      "n": "list_solutions",
+      "p": [
+        "selection_context"
+      ],
+      "r": []
+    },
+    {
+      "h": "c3a9f4fc394868856d679a9cc955c034de6723ba03a1bfb2d0fa3097ce4889d5",
+      "n": "list_tables",
+      "p": [
+        "compact",
+        "cursor",
+        "page_size",
+        "prefix",
+        "selection_context",
+        "tenant"
+      ],
+      "r": [
+        "tenant"
+      ]
+    },
+    {
+      "h": "718f36c4fd59bb9780758a19044f818054335d8882cef0e6def4e43f16860787",
+      "n": "list_templates",
+      "p": [
+        "selection_context",
+        "tenant"
+      ],
+      "r": [
+        "tenant"
+      ]
+    },
+    {
+      "h": "99b305a74a1aaba53313021b1d8e78cfc819051a52356ed5cfaed7a637f84c9f",
+      "n": "port_draft_connector",
+      "p": [
+        "agentId",
+        "selection_context",
+        "tenantSlug"
+      ],
+      "r": [
+        "agentId",
+        "tenantSlug"
+      ]
+    },
+    {
+      "h": "ca083c0c1d07a05d0e252f8e4253add9a44fd3efac595db875ee3d21b3953f7d",
+      "n": "profile_table",
+      "p": [
+        "refresh",
+        "selection_context",
+        "table",
+        "tenant"
+      ],
+      "r": [
+        "table",
+        "tenant"
+      ]
+    },
+    {
+      "h": "ab89c98425520b556c39edf0c91d58a693c4f25a018459d09c3e994eac40228a",
+      "n": "propose_agent",
+      "p": [
+        "connectors",
+        "documents",
+        "family",
+        "herramientas_retiradas",
+        "name",
+        "proposals_enabled",
+        "selection_context",
+        "tagline"
+      ],
+      "r": [
+        "name"
+      ]
+    },
+    {
+      "h": "956aed682511f7586216bd22e92649ae83e541d89cbf97ef963e65816684c031",
+      "n": "propose_install",
+      "p": [
+        "column_mappings",
+        "confirm",
+        "selection_context",
+        "suggest_by_type",
+        "template_id",
+        "tenant",
+        "version"
+      ],
+      "r": [
+        "template_id",
+        "tenant"
+      ]
+    },
+    {
+      "h": "fb7dcfee57a554eea03714fb3fb298b5ff2aa256a1c40f61fc5d39e0a00da844",
+      "n": "publish_bundle",
+      "p": [
+        "charts",
+        "confirm",
+        "dashboard",
+        "metrics",
+        "selection_context",
+        "tenant"
+      ],
+      "r": [
+        "tenant"
+      ]
+    },
+    {
+      "h": "c7eeb5a54f9d91f3259671bfb40a5a838eb19a0b8144d2b4cd8538d271a65f7f",
+      "n": "read_library_document",
+      "p": [
+        "documentId",
+        "max_bytes",
+        "offset",
+        "selection_context"
+      ],
+      "r": [
+        "documentId"
+      ]
+    },
+    {
+      "h": "cfa64031dde39437baf7b1e32d7a09e26517a62e2b7e889d5f88da783f20806f",
+      "n": "release_agent",
+      "p": [
+        "selection_context"
+      ],
+      "r": []
+    },
+    {
+      "h": "5b076eb5e6161454d63ed795fae84c0e1411467754a942c5222c8039ce9c31c2",
+      "n": "remember",
+      "p": [
+        "body_md",
+        "kind",
+        "scope",
+        "selection_context",
+        "slug",
+        "title"
+      ],
+      "r": [
+        "body_md",
+        "kind",
+        "title"
+      ]
+    },
+    {
+      "h": "549823d670138ff9a9625ffe5565cf7e9c6a96a880f3ff633c7aecb9aa347ced",
+      "n": "render_chart",
+      "p": [
+        "chart",
+        "drill",
+        "filters",
+        "height",
+        "params",
+        "pixel_ratio",
+        "selection_context",
+        "tenant",
+        "time_grain",
+        "version_id",
+        "width"
+      ],
+      "r": [
+        "chart",
+        "tenant"
+      ]
+    },
+    {
+      "h": "a2498e0cdc381385c8e4cb1b461a4423a011fce08ad4ccabadf6994d85c9a43d",
+      "n": "reorder_agent_documents",
+      "p": [
+        "agentId",
+        "order",
+        "selection_context"
+      ],
+      "r": [
+        "agentId",
+        "order"
+      ]
+    },
+    {
+      "h": "a423548a28b13c3262ee4b08216019e89221ffa4cef8f76633e03ae2003f265f",
+      "n": "reorder_draft_documents",
+      "p": [
+        "agentId",
+        "order",
+        "segment",
+        "selection_context"
+      ],
+      "r": [
+        "agentId",
+        "order",
+        "segment"
+      ]
+    },
+    {
+      "h": "d405e3c117fe6e3345f1b593cf969c8f5f36f522dc395288a1e736c7705db6e2",
+      "n": "request_dataset_activation",
+      "p": [
+        "confirm",
+        "dataset",
+        "selection_context",
+        "tenant"
+      ],
+      "r": [
+        "dataset",
+        "tenant"
+      ]
+    },
+    {
+      "h": "a7655d8f99188cd0deb35087f421c13ce0b2bf42578394b0291ee3e040481a1f",
+      "n": "run_dashboard",
+      "p": [
+        "dashboard",
+        "params",
+        "selection_context",
+        "tenant"
+      ],
+      "r": [
+        "dashboard",
+        "tenant"
+      ]
+    },
+    {
+      "h": "52920e5636345b89ff0f680432d5dea112a5a640287f57adc6e69b9f06238ee3",
+      "n": "run_dataset",
+      "p": [
+        "cursor",
+        "dataset",
+        "params",
+        "selection_context",
+        "tenant",
+        "version"
+      ],
+      "r": [
+        "dataset",
+        "tenant"
+      ]
+    },
+    {
+      "h": "8e81dd871f2baf0f17d8b42c73bed2a8aec84d9a3e6c0daea301e7771475f7b3",
+      "n": "run_metric",
+      "p": [
+        "calendar_axis",
+        "compare",
+        "cursor",
+        "filters",
+        "group_by",
+        "limit",
+        "metric",
+        "metrics",
+        "order_by",
+        "selection_context",
+        "share_of_total",
+        "tenant",
+        "time_grain",
+        "window"
+      ],
+      "r": [
+        "tenant"
+      ]
+    },
+    {
+      "h": "b71efc0a4798b0b5bdfa19a7ad5e7aa7bf5c98ad62aa0564c0b2a91c0422918d",
+      "n": "run_query",
+      "p": [
+        "cursor",
+        "limit",
+        "page_size",
+        "projection",
+        "sample",
+        "selection_context",
+        "sql",
+        "tenant"
+      ],
+      "r": [
+        "sql",
+        "tenant"
+      ]
+    },
+    {
+      "h": "1c941b34433331fe2414d8aa8342aee44599262d27c07a1a9f5927518d63fb4b",
+      "n": "save_chart_edit",
+      "p": [
+        "change_summary",
+        "chart",
+        "confirm",
+        "selection_context",
+        "tenant"
+      ],
+      "r": [
+        "chart",
+        "tenant"
+      ]
+    },
+    {
+      "h": "9bb29148ccc1dcdd9339bc31141ecbb09217d9e7f79ad3fe6dfc32db67165996",
+      "n": "save_dashboard_edit",
+      "p": [
+        "change_summary",
+        "confirm",
+        "dashboard",
+        "selection_context",
+        "tenant"
+      ],
+      "r": [
+        "dashboard",
+        "tenant"
+      ]
+    },
+    {
+      "h": "e1c21dd32b2fa59f5a49644d8cb9f0a1bfd274229bd55c19c34459d5e531df7c",
+      "n": "search_model",
+      "p": [
+        "limit",
+        "query",
+        "selection_context",
+        "tenant"
+      ],
+      "r": [
+        "query",
+        "tenant"
+      ]
+    },
+    {
+      "h": "c0e78121d0cd3ed3a9d74a0560f5037b2353c38cf8699eaf67982a4ad988b83a",
+      "n": "set_chart_options",
+      "p": [
+        "chart",
+        "chart_type",
+        "confirm",
+        "options",
+        "selection_context",
+        "tenant"
+      ],
+      "r": [
+        "chart",
+        "tenant"
+      ]
+    },
+    {
+      "h": "a40ede6ae361720e93d67236041c01788411069b386bb36f306135dc739c1d17",
+      "n": "set_connector_links",
+      "p": [
+        "confirm",
+        "links",
+        "selection_context",
+        "tenant"
+      ],
+      "r": [
+        "links",
+        "tenant"
+      ]
+    },
+    {
+      "h": "93271909710c0dae4c34f9d1fe18007085eb6b7aaf20af6e7d794f071bbfa0d4",
+      "n": "set_relations",
+      "p": [
+        "confirm",
+        "relations",
+        "selection_context",
+        "tenant"
+      ],
+      "r": [
+        "relations",
+        "tenant"
+      ]
+    },
+    {
+      "h": "3a391840c21fa425cfde02194264bba0a6ba0264cfd7fa02107db4b239707c83",
+      "n": "start_agent_edit",
+      "p": [
+        "agentId",
+        "confirm",
+        "selection_context"
+      ],
+      "r": [
+        "agentId"
+      ]
+    },
+    {
+      "h": "66e30eddd84c2c969d293c8d2ad9139f41752ea8404608924eeb305395f90286",
+      "n": "submit_proposal",
+      "p": [
+        "body",
+        "context",
+        "selection_context",
+        "title"
+      ],
+      "r": [
+        "title"
+      ]
+    },
+    {
+      "h": "a23c15f8afb1aa580e4038b270a4e6d81ad4633cc528013cbd895bd884b8eaac",
+      "n": "test_chart",
+      "p": [
+        "chart",
+        "confirm",
+        "if_match",
+        "params",
+        "selection_context",
+        "tenant",
+        "version_id"
+      ],
+      "r": [
+        "chart",
+        "tenant"
+      ]
+    },
+    {
+      "h": "2a7e4b1b898ac7835cd67f858db3e9d1f45ea42b2212e7b49cba77c6b863c67b",
+      "n": "test_custom_dashboard",
+      "p": [
+        "confirm",
+        "custom_dashboard",
+        "if_match",
+        "selection_context",
+        "tenant",
+        "version_id"
+      ],
+      "r": [
+        "custom_dashboard",
+        "tenant"
+      ]
+    },
+    {
+      "h": "c5973c35d162f59e275b42b8e3fcd0fab0f981532df1239d04ffc4ce64bad40b",
+      "n": "test_dashboard",
+      "p": [
+        "confirm",
+        "dashboard",
+        "if_match",
+        "selection_context",
+        "tenant",
+        "version_id"
+      ],
+      "r": [
+        "dashboard",
+        "tenant"
+      ]
+    },
+    {
+      "h": "d07e832e1c175dc113e907a008cd807ccb47fc6107fd3db74bc66fd1e4fece79",
+      "n": "test_dimension",
+      "p": [
+        "confirm",
+        "dimension",
+        "if_match",
+        "params",
+        "selection_context",
+        "tenant"
+      ],
+      "r": [
+        "dimension",
+        "tenant"
+      ]
+    },
+    {
+      "h": "c3b99589967a2c9f7eb5c0d3a0c44bbcab8111a60b811a704421161c4300ef1a",
+      "n": "test_filter_set",
+      "p": [
+        "confirm",
+        "filter_set",
+        "selection_context",
+        "tenant"
+      ],
+      "r": [
+        "filter_set",
+        "tenant"
+      ]
+    },
+    {
+      "h": "a48c7d1d049ca9ed7c1afb3081ef40d1c97e14cb311d4a2720c02ea951d3c44c",
+      "n": "test_metric",
+      "p": [
+        "confirm",
+        "filters",
+        "group_by",
+        "if_match",
+        "metric",
+        "params",
+        "selection_context",
+        "share_of_total",
+        "tenant",
+        "time_grain"
+      ],
+      "r": [
+        "metric",
+        "tenant"
+      ]
+    },
+    {
+      "h": "567beda37d0c7c25bc33a85a21dd483856f5c41a2a33e4936015c3d055bf3a6d",
+      "n": "toggle_agent_document",
+      "p": [
+        "agentId",
+        "documentId",
+        "enabled",
+        "selection_context"
+      ],
+      "r": [
+        "agentId",
+        "documentId",
+        "enabled"
+      ]
+    },
+    {
+      "h": "9f624da6f73013213469c3b5e3261bb8ada5e6cfbe31ba047f99024ee6d01ec0",
+      "n": "unport_draft_connector",
+      "p": [
+        "agentId",
+        "selection_context",
+        "tenantSlug"
+      ],
+      "r": [
+        "agentId",
+        "tenantSlug"
+      ]
+    },
+    {
+      "h": "73d535249761d36b644ad77222195350a0d898bbefaff503a47549257306a69d",
+      "n": "upsert_chart",
+      "p": [
+        "business_definition",
+        "chart_type",
+        "confirm",
+        "if_match",
+        "name",
+        "selection_context",
+        "spec",
+        "tenant"
+      ],
+      "r": [
+        "chart_type",
+        "name",
+        "spec",
+        "tenant"
+      ]
+    },
+    {
+      "h": "b1d94f4f5543871e3b6d4e09c107c351d5bda9793a281e6a0169832414367831",
+      "n": "upsert_custom_dashboard",
+      "p": [
+        "confirm",
+        "contract_version",
+        "datasets_refs",
+        "filter_set_refs",
+        "if_match",
+        "name",
+        "projection",
+        "queries",
+        "selection_context",
+        "template",
+        "tenant"
+      ],
+      "r": [
+        "name",
+        "template",
+        "tenant"
+      ]
+    },
+    {
+      "h": "4643c86ec41e671eb46679fccf7174c9f4819c3c37af4b1f9d6920f0453fd115",
+      "n": "upsert_dashboard",
+      "p": [
+        "business_definition",
+        "confirm",
+        "if_match",
+        "name",
+        "selection_context",
+        "spec",
+        "tenant"
+      ],
+      "r": [
+        "name",
+        "spec",
+        "tenant"
+      ]
+    },
+    {
+      "h": "186121547af05e0e622c8f6b615138983b5d2b11f4c4f58da437843c94114c90",
+      "n": "upsert_dataset",
+      "p": [
+        "business_definition",
+        "confirm",
+        "default_params",
+        "if_match",
+        "name",
+        "selection_context",
+        "sql",
+        "tenant"
+      ],
+      "r": [
+        "name",
+        "sql",
+        "tenant"
+      ]
+    },
+    {
+      "h": "1bd2b486c7dc6662e0cd017645b78513a6fbf603ccbba0eccbcc29750c46a880",
+      "n": "upsert_dimension",
+      "p": [
+        "aliases",
+        "business_definition",
+        "closed_list",
+        "confirm",
+        "definition",
+        "dimension_class",
+        "expr",
+        "filter_only",
+        "if_match",
+        "name",
+        "rolls_up_to",
+        "selection_context",
+        "source_column",
+        "source_table",
+        "tenant",
+        "time_grain"
+      ],
+      "r": [
+        "expr",
+        "name",
+        "tenant"
+      ]
+    },
+    {
+      "h": "8e2e8a77b663fd3d87e8b2ecd1a1503d013babad9dc93a11f04fb39ca82b0a8a",
+      "n": "upsert_filter_set",
+      "p": [
+        "confirm",
+        "filters",
+        "if_match",
+        "name",
+        "selection_context",
+        "tenant"
+      ],
+      "r": [
+        "filters",
+        "name",
+        "tenant"
+      ]
+    },
+    {
+      "h": "62f4ee3046a8e87dfe00439128815e01480c949600867f233fdfeb49dbbbb07f",
+      "n": "upsert_metric",
+      "p": [
+        "aggregation",
+        "aliases",
+        "business_definition",
+        "confirm",
+        "conversion_calculation",
+        "conversion_entity",
+        "conversion_window",
+        "cumulative_window",
+        "currency",
+        "definition",
+        "derived_formula",
+        "from_dimension",
+        "if_match",
+        "metric_class",
+        "metric_refs",
+        "name",
+        "non_additive_collapse",
+        "non_additive_dimension",
+        "non_additive_elements",
+        "percentile_value",
+        "period_date_column",
+        "period_sum",
+        "selection_context",
+        "source_table",
+        "tenant",
+        "unit",
+        "valid_dimensions",
+        "value_format"
+      ],
+      "r": [
+        "name",
+        "tenant"
+      ]
+    },
+    {
+      "h": "1c6a9d12b6fc335ee6bb6f7473501bf22a1e080c77baa7cd82d26902dde5ccf3",
+      "n": "use_agent",
+      "p": [
+        "agent",
+        "selection_context",
+        "user_choice_quote"
+      ],
+      "r": [
+        "agent",
+        "user_choice_quote"
+      ]
+    },
+    {
+      "h": "6eced62133602a7a3166303f4dba180ed1a58c3158992e2a6fd093889cef8bac",
+      "n": "workspace_migrate",
+      "p": [
+        "nombre",
+        "selection_context",
+        "sql"
+      ],
+      "r": [
+        "nombre",
+        "sql"
+      ]
+    },
+    {
+      "h": "0446ab3e3c1d3e6e8c3da82bedcf41efb1c8217b70e7c8400c7ab7fafadffcff",
+      "n": "workspace_purge",
+      "p": [
+        "frase",
+        "selection_context"
+      ],
+      "r": [
+        "frase"
+      ]
+    },
+    {
+      "h": "73c141dfdcb20b011f211f5057448fcd12647dbca479be5a90de1fe27d7a8d6a",
+      "n": "workspace_query",
+      "p": [
+        "selection_context",
+        "sql"
+      ],
+      "r": [
+        "sql"
+      ]
+    },
+    {
+      "h": "473e991aa4b6563c8eded42dd2cf6bb46ac37486da5bc1370c2546886ef8b78d",
+      "n": "workspace_restore",
+      "p": [
+        "checkpoint",
+        "selection_context"
+      ],
+      "r": [
+        "checkpoint"
+      ]
+    },
+    {
+      "h": "957e72c7eea39ebba0225155891bb3f7bd875078da8400c5b5796270d9ca18fc",
+      "n": "workspace_schema",
+      "p": [
+        "selection_context"
+      ],
+      "r": []
+    },
+    {
+      "h": "78619a544083ad6a6c2b7e4bccde87b070f3b331d5bf39920ef3323d914fe7b8",
+      "n": "workspace_undelete",
+      "p": [
+        "ids",
+        "selection_context"
+      ],
+      "r": [
+        "ids"
+      ]
+    },
+    {
+      "h": "b91066f89635e9a1242e8cdcb5eaf7fbd300a12bb5a1bea08b0cd584bb15d7f8",
+      "n": "workspace_undo",
+      "p": [
+        "selection_context",
+        "tabla"
+      ],
+      "r": []
+    },
+    {
+      "h": "525b0cb257d85e232f869f9b0f5ecb7b0f17186234757f54222728ef3081a630",
+      "n": "workspace_write",
+      "p": [
+        "selection_context",
+        "sql"
+      ],
+      "r": [
+        "sql"
+      ]
+    },
+    {
+      "h": "627d53164fd6a6a6c1e0e2614a6700080919b01238787ef4ce02da406b15a15b",
+      "n": "write_agent_document",
+      "p": [
+        "body",
+        "description",
+        "documentId",
+        "name",
+        "selection_context"
+      ],
+      "r": [
+        "documentId"
+      ]
+    }
+  ],
+  "huella": "11e81846335dafbd83ef8adcfaa40954f3597d884ace8623eb16a064959ef804",
+  "instrucciones_sha256": "3faf86c24e3a8800ccb0696ca2888adc1fc48e9b128cec2ecc3a41cd17fa2320",
+  "protocolo": "2025-06-18"
+}

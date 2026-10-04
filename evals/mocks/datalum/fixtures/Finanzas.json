@@ -1,0 +1,83 @@
+{
+ "operating_as": "operando como Finanzas v2",
+ "resealed": false,
+ "resealed_from_version": null,
+ "expires_at": "2026-10-05T10:00:00Z",
+ "selection_context": "conv-sintetica-0001",
+ "agent": {
+  "id": "ag_finanzas",
+  "name": "Finanzas",
+  "family": "institucional",
+  "version": 2,
+  "proposalsEnabled": false,
+  "herramientasRetiradas": []
+ },
+ "mission": [
+  {
+   "segment": "guardrails",
+   "title": "Límites",
+   "body": "Sólo reportas cifras que devuelve Datalum."
+  },
+  {
+   "segment": "rules",
+   "title": "Cómo trabaja",
+   "body": "Sigue el procedimiento de agents/finanzas/superpoderes que corresponda."
+  },
+  {
+   "segment": "persona",
+   "title": "Quién es",
+   "body": "Analista financiero."
+  }
+ ],
+ "index": {
+  "path": "agents/finanzas",
+  "groups": [
+   {
+    "type": "Agent",
+    "entries": [
+     {
+      "concept_id": "agents/finanzas/agente",
+      "title": "Finanzas",
+      "desc": "Ficha del agente"
+     }
+    ]
+   }
+  ],
+  "subdirs": [
+   {
+    "name": "superpoderes",
+    "path": "agents/finanzas/superpoderes",
+    "docs": 1
+   }
+  ],
+  "docs": 1,
+  "subtree_docs": 2,
+  "next_cursor": null,
+  "truncado": false
+ },
+ "connectors": [
+  {
+   "slug": "comercial",
+   "name": "Comercial",
+   "status": "activo",
+   "time_zone": "America/Mexico_City",
+   "zona_utilizable": true,
+   "hint": "El modelo de este conector está publicado.",
+   "publication": {
+    "servedVersion": 12,
+    "publishedAt": "2026-09-28T16:00:00Z",
+    "outdated": false
+   }
+  }
+ ],
+ "news": [],
+ "memory": {
+  "text": "",
+  "incluidas": 0,
+  "omitidas": 0,
+  "total": 0,
+  "budget": 2000,
+  "truncated": false
+ },
+ "sello_posterior": null
+}

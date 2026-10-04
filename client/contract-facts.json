@@ -1,0 +1,12 @@
+{
+  "_": "Derivado del contrato de producción por scripts/compat.py. No se edita a mano.",
+  "citas_humanas": {
+    "delete_my_memories": "user_request_quote",
+    "use_agent": "user_choice_quote",
+    "workspace_purge": "frase"
+  },
+  "sin_selection_context": [
+    "brain_import",
+    "list_agents"
+  ]
+}
