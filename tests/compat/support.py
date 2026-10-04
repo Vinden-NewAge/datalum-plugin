@@ -147,9 +147,9 @@ class LocalForge(publish.GhForge):
         self._maybe_fail("publish")
         self.releases[tag].update(draft=False, latest=True)
 
-    def demote(self, tag):
-        self.calls.append("demote")
-        self.releases[tag]["latest"] = False
+    def unpublish(self, tag):
+        self.calls.append("unpublish")
+        self.releases[tag].update(draft=True, latest=False)
 
     def advance_main(self, commit, *, branch, title, body):
         pushed = self._run("git", "push", self.remote, f"{commit}:refs/heads/{self.main}", check=False)

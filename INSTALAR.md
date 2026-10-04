@@ -62,7 +62,8 @@ Datalum en el navegador y aprueba la conexión.
 
 En Claude Code el plugin trae además unos controles que corren en tu máquina. Comprueban
 que la elección de agente la hiciste tú, mantienen cada conversación en su agente y
-evitan guardar dos veces lo mismo. Necesitan Node 18 o posterior. Si no lo tienes, el
+evitan guardar dos veces lo mismo. A veces Claude Code te pedirá confirmar con qué agente
+trabajar, o un borrado: es esa comprobación. Necesitan Node 18 o posterior. Si no lo tienes, el
 plugin funciona igual sin ellos. Qué hace cada control: [CONTROLES.md](CONTROLES.md).
 
 ## ChatGPT

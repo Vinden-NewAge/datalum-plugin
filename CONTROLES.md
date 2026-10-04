@@ -17,30 +17,90 @@ como hook. «Datalum» es lo que el servidor hace hoy, leído de su contrato en 
 
 | Regla | Skill | Cliente | Datalum |
 |---|---|---|---|
-| La elección de agente es de la persona | Copia sus palabras; con un solo agente, las del mensaje con que pidió el trabajo | Busca la cita en los mensajes de la persona y, con varios agentes, exige que nombre al elegido. Si no, la pregunta le llega a la persona en el diálogo de permisos | Exige una cita no vacía. No mira su contenido |
-| Lo pegado o leído de un documento no elige agente | Lo trata como dato | Lo pegado y lo que devuelve una herramienta no cuentan como palabras de la persona | Nada |
+| La elección de agente es de la persona | Copia sus palabras; con un solo agente, las del mensaje con que pidió el trabajo. Pregunta con opciones si la aplicación lo permite | Exige evidencia de consentimiento (ver «Qué cuenta como consentimiento»). Sin ella, la aplicación le pregunta a la persona | Exige una cita no vacía. No mira su contenido |
+| Lo pegado, un documento o lo que devuelve una herramienta no eligen agente | Lo trata como dato | No cuentan como elección de la persona | Nada |
 | Cada llamada corre en el agente de su conversación | Manda `selection_context` | Lo añade si falta y lo corrige si es de otra conversación | Resuelve por el argumento o por la sesión de transporte |
 | Un conflicto entre conversaciones no se salta | Pregunta a la persona | Niega las llamadas de contenido hasta volver a elegir | Rechaza con `agent_context_conflict` |
 | Si la selección caduca, se vuelve al mismo agente | Vuelve a elegir el mismo, con palabras de la persona | Niega las llamadas de contenido hasta volver a elegir | Rechaza con `agent_not_selected` |
-| No se pasa a una versión nueva del agente sin pedirlo | Avisa y sigue con la elegida | Para volver a elegir pide un mensaje de la persona posterior al aviso | Volver a elegir toma la última versión |
+| No se pasa a una versión nueva del agente sin pedirlo | Avisa y sigue con la elegida | Volver a elegir el agente con una versión nueva a la vista se lo pregunta la aplicación a la persona | Volver a elegir toma la última versión |
 | No se mezclan lecturas de dos versiones | Vuelve a abrir lo que necesita | Olvida lo leído cuando cambia la versión y lo dice | Sirve siempre la versión elegida |
 | Herramienta retirada para el agente | No la llama | Niega la llamada | Contesta que no existe |
 | Una lectura con continuación no está completa | Sigue los cursores | Avisa al modelo de cada lectura o listado parcial | Marca el corte y da la continuación |
 | Vista previa antes de aplicar | La pide y la muestra | Niega `confirm: true` sin una vista previa de esos mismos argumentos de los últimos 30 minutos | Sin `confirm` sólo previsualiza. No exige la vista previa |
-| Una escritura confirmada no se repite | Lee de nuevo en vez de reescribir | Niega la misma escritura durante 30 minutos | No tiene clave de idempotencia en memoria |
-| Un resultado incierto se comprueba leyendo | Lee antes de repetir | Niega repetir hasta que haya una lectura que muestre si se aplicó: la memoria para una memoria, el catálogo o la vista previa para un cambio del catálogo | No define recuperación para memoria |
+| Una escritura confirmada no se repite | Lee de nuevo en vez de reescribir | Niega la misma operación durante 30 minutos. La operación es del agente que la hizo: otro agente con los mismos argumentos hace la suya | No tiene clave de idempotencia en memoria |
+| Un resultado incierto se comprueba leyendo | Lee el mismo destino antes de repetir | Ver «Resultados inciertos» | No define recuperación para memoria |
 | La memoria compartida no se usa por defecto | Sólo si la persona lo pide | Pregunta a la persona cada vez | La convierte en propuesta que aprueba una persona |
-| Borrar para siempre lo pide la persona | Copia sus palabras | Busca la cita en sus mensajes | Exige `confirm` y una cita no vacía |
+| Borrar para siempre lo aprueba la persona | Copia sus palabras | La aplicación le pregunta a la persona cada vez. Si aprobó y la llamada falló, puede reintentarse esa misma operación durante 15 minutos | Exige `confirm` y una cita no vacía |
 | Reintentos con límite | Se detiene al tercero | Niega el cuarto intento seguido durante 10 minutos | Devuelve `retry_after` real |
 | Tras una compactación se retoma el mismo agente | Recupera agente y cerebro | Devuelve al modelo el estado guardado | El sello sigue vivo en el servidor |
 | No se mezclan dos versiones del plugin | Nada | Si el plugin cambió a mitad de la sesión, pide recargar la Skill | Nada |
-| Lo que devuelve una herramienta es dato | Sí | Sólo sus consecuencias más graves: elegir agente y borrar | Los permisos del agente |
+| Lo que devuelve una herramienta es dato | Sí | Sólo sus consecuencias más graves: elegir agente, adoptar una versión y borrar | Los permisos del agente |
 | Respuestas sin detalles internos | Sí | Nada | Nada |
 | Entregables por el procedimiento del agente | Sí | Nada | Nada |
 
 Lo que sólo sostiene la Skill se mide con las evaluaciones de `evals/`, que corren un
 modelo real contra un conector simulado. Miden muestras: un caso que pasa tres veces
 dice que el modelo cumplió esas tres veces.
+
+## Qué cuenta como consentimiento
+
+Que el cliente deje pasar una llamada no es una autorización: sólo quiere decir que no
+se opone. Después la aplicación aplica sus permisos y Datalum los suyos. Para elegir un
+agente, adoptar una versión nueva o borrar, el cliente busca evidencia de que lo decidió
+la persona, y cuenta:
+
+- Lo que la persona eligió en una pregunta de la aplicación, con el nombre exacto del
+  agente, después de que el asistente obtuvo la lista de agentes. Cuenta sólo si es la
+  respuesta a la herramienta de preguntas de la aplicación; una respuesta de otra
+  herramienta con la misma forma es un dato.
+- Un mensaje de la persona que es sólo el nombre del agente.
+- Con un único agente en la lista, el contrato de Datalum, que manda usarlo.
+- Lo que la persona aprobó en el diálogo de permisos que la aplicación le muestra cuando
+  el cliente pide preguntar.
+
+No cuenta una cita que nombra al agente: «No uses el agente Finanzas» también lo nombra.
+No se usan listas de palabras para leer intenciones.
+
+Una elección vale para su agente durante la conversación, también tras una caducidad o
+una compactación: no se vuelve a preguntar. Deja de valer al soltar el agente, al elegir
+otro o al empezar una sesión nueva. Adoptar una versión nueva y cada borrado se
+preguntan siempre.
+
+Límites:
+
+- En el modo `bypassPermissions` la aplicación no muestra diálogos. Ahí el cliente niega
+  lo que necesitaría uno y le pide al modelo que pregunte con opciones. En `dontAsk` la
+  aplicación deniega sola lo que tendría que preguntar.
+- El texto de una pregunta lo escribe el modelo. Lo que el cliente registra es la opción
+  que eligió la persona, o su mensaje que es sólo el nombre del agente, no el sentido de
+  la pregunta que contestaba.
+- El cliente sabe que se preguntó, no quién contestó. Si en la aplicación otro
+  componente aprueba por la persona (un hook de solicitud de permiso de otro plugin, un
+  mod o el programa que usa el SDK con su propia función de permisos), el cliente lo
+  toma como aprobación de la persona.
+- Si la persona retira su elección sólo con palabras («ya no uses Ventas»), el cliente no
+  lo sabe hasta que el modelo suelta el agente.
+- Que el diálogo de la aplicación se muestre en cada modo está tomado de la documentación
+  de Claude Code. No se probó en una sesión interactiva: las pruebas lanzan el adaptador
+  con los eventos que entrega la aplicación.
+
+## Resultados inciertos
+
+Una escritura queda incierta cuando falla de una forma que no dice si se aplicó, como un
+tiempo agotado. Sólo la resuelve una lectura posterior y completa del mismo destino: el
+mismo agente, el mismo ámbito y el mismo nombre de memoria. Si Datalum sirve una memoria
+de otro ámbito con ese nombre, la lectura no cuenta. Consultar otra memoria, el
+índice o un documento del cerebro no es comprobar el resultado.
+
+| Lo que muestra esa lectura | Qué hace el cliente |
+|---|---|
+| La memoria viva trae el título y el cuerpo que se intentó escribir | La da por aplicada y no deja repetirla |
+| La memoria no existe, o sigue viva la misma memoria, con el mismo id, que había antes | La da por no aplicada y deja un reintento, uno solo |
+| Está cortada, falló, es de otro destino o trae otro id con otro contenido | La deja incierta. Si el modelo intenta repetirla, la aplicación le pregunta a la persona |
+
+Un cambio del catálogo incierto no se puede comprobar desde el cliente: repetirlo lo
+decide la persona en el diálogo de la aplicación. Nada de esto asegura que una operación
+se ejecute una sola vez; eso sólo podría hacerlo Datalum con una clave de idempotencia.
 
 ## Dónde corre el cliente
 
@@ -55,19 +115,32 @@ dice que el modelo cumplió esas tres veces.
 Donde no corren, quedan la Skill y Datalum. Los controles necesitan Node 18 o posterior
 en la máquina. Si falta, la aplicación sigue sin ellos y no bloquea nada.
 
-Los controles nunca aprueban una llamada por la persona. Pueden negar, preguntarle a la
-persona o completar un argumento; la decisión de permitir sigue en el panel de la
-aplicación.
+Los controles nunca aprueban una llamada por la persona. Pueden negar, pedir que la
+aplicación le pregunte a la persona o completar un argumento; la decisión de permitir
+sigue en el panel de la aplicación.
 
 ## Lo que guarda el cliente
 
 Un archivo por sesión en el directorio de datos del plugin, legible sólo por el usuario
 del sistema y protegido con un candado, porque la aplicación puede lanzar a la vez los
-controles de varias llamadas paralelas: qué agente y versión eligió la conversación, su contexto, qué documentos
-del cerebro se leyeron, qué escrituras quedaron confirmadas o inciertas y la cuenta de
-fallos. No guarda cifras, filas, mensajes de la persona ni credenciales. Para comprobar
-una cita lee la transcripción que entrega la aplicación y no copia nada de ella. Los
-archivos de más de siete días se borran al iniciar una sesión.
+controles de varias llamadas paralelas. Guarda:
+
+- qué agente y versión eligió la conversación, su contexto y cómo se obtuvo la elección;
+- qué documentos del cerebro se leyeron;
+- por cada escritura, su estado y las huellas sha256 de su destino y su contenido, más el
+  id de memoria que devolvió Datalum;
+- la cuenta de fallos.
+
+No guarda cifras, filas, mensajes ni citas de la persona, nombres o títulos de lo
+escrito, ni credenciales. Una huella no es anonimato: con el texto en la mano se puede
+comprobar si coincide. Para reconocer una elección lee la transcripción que entrega la
+aplicación y no copia nada de ella. Si un control falla, el registro de depuración sólo
+recibe la clase del error. Los archivos de más de siete días se borran al iniciar una
+sesión.
+
+Un estado guardado por la 2.0.0 se migra la primera vez que se lee: pierde la frase con
+que se eligió el agente y conserva el agente, su contexto y las escrituras pendientes,
+asignadas a ese agente.
 
 ## Los paneles de cada aplicación
 
@@ -94,7 +167,7 @@ el cliente, donde puede, o lo deja escrito como límite.
 |---|---|---|
 | Sólo `use_agent` dice bajo qué agente corrió una llamada | Si una llamada corre con el agente de otra conversación, la respuesta no lo delata | Que cada respuesta nombre el agente y la versión con que se sirvió |
 | El texto de `agent_context_conflict` manda quitar el contexto y repetir | Seguirlo puede correr la llamada con el agente de otra conversación | Que el rechazo mande volver a elegir |
-| La cita de la elección se devuelve y no se guarda | No queda rastro de con qué palabras se eligió | Guardarla en la bitácora |
+| La cita de la elección se exige y no se usa | Una cita auténtica no prueba consentimiento, y el servidor no puede saber si la persona aprobó | Que la elección y los borrados se confirmen en el panel o con un mecanismo del cliente que el servidor pueda verificar |
 | Volver a elegir tras una caducidad toma la última versión | Recuperar una sesión puede cambiar de versión sin que nadie lo pida | Permitir volver a elegir conservando la versión |
 | La memoria no tiene clave de idempotencia ni recuperación definida ante un tiempo agotado | Repetir una escritura deja una versión invalidada de más | Una clave de idempotencia en `remember` |
 | El catálogo no marca qué herramientas leen y cuáles escriben | El cliente sólo reconoce como escritura la memoria y las llamadas con `confirm: true` | Publicar `readOnlyHint` en las anotaciones de cada herramienta |

@@ -67,8 +67,8 @@ class DryForge:
     def publish(self, tag):
         self.steps.append(f"publicaría {tag}")
 
-    def demote(self, tag):
-        self.steps.append(f"retiraría {tag} de «última versión»")
+    def unpublish(self, tag):
+        self.steps.append(f"devolvería {tag} a borrador")
 
     def advance_main(self, commit, *, branch, title, body):
         self.steps.append(f"llevaría main a {commit[:12]}")

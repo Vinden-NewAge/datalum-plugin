@@ -1,5 +1,5 @@
 {
-  "description": "Controles del cliente para Datalum: comprueban que la elección de agente y los borrados los pidió la persona, mantienen cada llamada en el agente de su conversación, piden la vista previa antes de aplicar, evitan repetir una escritura ya confirmada y recuperan el estado tras una compactación. Sólo actúan sobre las herramientas de Datalum.",
+  "description": "Controles del cliente para Datalum: comprueban que la elección de agente y los borrados los pidió la persona, mantienen cada llamada en el agente de su conversación, piden la vista previa antes de aplicar, evitan repetir una escritura ya confirmada recuperan el estado tras una compactación y anotan cuándo la aplicación denegó una llamada. Sólo actúan sobre las herramientas de Datalum.",
   "hooks": {
     "SessionStart": [
       {
@@ -7,7 +7,9 @@
           {
             "type": "command",
             "command": "node",
-            "args": ["${CLAUDE_PLUGIN_ROOT}/client/adapters/claude-code.js"],
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/client/adapters/claude-code.js"
+            ],
             "timeout": 10
           }
         ]
@@ -20,7 +22,9 @@
           {
             "type": "command",
             "command": "node",
-            "args": ["${CLAUDE_PLUGIN_ROOT}/client/adapters/claude-code.js"],
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/client/adapters/claude-code.js"
+            ],
             "timeout": 10
           }
         ]
@@ -33,7 +37,9 @@
           {
             "type": "command",
             "command": "node",
-            "args": ["${CLAUDE_PLUGIN_ROOT}/client/adapters/claude-code.js"],
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/client/adapters/claude-code.js"
+            ],
             "timeout": 10
           }
         ]
@@ -46,7 +52,24 @@
           {
             "type": "command",
             "command": "node",
-            "args": ["${CLAUDE_PLUGIN_ROOT}/client/adapters/claude-code.js"],
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/client/adapters/claude-code.js"
+            ],
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PermissionDenied": [
+      {
+        "matcher": "mcp__.*[Dd]atalum.*__.*|mcp__.*__(list_agents|use_agent|release_agent)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/client/adapters/claude-code.js"
+            ],
             "timeout": 10
           }
         ]
