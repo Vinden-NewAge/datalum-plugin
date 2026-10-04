@@ -52,6 +52,7 @@ Tres clases de prueba. Ninguna sustituye a otra.
 | Con modelo real | `evals/` y `evals-sin-conector/` con Sonnet 5.5, 3 corridas por caso | 22 de 22 casos pasan en sus 3 corridas (66 de 66 corridas) |
 | Con modelo real | Los mismos casos con Opus 5.5, una corrida por caso, sobre el contenido anterior a los dos últimos ajustes | 22 de 22 casos pasan en su última corrida |
 | Real, sólo lectura | `/health`, `initialize` y `tools/list` sin sesión contra producción; `compat.py evaluar` contra producción | El despliegue se confirma y el contrato coteja |
+| En GitHub, sobre el PR | `check.yml` completo y el primer job de `compat.yml`, que le pregunta a producción qué sirve | Pasan. El zip que arma GitHub tiene el mismo sha256 que el anotado en el registro, y el flujo reconoce el despliegue como ya procesado |
 | Ensayo | La automatización de punta a punta en un clon, contra producción y sin publicar | Detecta el despliegue ya procesado, cierra en ensayo, rechaza un aviso de un commit que producción no sirve y uno de un actor no autorizado |
 
 Las evaluaciones corren contra un conector simulado con datos inventados; el juez de
