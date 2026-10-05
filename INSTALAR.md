@@ -26,7 +26,7 @@ asistente los obtiene como él indica.
 - Una cuenta de Datalum.
 - Al menos un agente que el administrador de tu empresa te haya otorgado y que esté
   activo.
-- La dirección del servidor: `https://mcp.datahub.vinden.cc/mcp`
+- La dirección del servidor: `https://mcp.datalum.ai/mcp`
 - La Skill empaquetada:
   https://github.com/Vinden-NewAge/datalum-plugin/releases/latest/download/datalum-skill.zip
   - En Mac, si al descargar ves una carpeta `datalum` en vez del archivo `.zip`, tu
@@ -43,7 +43,7 @@ configuración de Claude.
 2. **Conector:** entra a Personalizar > Conectores (Customize > Connectors).
    - Si tu empresa ya lo agregó, busca Datalum y pulsa Conectar.
    - Si no, elige Agregar conector personalizado (Add custom connector), con el nombre
-     `Datalum` y la dirección `https://mcp.datahub.vinden.cc/mcp`, y pulsa Conectar.
+     `Datalum` y la dirección `https://mcp.datalum.ai/mcp`, y pulsa Conectar.
 
    Inicia sesión con tu cuenta de Datalum y aprueba la conexión.
 3. **Skill:** entra a Personalizar > Skills (Customize > Skills) y sube
@@ -78,7 +78,7 @@ espacio de trabajo.
 1. **Conector:** activa Configuración > Seguridad e inicio de sesión > Modo desarrollador
    (Settings > Security and login > Developer mode). Luego entra a Plugins, pulsa el
    botón +, escribe el nombre `Datalum` y la dirección
-   `https://mcp.datahub.vinden.cc/mcp`, y crea la conexión. Inicia sesión con tu cuenta
+   `https://mcp.datalum.ai/mcp`, y crea la conexión. Inicia sesión con tu cuenta
    de Datalum y aprueba la conexión.
 2. **Skill:** entra a Plugins, pestaña Skills, elige Crear > Subir desde tu computadora
    (Create > Upload from your computer) y sube `datalum-skill.zip`. ChatGPT la revisa

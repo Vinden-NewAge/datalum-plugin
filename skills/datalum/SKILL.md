@@ -13,17 +13,17 @@ description: >-
   plain words.
 compatibility: >-
   Needs the Datalum connector (remote MCP server at
-  https://mcp.datahub.vinden.cc/mcp) and a Datalum account with at least one
+  https://mcp.datalum.ai/mcp) and a Datalum account with at least one
   active agent granted by the company's administrator.
 metadata:
   author: Vinden
   short-description: AI CONTEXT PILL
-  version: "2.0.2"
+  version: "2.0.3"
 ---
 
 # Datalum
 
-This is version 2.0.2 of the Datalum skill.
+This is version 2.0.3 of the Datalum skill.
 
 Datalum is a governed data layer. A person works in it through one agent that their
 company's administrator granted them. This skill gets the person connected, loads the
@@ -66,7 +66,7 @@ work. Find out which state they are in and give them the next step for that stat
 
 | What you see | State | Next step |
 |---|---|---|
-| No Datalum tool in this conversation, and the host cannot search for or load more tools | Connector not set up | The person adds the Datalum connector with the address `https://mcp.datahub.vinden.cc/mcp` and signs in. Steps per product: https://github.com/Vinden-NewAge/datalum-plugin/blob/main/INSTALAR.md |
+| No Datalum tool in this conversation, and the host cannot search for or load more tools | Connector not set up | The person adds the Datalum connector with the address `https://mcp.datalum.ai/mcp` and signs in. Steps per product: https://github.com/Vinden-NewAge/datalum-plugin/blob/main/INSTALAR.md |
 | The host loads tools on demand and you have not looked yet | Tools not discovered | Yours: search the host's tools for Datalum's `list_agents` and load it before concluding anything |
 | The connector exists but is turned off, or a call answers that a sign-in is required | No session | "Conecta tu cuenta de Datalum para comenzar." The person signs in from the host's connector panel. Never ask for a password, key or token in the chat |
 | Calls that worked start failing with an authentication error | Session expired | The person reconnects the connector in the host. After that the agent has to be chosen again |
