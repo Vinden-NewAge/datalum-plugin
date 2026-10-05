@@ -4,6 +4,32 @@ Cada versión del plugin de Datalum dice qué cambia para quien usa la Skill, co
 versión del servidor se comprobó y qué hay que hacer para recibirla. La más reciente va
 primero.
 
+## [2.0.3] - 2026-10-05
+
+La producción de Datalum se muda a `datalum.ai`. Las reglas de la Skill y de los
+controles no cambian.
+
+### Cambiado
+
+- El conector apunta a `https://mcp.datalum.ai/mcp`: `.mcp.json`, la ficha de ChatGPT,
+  la Skill, `INSTALAR.md` y el README. El inicio de sesión pasa a `api.datalum.ai` y el
+  panel a `app.datalum.ai`.
+- `https://mcp.datahub.vinden.cc/mcp` queda como qa en `compat/entornos.json`: un aviso
+  de ese entorno prepara y prueba la candidata sin publicar.
+
+### Servidor
+
+- El contrato de la v2.244.0, armado del código del servidor, es igual al de la
+  v2.243.0 guardado (`11e81846335d`, 94 herramientas).
+
+### Cómo recibirla
+
+- En Grok Build y Claude Code el conector llega con el plugin. En Claude (web y
+  escritorio) y en ChatGPT el conector se agregó a mano: hay que cambiar su dirección
+  por la nueva. Los pasos están en `INSTALAR.md`.
+- La producción nueva no trae las cuentas ni los datos de la anterior: hace falta una
+  cuenta en ella.
+
 ## [2.0.2] - 2026-10-05
 
 Corrige los pendientes que la auditoría de la 2.0.1 encontró con pruebas adicionales.

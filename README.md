@@ -59,7 +59,7 @@ grok --plugin-dir /absolute/path/to/datalum-plugin
 
 Claude (web and desktop) and ChatGPT: download
 [datalum-skill.zip](https://github.com/Vinden-NewAge/datalum-plugin/releases/latest/download/datalum-skill.zip),
-upload it as a skill, and add `https://mcp.datahub.vinden.cc/mcp` as a custom connector.
+upload it as a skill, and add `https://mcp.datalum.ai/mcp` as a custom connector.
 
 ## Authentication
 
@@ -74,12 +74,12 @@ is public (no secret).
 
 | Endpoint | Purpose |
 |---|---|
-| `https://mcp.datahub.vinden.cc/mcp` | Hosted MCP server (streamable HTTP) |
-| `https://mcp.datahub.vinden.cc/.well-known/oauth-protected-resource` | OAuth protected resource metadata (RFC 9728) |
-| `https://api.datahub.vinden.cc/admin-api/oauth/register` | Dynamic client registration |
-| `https://api.datahub.vinden.cc/admin-api/oauth/authorize` | Authorization |
-| `https://api.datahub.vinden.cc/admin-api/oauth/token` | Token exchange and refresh |
-| `https://datahub.vinden.cc` | Datalum panel: sign-in, consent, and approval of proposals |
+| `https://mcp.datalum.ai/mcp` | Hosted MCP server (streamable HTTP) |
+| `https://mcp.datalum.ai/.well-known/oauth-protected-resource` | OAuth protected resource metadata (RFC 9728) |
+| `https://api.datalum.ai/admin-api/oauth/register` | Dynamic client registration |
+| `https://api.datalum.ai/admin-api/oauth/authorize` | Authorization |
+| `https://api.datalum.ai/admin-api/oauth/token` | Token exchange and refresh |
+| `https://app.datalum.ai` | Datalum panel: sign-in, consent, and approval of proposals |
 
 The plugin calls no other host.
 

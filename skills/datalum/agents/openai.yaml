@@ -12,4 +12,4 @@ dependencies:
       value: "datalum"
       description: "Servidor de Datalum: los agentes que te otorgó tu empresa, su cerebro y los datos que gobiernan"
       transport: "streamable_http"
-      url: "https://mcp.datahub.vinden.cc/mcp"
+      url: "https://mcp.datalum.ai/mcp"

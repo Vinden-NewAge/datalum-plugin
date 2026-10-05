@@ -4,6 +4,23 @@ Qué versión del plugin se comprobó contra qué, y cómo. «Comprobado» quier
 algo se ejecutó y dio ese resultado. Lo que sólo consta en la documentación de un
 producto se marca «Sin comprobar».
 
+## Versión 2.0.3
+
+Preparada el 4 de octubre de 2026. Sólo cambia la dirección del servidor: la
+producción pasa a `datalum.ai` y la dirección anterior queda como qa.
+
+| Plugin | Servidor de Datalum | Contrato | Resultado |
+|---|---|---|---|
+| 2.0.3 | Producción nueva, `mcp.datalum.ai` | Sin medir | Sin comprobar: al preparar esta versión, `mcp.datalum.ai`, `api.datalum.ai` y `app.datalum.ai` contestan «Site Not Found» |
+| 2.0.3 | qa, `mcp.datahub.vinden.cc`, commit `4d49e2e7f2d3` (v2.244.0) | `11e81846335d`, 94 herramientas, armado del código de ese commit sin red ni base | Compatible sin cambios: igual al de la v2.243.0 guardado |
+
+Qué se ejecutó: `python3 scripts/check.py`, las pruebas de `tests/` y
+`claude plugin validate .`. No hay reglas nuevas que medir con mutantes.
+
+Cuando la producción nueva responda, la lectura de cada hora verá su commit. Sin el
+aviso del servidor anotará `contrato_no_disponible`; la comprobación se lanza a mano con
+el contrato de ese commit, como dice `MANTENER.md`.
+
 ## Versión 2.0.2
 
 Medida el 4 de octubre de 2026 sobre el contenido con huella `3f26973e6ca7`. Cierra los

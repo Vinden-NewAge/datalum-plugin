@@ -2,7 +2,7 @@
   "mcpServers": {
     "datalum": {
       "type": "http",
-      "url": "https://mcp.datahub.vinden.cc/mcp"
+      "url": "https://mcp.datalum.ai/mcp"
     }
   }
 }

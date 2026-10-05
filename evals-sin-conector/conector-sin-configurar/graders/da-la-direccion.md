@@ -1,4 +1,4 @@
 ---
 type: regex
-pattern: 'mcp\.datahub\.vinden\.cc/mcp|INSTALAR'
+pattern: 'mcp\.datalum\.ai/mcp|INSTALAR'
 ---
