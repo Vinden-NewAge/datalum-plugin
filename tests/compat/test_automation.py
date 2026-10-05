@@ -605,6 +605,41 @@ class GhForgeAgainstGh(unittest.TestCase):
             self.forge.release_state("v1.0.1")
 
 
+class PausedFamilies(unittest.TestCase):
+    """Las herramientas que el plugin tiene en pausa salen del contrato, por familia."""
+
+    REQUIREMENTS = {"en_pausa": {"familias": ["chart", "dashboard"], "aviso": "En pausa."}}
+
+    def facts(self, names):
+        summary = summary_of([tool(name, ["name"], ["name"]) for name in names])
+        return contract.derive_facts(summary, self.REQUIREMENTS)
+
+    def test_cada_herramienta_de_una_familia_queda_en_pausa(self):
+        facts = self.facts(["render_chart", "upsert_custom_dashboard", "export_chart_csv", "run_metric", "list_agents"])
+        self.assertEqual(facts["en_pausa"]["herramientas"], ["export_chart_csv", "render_chart", "upsert_custom_dashboard"])
+        self.assertEqual(facts["en_pausa"]["aviso"], "En pausa.")
+
+    def test_una_herramienta_nueva_de_la_familia_tambien(self):
+        facts = self.facts(["list_dashboards", "chart_templates", "run_metric"])
+        self.assertEqual(facts["en_pausa"]["herramientas"], ["chart_templates", "list_dashboards"])
+
+    def test_un_nombre_que_sólo_contiene_la_palabra_no_cuenta(self):
+        facts = self.facts(["describe_charter", "run_metric"])
+        self.assertEqual(facts["en_pausa"]["herramientas"], [])
+
+    def test_sin_familias_en_pausa_no_hay_pausa(self):
+        summary = summary_of([tool("render_chart", ["name"], ["name"])])
+        self.assertNotIn("en_pausa", contract.derive_facts(summary, {}))
+
+    def test_el_plugin_tiene_en_pausa_las_graficas_y_tableros_del_contrato_vigente(self):
+        root = Path(__file__).resolve().parents[2]
+        facts = json.loads((root / "client/contract-facts.json").read_text(encoding="utf-8"))
+        names = [t["n"] for t in json.loads((root / "compat/contrato-produccion.json").read_text(encoding="utf-8"))["herramientas"]]
+        expected = sorted(n for n in names if "chart" in n.split("_") or "dashboard" in n.split("_"))
+        self.assertEqual(len(expected), 14)
+        self.assertEqual(facts["en_pausa"]["herramientas"], expected)
+
+
 class Events(unittest.TestCase):
     def test_avisos_mal_formados_se_rechazan(self):
         good = event(SHA_A, summary_of(base_tools()))

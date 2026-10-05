@@ -4,6 +4,25 @@ Qué versión del plugin se comprobó contra qué, y cómo. «Comprobado» quier
 algo se ejecutó y dio ese resultado. Lo que sólo consta en la documentación de un
 producto se marca «Sin comprobar».
 
+## Versión 2.0.4
+
+Preparada el 4 de octubre de 2026. Pone en pausa las gráficas y los tableros de
+Datalum; el servidor no cambia.
+
+| Plugin | Servidor de Datalum | Contrato | Resultado |
+|---|---|---|---|
+| 2.0.4 | Producción, `mcp.datalum.ai`, commit `4d49e2e7f2d3` (v2.244.0) | `11e81846335d`, 94 herramientas; 14 en pausa | Compatible: `check.py` contra el contrato guardado |
+
+| Qué | Dónde se prueba |
+|---|---|
+| La pausa sale del contrato, por familia, también para herramientas nuevas | `PausedFamilies` en `tests/compat/test_automation.py` |
+| El cliente niega lo que está en pausa y deja pasar lo demás | `una herramienta en pausa se niega con el aviso del contrato, y las demás pasan` |
+| El adaptador niega gráficas y tableros con la lista real | `el plugin niega las gráficas y los tableros de Datalum` |
+| La Skill y CONTROLES lo dicen | `LaVersion204` en `tests/docs/test_documentos.py` |
+
+Sin comprobar: que el modelo deje de pedir gráficas en una conversación real. En Claude
+web y ChatGPT sólo lo sostiene la Skill, porque ahí el cliente no corre.
+
 ## Versión 2.0.3
 
 Preparada el 4 de octubre de 2026. Sólo cambia la dirección del servidor: la

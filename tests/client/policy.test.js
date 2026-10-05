@@ -448,3 +448,12 @@ test('una vista previa vieja ya no autoriza aplicar', () => {
   policy.postToolUse(state, 'upsert_metric', METRIC, { preview: true }, { now: T0 });
   assert.equal(pre(state, 'upsert_metric', Object.assign({ confirm: true }, METRIC), undefined, T0 + 31 * 60000).decision, 'deny');
 });
+
+test('una herramienta en pausa se niega con el aviso del contrato, y las demás pasan', () => {
+  const facts = { en_pausa: { herramientas: ['render_chart'], aviso: 'En pausa: díselo a la persona.' }, sin_selection_context: ['list_agents'] };
+  const state = policy.newState('2.0.4');
+  const paused = policy.preToolUse(state, 'render_chart', { name: 'ventas' }, facts, { now: Date.now() });
+  assert.equal(paused.decision, 'deny');
+  assert.equal(paused.reason, 'En pausa: díselo a la persona.');
+  assert.notEqual(policy.preToolUse(state, 'list_agents', {}, facts, { now: Date.now() }).decision, 'deny');
+});

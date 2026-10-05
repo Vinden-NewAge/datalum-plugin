@@ -214,6 +214,15 @@ test('tras actualizar desde la 2.0.0, una elección de antes no vuelve a elegir'
   assert.equal(result.out.hookSpecificOutput.permissionDecision, 'ask');
 });
 
+test('el plugin niega las gráficas y los tableros de Datalum', () => {
+  const box = sandbox();
+  for (const name of ['render_chart', 'upsert_dashboard', 'get_chart', 'run_dashboard']) {
+    const result = box.run({ hook_event_name: 'PreToolUse', tool_name: TOOL(name), tool_input: { name: 'ventas' } });
+    assert.equal(result.out.hookSpecificOutput.permissionDecision, 'deny', name);
+    assert.match(result.out.hookSpecificOutput.permissionDecisionReason, /paused/);
+  }
+});
+
 test('una llamada que la aplicación deniega no deja la elección registrada', () => {
   const box = sandbox();
   box.run({ hook_event_name: 'PostToolUse', tool_name: TOOL('list_agents'), tool_input: {}, tool_response: JSON.stringify({ agents: [{ agentId: 'ag-1', name: 'Ventas' }, { agentId: 'ag-2', name: 'Finanzas' }], message: '' }) });

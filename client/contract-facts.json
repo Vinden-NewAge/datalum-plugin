@@ -78,6 +78,25 @@
     "workspace_write": "sql",
     "write_agent_document": "documentId"
   },
+  "en_pausa": {
+    "aviso": "Datalum's charts and dashboards are paused in this plugin. Do not call this tool, even if the agent's brain names it, and do not look for another Datalum tool that makes a chart or a dashboard. Tell the person in plain words that charts and dashboards are not available here for now; you can still give them the figures.",
+    "herramientas": [
+      "export_chart_csv",
+      "get_chart",
+      "get_dashboard",
+      "render_chart",
+      "run_dashboard",
+      "save_chart_edit",
+      "save_dashboard_edit",
+      "set_chart_options",
+      "test_chart",
+      "test_custom_dashboard",
+      "test_dashboard",
+      "upsert_chart",
+      "upsert_custom_dashboard",
+      "upsert_dashboard"
+    ]
+  },
   "sin_selection_context": [
     "brain_import",
     "list_agents"

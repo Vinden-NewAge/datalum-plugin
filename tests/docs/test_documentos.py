@@ -168,6 +168,14 @@ class LaVersion202(unittest.TestCase):
         self.assertIn(flat("La actualización tras el despliegue final de producción todavía no es automática de punta a punta"), flat(section))
 
 
+class LaVersion204(unittest.TestCase):
+    def test_la_skill_dice_que_las_graficas_y_tableros_estan_en_pausa(self):
+        self.assertIn(flat("Datalum's chart and dashboard tools are paused in this plugin"), flat(SKILL))
+
+    def test_controles_dice_quien_sostiene_la_pausa(self):
+        self.assertIn("| Gráficas y tableros de Datalum en pausa |", read("CONTROLES.md"))
+
+
 class LasGuias(unittest.TestCase):
     def test_actualizar_distingue_los_cuatro_pasos_y_no_promete_de_mas(self):
         text = read("ACTUALIZAR.md")
