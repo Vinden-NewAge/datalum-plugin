@@ -69,6 +69,7 @@ class DryForge:
 
     def unpublish(self, tag):
         self.steps.append(f"devolvería {tag} a borrador")
+        return True
 
     def advance_main(self, commit, *, branch, title, body):
         self.steps.append(f"llevaría main a {commit[:12]}")
@@ -150,7 +151,7 @@ def cmd_cerrar(args: argparse.Namespace) -> int:
     if args.simular:
         entry["simulacion"] = forge.steps
     print(json.dumps(entry, ensure_ascii=False, indent=2))
-    failed = entry["resultado"] in ("publicacion_fallida", "paquete_no_coincide", "retirada_fallida", "pruebas_fallidas")
+    failed = entry["resultado"] in ("publicacion_fallida", "paquete_no_coincide", "retirada_fallida", "retirada_incierta", "pruebas_fallidas")
     if str(entry.get("main", "")).startswith("pendiente"):
         # El resultado no llegó a main: la corrida queda en rojo para que alguien lo vea.
         print(f"main no avanzó: {entry['main']}", file=sys.stderr)
@@ -187,7 +188,7 @@ def cmd_publicar(args: argparse.Namespace) -> int:
             title=f"Datalum {version}", notes=finalize._notes(ROOT, version), assets=assets,
             recover=args.recuperar,
         )
-    except (publish.Immutable, publish.PackageMismatch, publish.WithdrawFailed, publish.DownloadFailed) as e:
+    except (publish.Immutable, publish.PackageMismatch, publish.WithdrawFailed, publish.WithdrawUncertain, publish.DownloadFailed, publish.StateUnknown) as e:
         print(f"No se publicó: {e}", file=sys.stderr)
         return 1
     print(json.dumps(outcome, ensure_ascii=False, indent=2))

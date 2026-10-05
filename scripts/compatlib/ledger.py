@@ -24,6 +24,7 @@ RETRIABLE = {
     "publicacion_fallida",
     "paquete_no_coincide",
     "retirada_fallida",
+    "retirada_incierta",
 }
 RESULTS = FINAL | PENDING | RETRIABLE | {"candidata_lista"}
 

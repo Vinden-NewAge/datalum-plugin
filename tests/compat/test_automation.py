@@ -393,6 +393,22 @@ class Flow(unittest.TestCase):
         self.assertFalse(self.repo.forge.releases["v1.0.1"]["draft"])
         self.assertEqual(self.remote_version(), "1.0.1")
 
+    def test_una_retirada_rechazada_y_sin_estado_se_recupera_en_el_reintento(self):
+        tools = tools_with_change()
+        ev, prod = event(SHA_B, summary_of(tools)), FakeProduction(SHA_B, tools)
+        self.repo.forge.corrupt = {"published"}
+        # GitHub rechaza la orden y además no contesta cómo quedó: sigue a la vista.
+        self.repo.forge.fail_on = {"unpublish", "state_after_unpublish"}
+        _, entry = self.run_flow(ev, prod)
+        self.assertEqual(entry["resultado"], "retirada_incierta")
+        self.assertFalse(self.repo.forge.releases["v1.0.1"]["draft"])
+        self.repo.forge.corrupt = set()
+        bad = {name: "0" * 64 for name in self.repo.forge.releases["v1.0.1"]["assets"]}
+        self.repo.forge.releases["v1.0.1"]["assets"] = bad
+        _, retry = self.run_flow(ev, prod)
+        self.assertEqual(retry["resultado"], "actualizado")
+        self.assertNotEqual(self.repo.forge.releases["v1.0.1"]["assets"], bad, "se publicaron los archivos probados")
+
     def test_una_descarga_fallida_no_retira_una_version_correcta(self):
         tools = tools_with_change()
         ev, prod = event(SHA_B, summary_of(tools)), FakeProduction(SHA_B, tools)

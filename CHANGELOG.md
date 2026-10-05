@@ -6,8 +6,8 @@ primero.
 
 ## [2.0.2] - 2026-10-05
 
-Corrige cuatro defectos que la auditoría de la 2.0.1 encontró con pruebas adicionales.
-La Skill no cambia; el contrato con Datalum tampoco.
+Corrige los pendientes que la auditoría de la 2.0.1 encontró con pruebas adicionales.
+La Skill cambia un paso de memoria; el contrato con Datalum no cambia.
 
 ### Corregido
 
@@ -25,10 +25,28 @@ La Skill no cambia; el contrato con Datalum tampoco.
   que devuelve Datalum: el archivo enmarcado con cada línea prefijada, el «no existe»
   como `agent_memory_not_found` y el detalle anidado cuando se lee por la ruta del
   cerebro. Un guardado comprobable podía seguir contando como incierto.
-- Al retirar una versión publicada con archivos que no se probaron, no se comprobaba que
-  la retirada funcionara, y un fallo no se podía recuperar. Ahora se comprueba; si sigue
-  a la vista, el resultado es `retirada_fallida` y el reintento la retira antes de
-  publicar lo probado. Una descarga fallida ya no se confunde con archivos distintos.
+- Una propuesta de memoria presentada por `brain_write` se anunciaba como guardada: el
+  cliente buscaba el recibo en la raíz y `brain_write` lo devuelve dentro de `memory`.
+  Ahora lee cada respuesta según su contrato y distingue cuatro casos: escrita,
+  propuesta que espera la aprobación de una persona, resultado incierto y escrita cuya
+  relectura falló. Una propuesta no se puede presentar dos veces.
+- Una lectura del detalle de otro agente, o el «no existe» de una memoria compartida,
+  resolvía una escritura incierta. Ahora no: una propuesta puede estar esperando
+  aprobación. Repetirla lo decide la persona, avisada de que puede duplicarla.
+- Los avisos de recuperación del cliente mandaban usar `list_memories`. Ahora remiten al
+  procedimiento de memoria del cerebro del agente, y el paso de memoria de la Skill
+  tampoco nombra una herramienta. El cliente sigue reconociendo las dos rutas.
+- Al retirar una versión publicada con archivos que no se probaron, se ignoraba el
+  rechazo de GitHub y no se comprobaba la retirada; un fallo no se podía recuperar.
+  Ahora se lee el estado en GitHub: si sigue a la vista, el resultado es
+  `retirada_fallida`; si no se puede leer, `retirada_incierta`. El reintento del mismo
+  despliegue recupera las dos antes de publicar lo probado. Una descarga fallida ya no
+  se confunde con archivos distintos.
+
+### Documentación
+
+- `INSTALAR.md` y el README dicen que el plugin no instala los recursos de entrega de un
+  agente, como `datalum-entregables` o el formato del Builder: los nombra su cerebro.
 
 ### Servidor
 

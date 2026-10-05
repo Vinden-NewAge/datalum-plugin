@@ -8,7 +8,9 @@ Cada paso mira primero qué existe. Por eso el mismo despliegue se puede reinten
 un fallo: lo hecho se reconoce y no se repite. Una etiqueta con otro contenido detiene
 todo, y una versión publicada con otros archivos también, salvo que la haya dejado así
 un intento anterior de este mismo proceso (`recover`): entonces se retira y se publica
-lo probado. Retirar es devolverla a borrador, y se comprueba que quedó retirada.
+lo probado. Retirar es devolverla a borrador, y se comprueba en GitHub que quedó
+retirada: si sigue a la vista la retirada falló, y si no se puede leer cómo quedó es
+incierta. Las dos se recuperan en el reintento del mismo despliegue.
 """
 
 from __future__ import annotations
@@ -35,15 +37,28 @@ class WithdrawFailed(RuntimeError):
     """Una versión con archivos que no se probaron sigue a la vista."""
 
 
+class WithdrawUncertain(RuntimeError):
+    """No se pudo leer si una versión con archivos que no se probaron quedó retirada."""
+
+
+class StateUnknown(RuntimeError):
+    """GitHub no contestó en qué estado está una versión."""
+
+
 class DownloadFailed(RuntimeError):
     """No se pudieron descargar los archivos de una versión para cotejarlos."""
 
 
 def withdraw(forge, tag: str) -> None:
-    """Devuelve la versión a borrador y comprueba que lo está."""
-    forge.unpublish(tag)
-    if forge.release_state(tag) != "draft":
-        raise WithdrawFailed(f"la versión {tag}, con archivos que no se probaron, sigue publicada")
+    """Devuelve la versión a borrador y comprueba en GitHub que dejó de estar a la vista."""
+    accepted = forge.unpublish(tag)
+    try:
+        state = forge.release_state(tag)
+    except StateUnknown as e:
+        raise WithdrawUncertain(f"no se sabe si la versión {tag}, con archivos que no se probaron, quedó retirada: {e}") from e
+    if state == "published":
+        refused = "" if accepted else "; GitHub rechazó la orden"
+        raise WithdrawFailed(f"la versión {tag}, con archivos que no se probaron, sigue publicada{refused}")
 
 
 def file_sha256(path: Path) -> str:
@@ -121,9 +136,14 @@ class GhForge:
             return versioning.shipped_digest(Path(tmp))
 
     def release_state(self, tag: str) -> Optional[str]:
+        """`draft`, `published` o None si la versión no existe. Si GitHub no contesta,
+        no se supone nada."""
         result = self._run("gh", "release", "view", tag, "--json", "isDraft", check=False)
         if result.returncode != 0:
-            return None
+            if "not found" in result.stderr.lower():
+                return None
+            detail = result.stderr.strip().splitlines()[-1] if result.stderr.strip() else "sin detalle"
+            raise StateUnknown(f"no se pudo leer el estado de {tag} ({detail})")
         return "draft" if json.loads(result.stdout)["isDraft"] else "published"
 
     def release_assets(self, tag: str) -> dict:
@@ -150,8 +170,10 @@ class GhForge:
     def publish(self, tag: str) -> None:
         self._run("gh", "release", "edit", tag, "--draft=false", "--latest")
 
-    def unpublish(self, tag: str) -> None:
-        self._run("gh", "release", "edit", tag, "--draft=true", check=False)
+    def unpublish(self, tag: str) -> bool:
+        """Pide volver a borrador. Devuelve si GitHub aceptó la orden; si quedó retirada
+        lo comprueba `withdraw` leyendo el estado."""
+        return self._run("gh", "release", "edit", tag, "--draft=true", check=False).returncode == 0
 
     def advance_main(self, commit: str, *, branch: str, title: str, body: str) -> str:
         """Lleva `main` al commit. Si las reglas del repositorio no dejan empujar,

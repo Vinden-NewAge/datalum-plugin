@@ -124,7 +124,7 @@ class LaVersion201(unittest.TestCase):
 
     def test_controles_explica_consentimiento_resultados_inciertos_y_limites(self):
         text = read("CONTROLES.md")
-        for heading in ("## Qué cuenta como consentimiento", "## Resultados inciertos", "## Lo que guarda el cliente"):
+        for heading in ("## Qué cuenta como consentimiento", "## Resultados de una escritura", "## Lo que guarda el cliente"):
             self.assertIn(heading, text)
         self.assertIn(flat("Que el cliente deje pasar una llamada no es una autorización"), flat(text))
         self.assertIn(flat("Una huella no es anonimato"), flat(text))
@@ -146,6 +146,20 @@ class LaVersion202(unittest.TestCase):
         self.assertIn(flat("lo que la persona eligió para ese cambio cuenta aunque el modelo suelte el anterior después"), text)
         self.assertIn(flat("lo que la persona eligió antes de actualizar no vuelve a elegir"), text)
         self.assertIn(flat("Una lectura por id no se puede asociar a la escritura y la deja incierta"), text)
+
+    def test_la_skill_no_impone_una_ruta_de_memoria(self):
+        self.assertIn(flat("Look for existing work first, the way the brain says to look in its memory"), flat(SKILL))
+        self.assertNotIn("`list_memories` returns the index", SKILL)
+
+    def test_controles_distingue_los_cuatro_resultados_de_una_escritura(self):
+        text = read("CONTROLES.md")
+        for row in ("| El recibo dice `escrita` |", "| El recibo dice `propuesta` |", "| Estaba escrita y la relectura falló |"):
+            self.assertIn(row, text)
+        self.assertIn(flat("sus avisos no imponen ninguna de las dos"), flat(text))
+
+    def test_instalar_el_plugin_no_instala_los_recursos_de_entrega(self):
+        self.assertIn(flat("Tampoco instala los recursos de entrega de un agente, como `datalum-entregables`"), flat(read("INSTALAR.md")))
+        self.assertIn(flat("It does not install an agent's\ndelivery resources, such as `datalum-entregables`"), flat(read("README.md")))
 
     def test_compatibilidad_dice_que_falta_el_aviso_del_servidor(self):
         text = read("COMPATIBILIDAD.md")

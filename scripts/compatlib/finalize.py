@@ -142,9 +142,11 @@ def finalize(
             )
         except publish.WithdrawFailed as e:
             return fail("retirada_fallida", str(e))
+        except publish.WithdrawUncertain as e:
+            return fail("retirada_incierta", str(e))
         except publish.PackageMismatch as e:
             return fail("paquete_no_coincide", str(e))
-        except (publish.Immutable, publish.DownloadFailed, subprocess.CalledProcessError, OSError) as e:
+        except (publish.Immutable, publish.DownloadFailed, publish.StateUnknown, subprocess.CalledProcessError, OSError) as e:
             return fail("publicacion_fallida", _reason(e))
         info = plugin(new_version)
         if evaluation.get("candidata"):
@@ -158,7 +160,7 @@ def finalize(
 
 
 # Resultados de un intento de publicar que pudo dejar algo a la vista.
-OWN_PUBLISH_FAILURES = {"publicacion_fallida", "paquete_no_coincide", "retirada_fallida"}
+OWN_PUBLISH_FAILURES = {"publicacion_fallida", "paquete_no_coincide", "retirada_fallida", "retirada_incierta"}
 
 
 def _evidence(where: dict) -> list:

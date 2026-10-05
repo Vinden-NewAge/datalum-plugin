@@ -28,7 +28,7 @@ como hook. «Datalum» es lo que el servidor hace hoy, leído de su contrato en 
 | Una lectura con continuación no está completa | Sigue los cursores | Avisa al modelo de cada lectura o listado parcial | Marca el corte y da la continuación |
 | Vista previa antes de aplicar | La pide y la muestra | Niega `confirm: true` sin una vista previa de esos mismos argumentos de los últimos 30 minutos | Sin `confirm` sólo previsualiza. No exige la vista previa |
 | Una escritura confirmada no se repite | Lee de nuevo en vez de reescribir | Niega la misma operación durante 30 minutos. La operación es del agente que la hizo: otro agente con los mismos argumentos hace la suya | No tiene clave de idempotencia en memoria |
-| Un resultado incierto se comprueba leyendo | Lee el mismo destino antes de repetir | Ver «Resultados inciertos» | No define recuperación para memoria |
+| Un resultado incierto se comprueba leyendo | Lee el mismo destino antes de repetir | Ver «Resultados de una escritura» | No define recuperación para memoria |
 | La memoria compartida no se usa por defecto | Sólo si la persona lo pide | Pregunta a la persona cada vez | La convierte en propuesta que aprueba una persona |
 | Borrar para siempre lo aprueba la persona | Copia sus palabras | La aplicación le pregunta a la persona cada vez. Si aprobó y la llamada falló, puede reintentarse esa misma operación durante 15 minutos | Exige `confirm` y una cita no vacía |
 | Reintentos con límite | Se detiene al tercero | Niega el cuarto intento seguido durante 10 minutos | Devuelve `retry_after` real |
@@ -90,15 +90,27 @@ Límites:
   de Claude Code. No se probó en una sesión interactiva: las pruebas lanzan el adaptador
   con los eventos que entrega la aplicación.
 
-## Resultados inciertos
+## Resultados de una escritura
 
-Una escritura queda incierta cuando falla de una forma que no dice si se aplicó, como un
-tiempo agotado. Sólo la resuelve una lectura posterior y completa del mismo destino: el
-mismo agente, el mismo ámbito y el mismo nombre de memoria, pedida por ese nombre
-(`list_memories` con `memory`, o su ruta en el cerebro). Una lectura por id no se puede
-asociar a la escritura y la deja incierta. Si Datalum sirve una memoria de otro ámbito
-con ese nombre, la lectura no cuenta. Consultar otra memoria, el índice o un documento
-del cerebro no es comprobar el resultado, aunque muestren el mismo texto.
+Antes de interpretar una respuesta, el cliente la lee según su contrato: el sobre de la
+aplicación, el JSON que va como texto y, dentro, el recibo. `remember` devuelve el recibo
+en la raíz y `brain_write`, dentro de `memory`. Cada capa se deserializa como JSON; el
+texto de la memoria no se toca.
+
+| Lo que pasó | Qué hace el cliente | Qué se le dice a la persona |
+|---|---|---|
+| El recibo dice `escrita` | La da por hecha y no deja repetirla | Que está guardada |
+| El recibo dice `propuesta` | La da por presentada y no deja presentarla otra vez | Que espera la aprobación de una persona: no es una memoria todavía |
+| Falló sin decir si se aplicó, como un tiempo agotado, o la respuesta no trae recibo | La deja incierta | Que no está confirmada |
+| Estaba escrita y la relectura falló | Sigue escrita | Que está guardada y falta comprobar que se recupera |
+
+Una escritura incierta sólo la resuelve una lectura posterior y completa del mismo
+destino: el mismo agente, el mismo ámbito y el mismo nombre de memoria, pedida por ese
+nombre. Cómo leerla lo dice el cerebro del agente: el cliente reconoce `brain_read` por la
+ruta de la memoria y `list_memories` con `memory`, y sus avisos no imponen ninguna de las
+dos. Una lectura por id no se puede asociar a la escritura y la deja incierta. Consultar
+otra memoria, el índice o un documento del cerebro no es comprobar el resultado, aunque
+muestren el mismo texto.
 
 El cliente lee la memoria como la sirve Datalum: el archivo va dentro de un marco, con
 cada línea prefijada con «| »; por la ruta del cerebro llega anidado; y «no existe»
@@ -107,12 +119,17 @@ llega como `agent_memory_not_found`.
 | Lo que muestra esa lectura | Qué hace el cliente |
 |---|---|
 | La memoria viva trae el título y el cuerpo que se intentó escribir | La da por aplicada y no deja repetirla |
-| La memoria no existe, o sigue viva la misma memoria, con el mismo id, que había antes | La da por no aplicada y deja un reintento, uno solo |
-| Está cortada, falló, es de otro destino o trae otro id con otro contenido | La deja incierta. Si el modelo intenta repetirla, la aplicación le pregunta a la persona |
+| La memoria personal no existe, o sigue viva la misma memoria, con el mismo id, que había antes | La da por no aplicada y deja un reintento, uno solo |
+| Una memoria compartida no existe o sigue igual | La deja incierta: la propuesta puede estar esperando la aprobación de una persona |
+| Está cortada, falló, es de otro agente o de otro ámbito, o trae otro id con otro contenido | La deja incierta |
 
-Un cambio del catálogo incierto no se puede comprobar desde el cliente: repetirlo lo
-decide la persona en el diálogo de la aplicación. Nada de esto asegura que una operación
-se ejecute una sola vez; eso sólo podría hacerlo Datalum con una clave de idempotencia.
+Mientras nadie haya leído el destino, el cliente no deja repetir una escritura incierta
+y pide leerlo primero. Si la lectura no la resolvió, repetirla lo decide la persona en el
+diálogo de la aplicación, que le avisa de que puede duplicarla; en `bypassPermissions` se
+niega. Un cambio del catálogo incierto no se puede comprobar desde el cliente: repetirlo
+lo decide la persona desde el principio. Nada de esto
+asegura que una operación se ejecute una sola vez; eso sólo podría hacerlo Datalum con
+una clave de idempotencia.
 
 ## Dónde corre el cliente
 

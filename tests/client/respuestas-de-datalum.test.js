@@ -151,3 +151,32 @@ test('la respuesta se lee capa por capa, sin tocar los escapes del texto', () =>
   // Igual si la aplicación entrega sólo la lista de bloques.
   assert.deepEqual(policy.readResponse(fixture('brain_read-detalle.json').content).data, data);
 });
+
+test('una respuesta sin recibo no cuenta como escrita', () => {
+  const state = sealed();
+  const input = { kind: 'hecho', slug: 'cierre_de_ventas', title: WRITE.title, body_md: WRITE.body_md };
+  const note = post(state, 'remember', input, { content: [{ type: 'text', text: '{"notice":"ok"}' }], isError: false }, T0 + 1000).context;
+  assert.match(note, /does not say whether this memory was saved/);
+  const again = pre(state, 'remember', input, T0 + 2000);
+  assert.equal(again.decision, 'deny');
+  assert.match(again.reason, /read that memory/);
+});
+
+test('no encontrar una propuesta presentada es lo esperado, y se dice', () => {
+  const state = sealed();
+  const input = brainWrite({ concept_id: COMPARTIDA, title: 'Moneda', body_md: 'Reportamos en pesos.' });
+  pre(state, 'brain_write', input, T0 + 1000);
+  post(state, 'brain_write', input, fixture('brain_write-propuesta.json'), T0 + 2000);
+  const note = post(state, 'brain_read', { concept_id: COMPARTIDA }, fixture('memoria-no-existe.json'), T0 + 3000).context;
+  assert.match(note, /proposal and does not exist until a person approves it/);
+  assert.match(policy.resumeContext(state), /1 proposal\(s\) filed and waiting/);
+});
+
+test('una relectura de una propuesta que falla por otra causa no se da por esperada', () => {
+  const state = sealed();
+  const input = brainWrite({ concept_id: COMPARTIDA, title: 'Moneda', body_md: 'Reportamos en pesos.' });
+  pre(state, 'brain_write', input, T0 + 1000);
+  post(state, 'brain_write', input, fixture('brain_write-propuesta.json'), T0 + 2000);
+  const note = policy.postToolUseFailure(state, 'brain_read', { concept_id: COMPARTIDA }, TIMEOUT, { now: T0 + 3000 }, FACTS).context;
+  assert.doesNotMatch(note || '', /expected/);
+});

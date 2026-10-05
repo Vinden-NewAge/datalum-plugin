@@ -211,9 +211,9 @@ the person asks for exactly that.
 
 When the brain's rules call for saving and the person agreed:
 
-1. Look for existing work first. `list_memories` returns the index; follow its cursor.
-   An empty, missing or partial index does not prove there is nothing, because the
-   index that arrives with `use_agent` is capped.
+1. Look for existing work first, the way the brain says to look in its memory. An index
+   comes in pages: follow its cursor. An empty, missing or partial index does not prove
+   there is nothing, because the index that arrives with `use_agent` is capped.
 2. Read the existing memory in full before replacing it.
 3. Keep what it holds: who it is about and for, what was agreed, the background and
    what is pending.

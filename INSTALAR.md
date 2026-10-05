@@ -17,6 +17,10 @@ y en ChatGPT se agregan por separado.
 Instalar el plugin no crea cuentas, empresas ni permisos. Eso lo hace el administrador
 de Datalum de tu empresa.
 
+Tampoco instala los recursos de entrega de un agente, como `datalum-entregables` o el
+formato con que entrega el Builder. Esos los nombra el cerebro del agente, y el
+asistente los obtiene como él indica.
+
 ## Antes de empezar
 
 - Una cuenta de Datalum.
