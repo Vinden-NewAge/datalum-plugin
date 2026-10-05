@@ -4,6 +4,27 @@ Cada versión del plugin de Datalum dice qué cambia para quien usa la Skill, co
 versión del servidor se comprobó y qué hay que hacer para recibirla. La más reciente va
 primero.
 
+## [2.0.4] - 2026-10-05
+
+Las gráficas y los tableros de Datalum quedan en pausa en el plugin.
+
+### Cambiado
+
+- El plugin no usa las herramientas de gráficas ni de tableros de Datalum: hoy son 14,
+  de `render_chart` a `upsert_custom_dashboard`. En Claude Code, Codex y Grok Build el
+  cliente niega esas llamadas y le dice al modelo que avise a la persona; en Claude web
+  y ChatGPT, donde el cliente no corre, lo dice la Skill.
+- La pausa se declara por familia en `compat/requisitos.json` y la lista se deriva del
+  contrato en `client/contract-facts.json`: una herramienta nueva de esas familias
+  también queda en pausa.
+- Los portales no tienen herramientas en el MCP: se arman con gráficas y tableros, así
+  que tampoco se tocan desde el plugin.
+
+### Servidor
+
+- Sin cambios: Datalum sigue sirviendo esas herramientas. El contrato es el mismo
+  (`11e81846335d`).
+
 ## [2.0.3] - 2026-10-05
 
 La producción de Datalum se muda a `datalum.ai`. Las reglas de la Skill y de los

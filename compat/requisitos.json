@@ -31,6 +31,14 @@
       "1c6a9d12b6fc335ee6bb6f7473501bf22a1e080c77baa7cd82d26902dde5ccf3"
     ]
   },
+  "en_pausa": {
+    "_": "Familias de herramientas que el plugin no usa. Para quitar la pausa se borra esta entrada.",
+    "aviso": "Datalum's charts and dashboards are paused in this plugin. Do not call this tool, even if the agent's brain names it, and do not look for another Datalum tool that makes a chart or a dashboard. Tell the person in plain words that charts and dashboards are not available here for now; you can still give them the figures.",
+    "familias": [
+      "chart",
+      "dashboard"
+    ]
+  },
   "esquema": 1,
   "herramientas": {
     "brain_index": {

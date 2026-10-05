@@ -157,7 +157,7 @@ def derive_facts(summary: dict, requirements: dict) -> dict:
         required = [arg for arg in entry["r"] if arg not in skip]
         if required:
             targets[entry["n"]] = "name" if "name" in required else required[0]
-    return {
+    facts = {
         "_": "Derivado del contrato de producción por scripts/compat.py. No se edita a mano.",
         "citas_humanas": quotes,
         "destinos": dict(sorted(targets.items())),
@@ -165,6 +165,18 @@ def derive_facts(summary: dict, requirements: dict) -> dict:
             entry["n"] for entry in summary["herramientas"] if "selection_context" not in entry["p"]
         ),
     }
+    # Las familias que el plugin tiene en pausa: toda herramienta del contrato con una
+    # palabra de la familia en su nombre, en singular o plural, también las que lleguen
+    # en un contrato nuevo.
+    paused = requirements.get("en_pausa")
+    if paused:
+        families = set(paused["familias"])
+
+        def in_family(name: str) -> bool:
+            return any(word in families or (word.endswith("s") and word[:-1] in families) for word in name.split("_"))
+
+        facts["en_pausa"] = {"herramientas": sorted(name for name in tools if in_family(name)), "aviso": paused["aviso"]}
+    return facts
 
 
 def compare(

@@ -25,6 +25,7 @@ como hook. «Datalum» es lo que el servidor hace hoy, leído de su contrato en 
 | No se pasa a una versión nueva del agente sin pedirlo | Avisa y sigue con la elegida | Volver a elegir el agente con una versión nueva a la vista se lo pregunta la aplicación a la persona | Volver a elegir toma la última versión |
 | No se mezclan lecturas de dos versiones | Vuelve a abrir lo que necesita | Olvida lo leído cuando cambia la versión y lo dice | Sirve siempre la versión elegida |
 | Herramienta retirada para el agente | No la llama | Niega la llamada | Contesta que no existe |
+| Gráficas y tableros de Datalum en pausa | No llama a sus herramientas, aunque el cerebro las nombre, y lo dice | Niega toda herramienta de esas familias que traiga el contrato, también las nuevas. La lista se deriva en `client/contract-facts.json` | Las sigue sirviendo |
 | Una lectura con continuación no está completa | Sigue los cursores | Avisa al modelo de cada lectura o listado parcial | Marca el corte y da la continuación |
 | Vista previa antes de aplicar | La pide y la muestra | Niega `confirm: true` sin una vista previa de esos mismos argumentos de los últimos 30 minutos | Sin `confirm` sólo previsualiza. No exige la vista previa |
 | Una escritura confirmada no se repite | Lee de nuevo en vez de reescribir | Niega la misma operación durante 30 minutos. La operación es del agente que la hizo: otro agente con los mismos argumentos hace la suya | No tiene clave de idempotencia en memoria |

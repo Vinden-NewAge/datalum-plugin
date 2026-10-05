@@ -157,6 +157,16 @@ se actualizan solas y conversaciones abiertas con la versión anterior cargada
 
 El aviso del entorno previo sirve para enterarse en el paso 1 y no en producción.
 
+## Herramientas en pausa
+
+`compat/requisitos.json` declara en `en_pausa` las familias de herramientas que el
+plugin no usa: hoy `chart` y `dashboard`, por la pausa de gráficas y tableros. Cada
+comprobación deriva de ahí la lista de `client/contract-facts.json` con los nombres que
+trae el contrato, así que una herramienta nueva de esas familias también queda en pausa.
+El cliente niega esas llamadas con el `aviso` de la entrada, y la Skill lo dice para las
+aplicaciones donde el cliente no corre. Para quitar la pausa se borra la entrada, se
+quita el párrafo de la Skill y se publica una versión.
+
 ## Sacar una versión a mano
 
 Cuando cambia la Skill, los controles o lo que el plugin necesita del servidor.

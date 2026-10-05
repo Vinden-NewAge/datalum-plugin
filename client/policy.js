@@ -387,6 +387,10 @@ function preToolUse(state, tool, input, facts, ctx) {
     };
   }
 
+  // Lo que el plugin tiene en pausa lo nombra el contrato derivado, no este código.
+  const paused = facts && facts.en_pausa;
+  if (paused && (paused.herramientas || []).includes(tool)) return { decision: 'deny', reason: paused.aviso };
+
   if (tool === 'use_agent') return preSelect(state, input, ctx, now);
 
   if (DELETES.has(tool)) {

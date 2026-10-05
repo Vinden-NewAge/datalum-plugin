@@ -18,12 +18,12 @@ compatibility: >-
 metadata:
   author: Vinden
   short-description: AI CONTEXT PILL
-  version: "2.0.3"
+  version: "2.0.4"
 ---
 
 # Datalum
 
-This is version 2.0.3 of the Datalum skill.
+This is version 2.0.4 of the Datalum skill.
 
 Datalum is a governed data layer. A person works in it through one agent that their
 company's administrator granted them. This skill gets the person connected, loads the
@@ -176,6 +176,10 @@ is delivered as an HTML file made with the host's file tools, make that file. Do
 send the request to Datalum's chart or dashboard tools instead. If the procedure needs
 something the host lacks, such as writing files or showing visuals, say what cannot be
 delivered here and offer what the host can do.
+
+Datalum's chart and dashboard tools are paused in this plugin: do not call them, even
+when the agent's brain names them. If the person asks for a Datalum chart or dashboard,
+say it is not available here for now and offer the figures another way.
 
 Figures the person will rely on come from Datalum results. When you compute something
 yourself, use code where the host allows it and say that the calculation is yours.
