@@ -63,8 +63,14 @@ No se usan listas de palabras para leer intenciones.
 
 Una elección vale para su agente durante la conversación, también tras una caducidad o
 una compactación: no se vuelve a preguntar. Deja de valer al soltar el agente, al elegir
-otro o al empezar una sesión nueva. Adoptar una versión nueva y cada borrado se
-preguntan siempre.
+otro o al empezar una sesión nueva.
+
+Cada elección de la persona sirve una vez. La respuesta que ya eligió un agente sigue en
+la conversación, pero no vuelve a elegirlo después de soltarlo ni elige a otro. Para
+cambiar de agente, la Skill manda soltar el actual y elegir el nuevo: lo que la persona
+eligió para ese cambio cuenta aunque el modelo suelte el anterior después. Tras soltar un
+agente, el único de la lista ya no se da por elegido. Adoptar una versión nueva y cada
+borrado se le preguntan a la persona.
 
 Límites:
 
@@ -88,9 +94,15 @@ Límites:
 
 Una escritura queda incierta cuando falla de una forma que no dice si se aplicó, como un
 tiempo agotado. Sólo la resuelve una lectura posterior y completa del mismo destino: el
-mismo agente, el mismo ámbito y el mismo nombre de memoria. Si Datalum sirve una memoria
-de otro ámbito con ese nombre, la lectura no cuenta. Consultar otra memoria, el
-índice o un documento del cerebro no es comprobar el resultado.
+mismo agente, el mismo ámbito y el mismo nombre de memoria, pedida por ese nombre
+(`list_memories` con `memory`, o su ruta en el cerebro). Una lectura por id no se puede
+asociar a la escritura y la deja incierta. Si Datalum sirve una memoria de otro ámbito
+con ese nombre, la lectura no cuenta. Consultar otra memoria, el índice o un documento
+del cerebro no es comprobar el resultado, aunque muestren el mismo texto.
+
+El cliente lee la memoria como la sirve Datalum: el archivo va dentro de un marco, con
+cada línea prefijada con «| »; por la ruta del cerebro llega anidado; y «no existe»
+llega como `agent_memory_not_found`.
 
 | Lo que muestra esa lectura | Qué hace el cliente |
 |---|---|
@@ -139,8 +151,11 @@ recibe la clase del error. Los archivos de más de siete días se borran al inic
 sesión.
 
 Un estado guardado por la 2.0.0 se migra la primera vez que se lee: pierde la frase con
-que se eligió el agente y conserva el agente, su contexto y las escrituras pendientes,
-asignadas a ese agente.
+que se eligió el agente y conserva el agente, su contexto y las escrituras pendientes.
+La 2.0.0 no guardaba qué agente hizo cada escritura: las posteriores a la elección del
+agente vigente se le atribuyen a él, y las anteriores quedan sin dueño. Repetir una de
+ésas, mientras dure su ventana de 30 minutos, lo decide la persona. El agente que estaba
+elegido sigue elegido; lo que la persona eligió antes de actualizar no vuelve a elegir.
 
 ## Los paneles de cada aplicación
 

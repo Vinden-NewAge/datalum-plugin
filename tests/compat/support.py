@@ -126,6 +126,9 @@ class LocalForge(publish.GhForge):
         release = self.releases.get(tag)
         if release is None:
             return {}
+        if "download" in self.fail_on:
+            self.fail_on.discard("download")
+            raise publish.DownloadFailed(f"no se pudieron descargar los archivos de {tag}")
         stage = "draft" if release["draft"] else "published"
         assets = dict(release["assets"])
         if stage in self.corrupt:

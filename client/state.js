@@ -22,13 +22,14 @@ function file(sessionId) {
   return path.join(dir(), safe + '.json');
 }
 
-// Un estado de la 2.0.0 se migra al leerlo: sin la frase con que se eligió el agente
-// y con sus escrituras pendientes asignadas al agente que estaba elegido. Quien lo
-// guarde después, dentro del candado, deja escrita la versión migrada.
+// Un estado de la 2.0.0 se migra al leerlo: sin la frase con que se eligió el agente,
+// con las escrituras posteriores a esa elección asignadas al agente elegido y las
+// anteriores sin dueño. Quien lo guarde después, dentro del candado, deja escrita la
+// versión migrada.
 function load(sessionId, pluginVersion) {
   try {
     const raw = JSON.parse(fs.readFileSync(file(sessionId), 'utf8'));
-    if (raw && (raw.v === 1 || raw.v === policy.STATE_VERSION)) return policy.migrate(raw, pluginVersion);
+    if (raw && (raw.v === 1 || raw.v === policy.STATE_VERSION)) return policy.migrate(raw, pluginVersion, new Date().toISOString());
   } catch (_) {
     // Sin estado guardado o ilegible: se empieza de cero.
   }

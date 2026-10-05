@@ -4,6 +4,73 @@ Qué versión del plugin se comprobó contra qué, y cómo. «Comprobado» quier
 algo se ejecutó y dio ese resultado. Lo que sólo consta en la documentación de un
 producto se marca «Sin comprobar».
 
+## Versión 2.0.2
+
+Medida el 4 de octubre de 2026 sobre el contenido con huella `c183509358cd`. Cierra
+cuatro defectos que la auditoría de la 2.0.1 encontró con pruebas adicionales: tres de
+los controles del cliente y uno de la publicación automática. La Skill no cambia.
+
+### Servidor
+
+| Plugin | Servidor de Datalum | Contrato | Resultado |
+|---|---|---|---|
+| 2.0.2 | Producción, `mcp.datahub.vinden.cc`, commit `22a5a022caeb` (v2.243.0) | `11e81846335d`, 94 herramientas | Compatible: `check.py` contra el contrato guardado |
+
+Sin despliegues de Datalum desde la 2.0.0. La forma de la memoria que reconoce el
+cliente se tomó del código del servidor, leído sin modificarlo: el marco del archivo,
+el prefijo de cada línea, los invisibles que reemplaza, el código
+`agent_memory_not_found` y el detalle anidado que sirve `brain_read`.
+
+### Qué se ejecutó
+
+| Clase | Qué | Resultado |
+|---|---|---|
+| De código | Reproducción de los defectos: `tests/client/defectos-2.0.1.test.js` y `test_una_retirada_fallida_se_detecta_y_el_reintento_la_recupera` | Contra la 2.0.1 fallan las 6. Con la 2.0.2 pasan las 6 |
+| Documental | `tests/docs/` | 28 pruebas, todas pasan |
+| De código | `tests/compat/`: la actualización automática | 44 pruebas, todas pasan |
+| De código | `tests/client/`: política, adaptador y regresiones | 113 pruebas, todas pasan |
+| De código | 19 mutantes nuevos, uno por regla de la 2.0.2 | Las pruebas detectan los 19. Cuatro sobrevivieron a la primera medición y cada uno ganó su prueba |
+| De código | Los 41 mutantes de la 2.0.1, ocho rehechos sobre las líneas que cambiaron | Las pruebas detectan los 41 |
+| De código | Los mutantes de la automatización que siguen aplicando | Las pruebas detectan 25. Sobrevive el mismo equivalente de la 2.0.1 |
+| Estructura | `python3 scripts/check.py` y `claude plugin validate .` (Claude Code 2.1.286) | Pasan. `validate` advierte que ignora el campo `logo` |
+| Revisión de código | Una pasada sobre el diff completo de la 2.0.2 | 5 hallazgos, todos arreglados. El más serio: soltar el agente anulaba la elección que la persona acababa de hacer para cambiarlo, y la Skill manda soltar antes de elegir el nuevo. Otro: tras actualizar desde la 2.0.0 sin agente elegido, una respuesta vieja volvía a contar. Los dos tienen prueba; los otros tres eran de redacción: la pregunta sobre lo migrado decía «ya se hizo» de algo que quizá no se hizo, un comentario describía la migración anterior y `CONTROLES.md` no decía que la lectura que resuelve una escritura incierta va por nombre |
+
+### Dónde se prueba cada caso de la 2.0.2
+
+| Caso | Pruebas |
+|---|---|
+| Una elección vieja tras soltar o cambiar de agente | `una elección vieja de la persona no vale después de soltar el agente`, `elegir otro agente también deja sin efecto lo elegido antes`, `con dos elecciones en paralelo, ninguna de las dos se vuelve a usar`, `tras soltar el único agente, la persona vuelve a decidir`, `una respuesta de antes de la lista de agentes no cuenta` |
+| Cambiar de agente sin preguntas repetidas | `cambiar de agente como manda la Skill no vuelve a preguntar`, `si elegir el agente nuevo choca con el anterior, soltarlo no anula la elección` |
+| Migración desde la 2.0.0 | `migrar no atribuye al agente actual lo que escribió otro antes`, `lo migrado de agente desconocido lo decide la persona`, `lo migrado de después de elegir el agente sigue siendo suyo`, `una elección hecha antes de actualizar desde la 2.0.0 no vuelve a elegir`, `tras actualizar desde la 2.0.0, una elección de antes no vuelve a elegir` |
+| La memoria como la sirve Datalum | `reconoce como aplicado el detalle real que devuelve Datalum`, `reconoce el «no existe» real de Datalum`, `reconoce la memoria servida por la ruta del cerebro, que llega anidada`, `un índice no confirma una escritura aunque muestre el mismo texto` |
+| Retirar una versión publicada con otros archivos | `test_una_retirada_fallida_se_detecta_y_el_reintento_la_recupera`, `test_paquete_publicado_distinto_vuelve_a_borrador`, `test_una_descarga_fallida_no_retira_una_version_correcta`, `test_sin_un_intento_propio_anterior_no_se_toca_una_version_publicada` |
+
+### Actualización después de producción
+
+La retirada de una versión publicada con archivos que no se probaron ahora se comprueba:
+si sigue a la vista, el resultado es `retirada_fallida`, la corrida queda en rojo y se
+avisa a una persona. El reintento del mismo despliegue la retira antes de publicar lo
+probado. Sólo toca una versión que dejó a la vista un intento anterior de ese mismo
+despliegue; una versión publicada por otro camino detiene todo, como antes.
+
+La actualización tras el despliegue final de producción todavía no es automática de
+punta a punta. El flujo de este repositorio recibe el aviso y lo procesa completo, y eso
+está probado con avisos simulados y con corridas manuales. Lo que falta no vive aquí:
+
+| Pieza | Estado | Mientras falte |
+|---|---|---|
+| El paso que avisa al terminar el despliegue de producción | Preparado para revisión y sin aplicar en el repositorio del servidor, que para este encargo es de sólo lectura. Lo que tiene que mandar está en `integracion-servidor/README.md` | La lectura de cada hora ve el commit nuevo y anota `contrato_no_disponible`; una persona lo atiende |
+| Secreto `DATALUM_PLUGIN_DISPATCH_TOKEN` en el repositorio del servidor | Sin crear. Lo crea quien administra ese repositorio | No hay aviso |
+| Secreto `DATALUM_COMPAT_TOKEN` en este repositorio | Sin crear | La lectura de cada hora no ve el catálogo completo y no puede publicar sola |
+
+Con el secreto `DATALUM_COMPAT_TOKEN` basta para que la lectura de cada hora publique
+sola, con hasta una hora de retraso:
+`test_con_credencial_de_lectura_el_contrato_sale_del_servidor`. Necesita una credencial
+de Datalum que no caduque entre lecturas.
+
+Lo que no se ejecutó: las evaluaciones con modelo real, por la misma falta de sesión de
+la 2.0.1, y nada fuera de Claude Code.
+
 ## Versión 2.0.1
 
 Medida el 4 de octubre de 2026 sobre el contenido con huella `8202ba224887`. Corrige

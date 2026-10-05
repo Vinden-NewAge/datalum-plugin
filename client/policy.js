@@ -32,6 +32,8 @@ const DELETES = new Set(['delete_my_memories', 'workspace_purge']);
 // pregunta nada.
 const ASKING_MODES = new Set(['default', 'acceptEdits', 'plan', 'auto']);
 const NO_AGENT = 'sin-agente';
+// Una escritura migrada de la 2.0.0 cuyo agente no se puede saber.
+const UNKNOWN_AGENT = 'agente-desconocido';
 // Argumentos con palabras de la persona: no forman parte de la identidad de una
 // operación ni se guardan.
 const QUOTE_ARGS = ['user_choice_quote', 'user_request_quote', 'frase'];
@@ -47,6 +49,8 @@ function newState(pluginVersion) {
     retired: [],
     keyring: null, // [{id, name}] de la última respuesta de list_agents
     keyring_at: null,
+    choice_floor: null, // la última elección de la persona que ya se usó: para elegir otra vez cuenta sólo lo posterior
+    released_at: null, // desde que se soltó un agente, el único de la lista ya no se da por elegido
     authorized: {}, // agente → {via, at}: la persona eligió trabajar con él en esta conversación
     pending: {}, // llamadas en las que el cliente pidió a la aplicación que preguntara
     approved: {}, // operación → at: aprobada por la persona y todavía reintentable
@@ -64,7 +68,7 @@ function newState(pluginVersion) {
 // Un estado de la 2.0.0 guardaba la frase con que se eligió el agente y llaves de
 // escritura sin agente. Se migra sin perder las escrituras pendientes, el agente
 // elegido ni la continuidad de la conversación.
-function migrate(raw, pluginVersion) {
+function migrate(raw, pluginVersion, at) {
   if (!raw || typeof raw !== 'object') return newState(pluginVersion);
   if (raw.v === STATE_VERSION) return raw;
   if (raw.v !== 1) return newState(pluginVersion);
@@ -79,12 +83,19 @@ function migrate(raw, pluginVersion) {
     // La conversación ya trabajaba con ese agente: la elección se conserva.
     state.authorized[seal.agent_id] = { via: 'migrado', at: seal.sealed_at || null };
   }
-  const owner = (raw.seal && raw.seal.agent_id) || NO_AGENT;
+  // Lo que la persona eligió antes de actualizar ya lo usó la 2.0.0: para elegir otra
+  // vez hace falta una elección nueva.
+  state.choice_floor = at || (raw.seal && raw.seal.sealed_at) || null;
+  // La 2.0.0 no guardaba qué agente hizo cada escritura. Lo posterior a la elección del
+  // agente actual es suyo; lo anterior pudo hacerlo otro, y queda sin dueño.
+  const sealedAt = raw.seal ? Date.parse(raw.seal.sealed_at) : NaN;
+  const ownerOf = (at) =>
+    raw.seal && Number.isFinite(sealedAt) && typeof at === 'number' && at >= sealedAt ? raw.seal.agent_id : UNKNOWN_AGENT;
   for (const [key, write] of Object.entries(raw.writes || {})) {
     // Sin el nombre ni el título: sólo lo que hace falta para seguir bloqueando.
-    state.legacy.writes[key] = { status: write.status, at: write.at, tool: write.tool, agent: owner };
+    state.legacy.writes[key] = { status: write.status, at: write.at, tool: write.tool, agent: ownerOf(write.at) };
   }
-  for (const [key, at] of Object.entries(raw.previews || {})) state.legacy.previews[key] = { at, agent: owner };
+  for (const [key, at] of Object.entries(raw.previews || {})) state.legacy.previews[key] = { at, agent: ownerOf(at) };
   return state;
 }
 
@@ -138,12 +149,30 @@ function digest(text) {
   return crypto.createHash('sha256').update(String(text)).digest('hex').slice(0, 24);
 }
 
+// Los invisibles que Datalum reemplaza por un espacio al servir el archivo de una
+// memoria: controles, ancho cero, marcas de dirección y aisladores bidi.
+// eslint-disable-next-line no-control-regex
+const INVISIBLES = /[\u0000-\u0009\u000b-\u001f\u007f-\u009f\u00ad\u200b-\u200f\u202a-\u202e\u2060-\u2064\u2066-\u2069\ufeff]/g;
+
 // Líneas significativas de un texto, para reconocer un cuerpo dentro de otro.
 function lines(text) {
   return String(text || '')
+    .replace(/\r\n?/g, '\n')
     .split('\n')
-    .map((l) => l.replace(/\s+/g, ' ').trim())
+    .map((l) => l.replace(INVISIBLES, ' ').replace(/\s+/g, ' ').trim())
     .filter(Boolean);
+}
+
+// El archivo de una memoria dentro del bloque de detalle que sirve Datalum: va entre
+// «--- archivo ---» y «--- fin del archivo ---», con cada línea prefijada con «| ».
+const FILE_OPEN = '--- archivo ---';
+const FILE_CLOSE = '--- fin del archivo ---';
+function memoryFile(block) {
+  const all = String(block || '').replace(/\r\n?/g, '\n').split('\n');
+  const start = all.indexOf(FILE_OPEN);
+  const end = all.lastIndexOf(FILE_CLOSE);
+  const inner = start >= 0 && end > start ? all.slice(start + 1, end) : all;
+  return inner.map((l) => (l.startsWith('| ') ? l.slice(2) : l === '|' ? '' : l)).join('\n');
 }
 
 function trim(map, max) {
@@ -169,7 +198,9 @@ function legacyKey(tool, input) {
 // mismo agente no cambia la identidad de sus operaciones.
 
 function memoryPath(conceptId) {
-  const m = /^agents\/[^/]+\/(memoria|memoria-compartida)\/([^/]+)$/.exec(String(conceptId || ''));
+  // `agents/{slug}/memoria/{nombre}`, o la forma corta `memoria/{nombre}` que Datalum
+  // también acepta.
+  const m = /^(?:agents\/[^/]+\/)?(memoria|memoria-compartida)\/([^/]+)$/.exec(String(conceptId || ''));
   return m ? { scope: m[1] === 'memoria' ? 'personal' : 'compartida', name: m[2] } : null;
 }
 
@@ -284,18 +315,23 @@ function agentIdOf(state, agent) {
 // menciona no lo es: «No uses Finanzas» también menciona a Finanzas. Cuenta lo que la
 // persona eligió en una pregunta de la aplicación, o un mensaje suyo que es sólo el
 // nombre del agente, después de que el asistente obtuvo la lista de agentes; y, con
-// un único agente, el contrato de Datalum, que manda usarlo.
+// un único agente, el contrato de Datalum, que manda usarlo. Devuelve {via, at}, con
+// `at` el momento de la elección, o null.
 function selectionEvidence(state, agent, human) {
   const entry = agentEntry(state, agent);
-  if (state.keyring && state.keyring.length === 1 && entry) return 'unico';
+  // Una elección sirve una vez: la que ya eligió un agente no vuelve a elegir otro, ni
+  // al mismo después de soltarlo. Y tras soltar, el único agente de la lista ya no se
+  // da por elegido: lo vuelve a decidir la persona.
+  const floor = [state.keyring_at, state.choice_floor].filter(Boolean).sort().pop() || null;
+  if (state.keyring && state.keyring.length === 1 && entry && !state.released_at) return { via: 'unico', at: null };
   const names = new Set([normalize(agent)]);
   if (entry) {
     if (entry.name) names.add(normalize(entry.name));
     if (entry.id) names.add(normalize(entry.id));
   }
   for (const m of human || []) {
-    if (state.keyring_at && m.at && m.at < state.keyring_at) continue;
-    if (names.has(normalize(ownWords(m.text)))) return m.kind === 'answer' ? 'pregunta' : 'mensaje';
+    if (floor && (!m.at || m.at <= floor)) continue;
+    if (names.has(normalize(ownWords(m.text)))) return { via: m.kind === 'answer' ? 'pregunta' : 'mensaje', at: m.at };
   }
   return null;
 }
@@ -482,9 +518,9 @@ function preSelect(state, input, ctx, now) {
   const authorization = state.authorized[agentId];
   if (authorization) return out; // La persona ya eligió este agente en esta conversación.
 
-  const via = selectionEvidence(state, input.agent, ctx && ctx.human);
-  if (via) {
-    expectOutcome(state, ctx, { kind: 'elegir', agent: agentId, via });
+  const evidence = selectionEvidence(state, input.agent, ctx && ctx.human);
+  if (evidence) {
+    expectOutcome(state, ctx, { kind: 'elegir', agent: agentId, via: evidence.via, chosen_at: evidence.at });
     return out;
   }
   return withInput(
@@ -507,11 +543,24 @@ function checkRepeat(state, tool, input, op, ctx, now) {
   const exact = state.ops[op.key];
   if (exact && exact.status === 'confirmed' && now - exact.at < WRITE_WINDOW_MS) return duplicate();
   const legacy = state.legacy.writes[legacyKey(tool, input)];
-  const legacyLive = legacy && legacy.agent === op.agent && now - legacy.at < WRITE_WINDOW_MS;
+  const legacyRecent = legacy && now - legacy.at < WRITE_WINDOW_MS;
+  const legacyLive = legacyRecent && legacy.agent === op.agent;
   if (legacyLive && legacy.status === 'confirmed') return duplicate();
   // La persona aprobó repetir esta operación y la llamada falló: no se le vuelve a preguntar.
   if (state.approved[op.key] && now - state.approved[op.key] <= PENDING_MS) return null;
   if (legacyLive && (legacy.status === 'uncertain' || legacy.status === 'partial')) return askRetry(state, ctx, op);
+  if (legacyRecent && legacy.agent === UNKNOWN_AGENT) {
+    // De antes de actualizar el plugin y de agente desconocido: puede ser un duplicado
+    // o una operación legítima de este agente. Decide la persona.
+    return askPerson(
+      state,
+      ctx,
+      { kind: 'reintentar', agent: op.agent, op: op.key },
+      'Esta misma operación ya se pidió hace poco en esta conversación, quizá con otro agente. ¿La repito?',
+      'This same operation was requested earlier in this conversation, possibly by another agent, and this app cannot ask the ' +
+        'person whether to repeat it. Do not repeat it; tell the person.'
+    );
+  }
 
   const pending = Object.entries(state.ops).find(
     ([key, rec]) => key.startsWith(op.targetKey + '|') && ['uncertain', 'absent', 'retrying'].includes(rec.status) && now - rec.at < WRITE_WINDOW_MS
@@ -614,7 +663,7 @@ function readResponse(response) {
   return found;
 }
 
-const CODE_IN_TEXT = /\b(agent_not_selected|agent_context_conflict|agent_seal_held|rate_limited|quota_exceeded|partial_write|not_found|unknown_tool|internal_error|backend_timeout|athena_timeout|okf_budget_exhausted|agent_identity_required|access_denied)\b/;
+const CODE_IN_TEXT = /\b(agent_memory_not_found|agent_not_selected|agent_context_conflict|agent_seal_held|rate_limited|quota_exceeded|partial_write|not_found|unknown_tool|internal_error|backend_timeout|athena_timeout|okf_budget_exhausted|agent_identity_required|access_denied)\b/;
 
 function errorFromText(text) {
   const body = String(text || '');
@@ -656,7 +705,9 @@ function resolveFromRead(state, tool, input, outcome, now) {
   if (!read) return;
   const agent = currentAgent(state);
   const targetKey = [agent, 'memoria.escribir', read.scope, digest(read.target)].join('|');
-  const body = outcome.data || {};
+  const wrapper = outcome.data || {};
+  // Por la ruta del cerebro, Datalum sirve el detalle anidado en `memory`.
+  const body = wrapper.memory && typeof wrapper.memory === 'object' && wrapper.memory.mode ? wrapper.memory : wrapper;
   // Si Datalum sirvió una memoria de otro ámbito (una compartida con el mismo nombre),
   // es otro destino: no dice nada de esta escritura.
   const otherScope = outcome.ok && body.scope && normalize(body.scope) !== read.scope;
@@ -680,12 +731,13 @@ function resolveFromRead(state, tool, input, outcome, now) {
 function judge(rec, outcome, body) {
   if (outcome.notFound) return 'absent';
   if (!outcome.ok) return 'uncertain';
+  if (body.mode && body.mode !== 'detail') return 'uncertain'; // un índice no prueba nada
   const truncated =
     body.truncado === true || body.truncated === true ||
     (body.next_offset !== undefined && body.next_offset !== null) ||
     (body.next_cursor !== undefined && body.next_cursor !== null);
   if (truncated) return 'uncertain';
-  const text = body.block !== undefined ? body.block : body.body;
+  const text = body.block !== undefined ? memoryFile(body.block) : body.body;
   if (text === undefined) return 'uncertain';
   const state = String(body.state || (body.frontmatter && body.frontmatter.state) || '').toLowerCase();
   if (state && !/viva|live|activ/.test(state)) return 'uncertain';
@@ -748,6 +800,10 @@ function postToolUse(state, tool, input, response, ctx, facts) {
       // modo que no pregunta, que la llamada haya pasado no dice nada de la persona.
       const approvedHere = fallback.via !== 'anfitrion' || ASKING_MODES.has(fallback.mode || 'default');
       if (approvedHere) state.authorized[agentId] = { via: fallback.via, at, name: state.seal.agent_name };
+      // La elección ya se usó: no vuelve a elegir.
+      if (fallback.chosen_at && (!state.choice_floor || fallback.chosen_at > state.choice_floor)) {
+        state.choice_floor = fallback.chosen_at;
+      }
     }
     const moved = before && before.agent_id === agentId && before.version !== state.seal.version;
     if (!before || before.agent_id !== agentId || moved) {
@@ -775,6 +831,7 @@ function postToolUse(state, tool, input, response, ctx, facts) {
     state.reads = {};
     state.listings = {};
     state.authorized = {}; // Soltar el agente retira la elección.
+    state.released_at = at;
   }
 
   if (body.sello_posterior && typeof body.sello_posterior === 'object' && state.seal) {
@@ -894,7 +951,8 @@ function applyError(state, tool, input, error, ctx, facts) {
     trim(state.failures);
   };
 
-  resolveFromRead(state, tool, input, { ok: false, notFound: code === 'not_found' }, now);
+  const notFound = code === 'not_found' || code === 'agent_memory_not_found';
+  resolveFromRead(state, tool, input, { ok: false, notFound }, now);
 
   if (code === 'agent_not_selected') {
     if (state.seal) {

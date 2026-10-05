@@ -200,6 +200,20 @@ test('un estado guardado por la 2.0.0 se migra al primer evento y se guarda sin 
   assert.equal(fs.existsSync(file + '.lock'), false, 'el candado se suelta');
 });
 
+test('tras actualizar desde la 2.0.0, una elección de antes no vuelve a elegir', () => {
+  const box = sandbox();
+  // La persona había elegido Finanzas y después lo soltó, todo con la 2.0.0.
+  box.say('Finanzas', { timestamp: new Date(Date.now() - 60000).toISOString() });
+  const file = path.join(box.dir, 'sessions', 'sesion-1.json');
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, JSON.stringify({
+    v: 1, plugin_version: '2.0.0', server: 'plugin_datalum_datalum', seal: null,
+    seal_state: 'none', newer_version: null, retired: [], keyring: null, reads: {}, listings: {}, previews: {}, writes: {}, failures: {},
+  }));
+  const result = box.run({ hook_event_name: 'PreToolUse', tool_name: TOOL('use_agent'), tool_input: { agent: 'Finanzas', user_choice_quote: 'Finanzas' } });
+  assert.equal(result.out.hookSpecificOutput.permissionDecision, 'ask');
+});
+
 test('una llamada que la aplicación deniega no deja la elección registrada', () => {
   const box = sandbox();
   box.run({ hook_event_name: 'PostToolUse', tool_name: TOOL('list_agents'), tool_input: {}, tool_response: JSON.stringify({ agents: [{ agentId: 'ag-1', name: 'Ventas' }, { agentId: 'ag-2', name: 'Finanzas' }], message: '' }) });

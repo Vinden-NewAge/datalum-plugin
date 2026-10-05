@@ -5,8 +5,10 @@ segunda descarga y cotejo. `main` se mueve después, así que si algo falla ante
 instalaciones siguen recibiendo la última versión válida.
 
 Cada paso mira primero qué existe. Por eso el mismo despliegue se puede reintentar tras
-un fallo: lo hecho se reconoce y no se repite. Una etiqueta o una versión publicada con
-otro contenido detiene todo; nunca se sobrescriben.
+un fallo: lo hecho se reconoce y no se repite. Una etiqueta con otro contenido detiene
+todo, y una versión publicada con otros archivos también, salvo que la haya dejado así
+un intento anterior de este mismo proceso (`recover`): entonces se retira y se publica
+lo probado. Retirar es devolverla a borrador, y se comprueba que quedó retirada.
 """
 
 from __future__ import annotations
@@ -29,13 +31,31 @@ class PackageMismatch(RuntimeError):
     """Lo descargado no es lo que se probó."""
 
 
+class WithdrawFailed(RuntimeError):
+    """Una versión con archivos que no se probaron sigue a la vista."""
+
+
+class DownloadFailed(RuntimeError):
+    """No se pudieron descargar los archivos de una versión para cotejarlos."""
+
+
+def withdraw(forge, tag: str) -> None:
+    """Devuelve la versión a borrador y comprueba que lo está."""
+    forge.unpublish(tag)
+    if forge.release_state(tag) != "draft":
+        raise WithdrawFailed(f"la versión {tag}, con archivos que no se probaron, sigue publicada")
+
+
 def file_sha256(path: Path) -> str:
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def publish(forge, *, tag: str, commit: str, digest: str, title: str, notes: str, assets: dict) -> dict:
+def publish(
+    forge, *, tag: str, commit: str, digest: str, title: str, notes: str, assets: dict, recover: bool = False
+) -> dict:
     """`assets` es {nombre: ruta} de los archivos ya probados. `digest` es la huella
-    del contenido publicable del commit probado."""
+    del contenido publicable del commit probado. `recover` permite retirar una versión
+    publicada con otros archivos que dejó un intento anterior de este mismo proceso."""
     expected = {name: file_sha256(path) for name, path in sorted(assets.items())}
 
     existing = forge.remote_tag(tag)
@@ -46,9 +66,14 @@ def publish(forge, *, tag: str, commit: str, digest: str, title: str, notes: str
 
     state = forge.release_state(tag)
     if state == "published":
-        if forge.release_assets(tag) != expected:
+        if forge.release_assets(tag) == expected:
+            return {"estado": "ya_publicada", "activos": expected}
+        if not recover:
             raise Immutable(f"la versión {tag} ya está publicada con otros archivos")
-        return {"estado": "ya_publicada", "activos": expected}
+        # La etiqueta tiene el contenido probado y el empaquetado es reproducible: lo
+        # publicado no es lo que sale de ese contenido. Se retira y se publica bien.
+        withdraw(forge, tag)
+        state = "draft"
     if state == "draft" and forge.release_assets(tag) != expected:
         forge.delete_draft(tag)
         state = None
@@ -59,9 +84,9 @@ def publish(forge, *, tag: str, commit: str, digest: str, title: str, notes: str
         raise PackageMismatch(f"los archivos del borrador de {tag} no son los que se probaron")
     forge.publish(tag)
     if forge.release_assets(tag) != expected:
-        # Vuelve a borrador: deja de verse y deja de ser «la última». No queda a la
-        # vista una versión con archivos que no se probaron.
-        forge.unpublish(tag)
+        # Vuelve a borrador: deja de verse y deja de ser «la última». Si no lo consigue,
+        # lo dice, para no dejar a la vista sin aviso una versión que no se probó.
+        withdraw(forge, tag)
         raise PackageMismatch(f"los archivos publicados de {tag} no son los que se probaron")
     return {"estado": "publicada", "activos": expected}
 
@@ -105,7 +130,10 @@ class GhForge:
         with tempfile.TemporaryDirectory() as tmp:
             result = self._run("gh", "release", "download", tag, "--dir", tmp, check=False)
             if result.returncode != 0:
-                return {}
+                if self.release_state(tag) is None:
+                    return {}
+                # La versión existe y no se pudo descargar: eso no es «otros archivos».
+                raise DownloadFailed(f"no se pudieron descargar los archivos de {tag}")
             return {p.name: file_sha256(p) for p in sorted(Path(tmp).iterdir()) if p.is_file()}
 
     def create_draft(self, tag: str, title: str, notes: str, assets: dict) -> None:

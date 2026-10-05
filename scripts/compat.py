@@ -150,7 +150,7 @@ def cmd_cerrar(args: argparse.Namespace) -> int:
     if args.simular:
         entry["simulacion"] = forge.steps
     print(json.dumps(entry, ensure_ascii=False, indent=2))
-    failed = entry["resultado"] in ("publicacion_fallida", "paquete_no_coincide", "pruebas_fallidas")
+    failed = entry["resultado"] in ("publicacion_fallida", "paquete_no_coincide", "retirada_fallida", "pruebas_fallidas")
     if str(entry.get("main", "")).startswith("pendiente"):
         # El resultado no llegó a main: la corrida queda en rojo para que alguien lo vea.
         print(f"main no avanzó: {entry['main']}", file=sys.stderr)
@@ -185,8 +185,9 @@ def cmd_publicar(args: argparse.Namespace) -> int:
         outcome = publish.publish(
             forge, tag=args.tag, commit=head, digest=versioning.shipped_digest(ROOT),
             title=f"Datalum {version}", notes=finalize._notes(ROOT, version), assets=assets,
+            recover=args.recuperar,
         )
-    except (publish.Immutable, publish.PackageMismatch) as e:
+    except (publish.Immutable, publish.PackageMismatch, publish.WithdrawFailed, publish.DownloadFailed) as e:
         print(f"No se publicó: {e}", file=sys.stderr)
         return 1
     print(json.dumps(outcome, ensure_ascii=False, indent=2))
@@ -264,6 +265,7 @@ def main() -> int:
 
     p = sub.add_parser("publicar")
     p.add_argument("--tag", required=True)
+    p.add_argument("--recuperar", action="store_true", help="retirar y volver a publicar una versión de esta etiqueta que quedó con otros archivos")
     p.add_argument("--simular", action="store_true")
     p.set_defaults(run=cmd_publicar)
 

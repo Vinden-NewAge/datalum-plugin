@@ -121,6 +121,14 @@ def finalize(
         if wrong:
             return fail("paquete_no_coincide", wrong[0])
         commit = git.commit_all(f"Versión {new_version}: sigue al contrato del despliegue de Datalum")
+        # Si el intento anterior de este mismo despliegue falló al publicar, lo que haya
+        # quedado a la vista es suyo y se puede retirar.
+        previous = [
+            e for e in ledger.read(where["ledger"])
+            if e["despliegue"]["entorno"] == evaluation["despliegue"]["entorno"]
+            and e["despliegue"].get("sha") == evaluation["despliegue"].get("sha")
+        ]
+        recover = bool(previous) and previous[-1]["resultado"] in OWN_PUBLISH_FAILURES
         try:
             outcome = publish.publish(
                 forge,
@@ -130,10 +138,13 @@ def finalize(
                 title=f"Datalum {new_version}",
                 notes=_notes(root, new_version),
                 assets=assets,
+                recover=recover,
             )
+        except publish.WithdrawFailed as e:
+            return fail("retirada_fallida", str(e))
         except publish.PackageMismatch as e:
             return fail("paquete_no_coincide", str(e))
-        except (publish.Immutable, subprocess.CalledProcessError, OSError) as e:
+        except (publish.Immutable, publish.DownloadFailed, subprocess.CalledProcessError, OSError) as e:
             return fail("publicacion_fallida", _reason(e))
         info = plugin(new_version)
         if evaluation.get("candidata"):
@@ -144,6 +155,10 @@ def finalize(
     if not tests_passed and action == "registrar":
         return fail("pruebas_fallidas", "las pruebas del plugin no pasan contra este contrato")
     return close(None, None, plugin(version))
+
+
+# Resultados de un intento de publicar que pudo dejar algo a la vista.
+OWN_PUBLISH_FAILURES = {"publicacion_fallida", "paquete_no_coincide", "retirada_fallida"}
 
 
 def _evidence(where: dict) -> list:

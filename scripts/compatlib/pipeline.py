@@ -299,6 +299,7 @@ def proposal(evaluation: dict) -> dict:
         "pruebas_fallidas": f"Las pruebas del plugin fallan contra el despliegue {served}",
         "publicacion_fallida": f"La publicación del plugin tras el despliegue {served} no terminó",
         "paquete_no_coincide": f"El paquete publicado tras el despliegue {served} no es el que se probó",
+        "retirada_fallida": f"Una versión del plugin con archivos que no se probaron sigue publicada tras el despliegue {served}",
     }
     lines = [
         f"Entorno: `{deployment['entorno']}` · commit `{deployment.get('sha')}` · versión del plugin: "
@@ -310,7 +311,10 @@ def proposal(evaluation: dict) -> dict:
         lines += ["", "Motivos:"] + [f"- {m}" for m in evaluation["motivos"]]
     if evaluation.get("notas"):
         lines += ["", "Cambios del catálogo:"] + [f"- {n}" for n in evaluation["notas"]]
-    lines += ["", "No se publicó ninguna versión del plugin. La última publicada sigue vigente."]
+    if result == "retirada_fallida":
+        lines += ["", "Hay que retirarla ya: devolverla a borrador en Releases, o volver a lanzar la comprobación, que la retira sola. Los pasos están en `MANTENER.md`."]
+    else:
+        lines += ["", "No se publicó ninguna versión del plugin. La última publicada sigue vigente."]
     if result == "incompatible":
         lines += [
             "",

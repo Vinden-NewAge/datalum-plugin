@@ -18,12 +18,12 @@ compatibility: >-
 metadata:
   author: Vinden
   short-description: AI CONTEXT PILL
-  version: "2.0.1"
+  version: "2.0.2"
 ---
 
 # Datalum
 
-This is version 2.0.1 of the Datalum skill.
+This is version 2.0.2 of the Datalum skill.
 
 Datalum is a governed data layer. A person works in it through one agent that their
 company's administrator granted them. This skill gets the person connected, loads the

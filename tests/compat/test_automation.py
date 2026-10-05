@@ -376,6 +376,45 @@ class Flow(unittest.TestCase):
         self.assertNotEqual(release["assets"], bad, "se publicaron los archivos probados")
         self.assertEqual(self.remote_version(), "1.0.1")
 
+    def test_una_descarga_fallida_no_retira_una_version_correcta(self):
+        tools = tools_with_change()
+        ev, prod = event(SHA_B, summary_of(tools)), FakeProduction(SHA_B, tools)
+        # Falla la descarga de después de publicar: no se sabe qué quedó, no que esté mal.
+        original = self.repo.forge.publish
+
+        def publish_then_lose_download(tag):
+            original(tag)
+            self.repo.forge.fail_on.add("download")
+
+        self.repo.forge.publish = publish_then_lose_download
+        _, entry = self.run_flow(ev, prod)
+        self.assertEqual(entry["resultado"], "publicacion_fallida")
+        self.assertNotIn("unpublish", self.repo.forge.calls)
+        self.assertFalse(self.repo.forge.releases["v1.0.1"]["draft"], "la versión correcta sigue publicada")
+        self.repo.forge.publish = original
+        _, retry = self.run_flow(ev, prod)
+        self.assertEqual(retry["resultado"], "actualizado")
+        self.assertEqual(retry["publicacion"]["estado"], "ya_publicada")
+
+    def test_sin_un_intento_propio_anterior_no_se_toca_una_version_publicada(self):
+        tools = tools_with_change()
+        ev, prod = event(SHA_B, summary_of(tools)), FakeProduction(SHA_B, tools)
+        # Una versión v1.0.1 ya publicada con otros archivos, sin intento previo de este
+        # despliegue en el registro: no se retira ni se cambia.
+        self.run_flow(event(SHA_A, summary_of(base_tools())), FakeProduction(SHA_A, base_tools()))
+        self.repo.forge.corrupt = {"published"}
+        self.repo.forge.fail_on = {"unpublish"}
+        self.run_flow(ev, prod)  # deja v1.0.1 publicada con archivos malos: retirada_fallida
+        self.repo.forge.corrupt = set()
+        bad = {name: "0" * 64 for name in self.repo.forge.releases["v1.0.1"]["assets"]}
+        self.repo.forge.releases["v1.0.1"]["assets"] = bad
+        from compatlib import publish as pub
+        assets = self.repo.package()
+        with self.assertRaises(pub.Immutable):
+            pub.publish(self.repo.forge, tag="v1.0.1", commit="HEAD", digest=self.repo.forge.tag_digest("v1.0.1"),
+                        title="t", notes="n", assets=assets, recover=False)
+        self.assertEqual(self.repo.forge.releases["v1.0.1"]["assets"], bad)
+
     def test_tras_volver_a_borrador_el_reintento_publica_lo_probado(self):
         tools = tools_with_change()
         ev, prod = event(SHA_B, summary_of(tools)), FakeProduction(SHA_B, tools)

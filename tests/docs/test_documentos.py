@@ -139,6 +139,21 @@ class LaVersion201(unittest.TestCase):
                 self.assertNotIn(word, code, f"{name} menciona {word}")
 
 
+class LaVersion202(unittest.TestCase):
+    def test_controles_explica_que_una_eleccion_sirve_una_vez(self):
+        text = flat(read("CONTROLES.md"))
+        self.assertIn(flat("Cada elección de la persona sirve una vez"), text)
+        self.assertIn(flat("lo que la persona eligió para ese cambio cuenta aunque el modelo suelte el anterior después"), text)
+        self.assertIn(flat("lo que la persona eligió antes de actualizar no vuelve a elegir"), text)
+        self.assertIn(flat("Una lectura por id no se puede asociar a la escritura y la deja incierta"), text)
+
+    def test_compatibilidad_dice_que_falta_el_aviso_del_servidor(self):
+        text = read("COMPATIBILIDAD.md")
+        self.assertIn("## Versión 2.0.2", text)
+        section = text.split("## Versión 2.0.2", 1)[1].split("\n## Versión 2.0.1", 1)[0]
+        self.assertIn(flat("La actualización tras el despliegue final de producción todavía no es automática de punta a punta"), flat(section))
+
+
 class LasGuias(unittest.TestCase):
     def test_actualizar_distingue_los_cuatro_pasos_y_no_promete_de_mas(self):
         text = read("ACTUALIZAR.md")

@@ -92,3 +92,123 @@ test('reconoce la memoria servida por la ruta del cerebro, que llega anidada', (
   policy.postToolUse(state, 'brain_read', { concept_id: 'agents/ventas/memoria/proyecto_a' }, served, { now: T0 + 3000 });
   assert.equal(policy.preToolUse(state, 'remember', AVANCE, FACTS, { now: T0 + 4000, mode: 'default' }).decision, 'deny');
 });
+
+test('elegir otro agente también deja sin efecto lo elegido antes', () => {
+  const state = policy.newState('2.0.1');
+  policy.postToolUse(state, 'list_agents', {}, KEYRING, { now: T0, at: iso(T0) });
+  const human = [answer('Finanzas', T0 + 500), answer('Ventas', T0 + 2000)];
+  assert.equal(select(state, 'Finanzas', 'ag_finanzas', human.slice(0, 1), T0 + 1000).decision, 'pass');
+  assert.equal(select(state, 'Ventas', 'ag_ventas', human, T0 + 3000).decision, 'pass');
+  // Volver a Finanzas con la respuesta de antes no vale: después eligió Ventas.
+  assert.equal(select(state, 'Finanzas', 'ag_finanzas', human, T0 + 5000).decision, 'ask');
+});
+
+test('una respuesta de antes de la lista de agentes no cuenta', () => {
+  const state = policy.newState('2.0.1');
+  policy.postToolUse(state, 'list_agents', {}, KEYRING, { now: T0, at: iso(T0) });
+  assert.equal(select(state, 'Finanzas', 'ag_finanzas', [answer('Finanzas', T0 - 500)], T0 + 1000).decision, 'ask');
+});
+
+test('tras soltar el único agente, la persona vuelve a decidir', () => {
+  const state = policy.newState('2.0.1');
+  const solo = { agents: [KEYRING.agents[0]], message: '' };
+  policy.postToolUse(state, 'list_agents', {}, solo, { now: T0, at: iso(T0) });
+  assert.equal(select(state, 'Ventas', 'ag_ventas', [], T0 + 500).decision, 'pass');
+  policy.postToolUse(state, 'release_agent', {}, { released: true }, { now: T0 + 1000, at: iso(T0 + 1000) });
+  assert.equal(select(state, 'Ventas', 'ag_ventas', [], T0 + 2000).decision, 'ask');
+  // Pedir la lista otra vez no cambia eso.
+  policy.postToolUse(state, 'list_agents', {}, solo, { now: T0 + 2500, at: iso(T0 + 2500) });
+  assert.equal(select(state, 'Ventas', 'ag_ventas', [], T0 + 3000).decision, 'ask');
+  assert.equal(select(state, 'Ventas', 'ag_ventas', [answer('Ventas', T0 + 3500)], T0 + 4000).decision, 'pass');
+});
+
+// Un estado de la 2.0.0 con una escritura confirmada hecha en `writeAt`; el agente
+// actual se eligió en T0 + 5000.
+const MONEDA = { kind: 'hecho', slug: 'moneda', title: 'Moneda', body_md: 'Reporta en pesos.' };
+function migrated(writeAt) {
+  const stable = (v) => (Array.isArray(v) ? '[' + v.map(stable).join(',') + ']' : v && typeof v === 'object' ? '{' + Object.keys(v).sort().map((k) => JSON.stringify(k) + ':' + stable(v[k])).join(',') + '}' : JSON.stringify(v));
+  const oldKey = 'remember:' + crypto.createHash('sha256').update(stable(MONEDA)).digest('hex').slice(0, 24);
+  return policy.migrate({
+    v: 1, seal: { agent_id: 'ag_finanzas', agent_name: 'Finanzas', version: 1, selection_context: 'ctx-f', quote: 'x', sealed_at: iso(T0 + 5000) },
+    seal_state: 'sealed', retired: [], reads: {}, listings: {}, previews: {}, failures: {},
+    writes: { [oldKey]: { status: 'confirmed', at: writeAt, tool: 'remember', name: 'moneda' } },
+  }, '2.0.1');
+}
+
+test('lo migrado de agente desconocido lo decide la persona', () => {
+  const asked = policy.preToolUse(migrated(T0 + 1000), 'remember', MONEDA, FACTS, { now: T0 + 6000, mode: 'default' });
+  assert.equal(asked.decision, 'ask');
+  assert.match(asked.reason, /quizá con otro agente/);
+  // Sin diálogos nadie vería la pregunta: no se repite.
+  assert.equal(policy.preToolUse(migrated(T0 + 1000), 'remember', MONEDA, FACTS, { now: T0 + 6000, mode: 'bypassPermissions' }).decision, 'deny');
+});
+
+test('lo migrado de después de elegir el agente sigue siendo suyo', () => {
+  const verdict = policy.preToolUse(migrated(T0 + 5500), 'remember', MONEDA, FACTS, { now: T0 + 6000, mode: 'default' });
+  assert.equal(verdict.decision, 'deny', 'es un duplicado de este agente');
+});
+
+test('un índice no confirma una escritura aunque muestre el mismo texto', () => {
+  const state = policy.newState('2.0.1');
+  policy.postToolUse(state, 'list_agents', {}, { agents: [KEYRING.agents[0]], message: '' }, { now: T0, at: iso(T0) });
+  select(state, 'Ventas', 'ag_ventas', [], T0 + 500);
+  // Una escritura por la ruta del cerebro, sin título.
+  const write = { concept_id: 'agents/ventas/memoria/proyecto_a', body_md: AVANCE.body_md };
+  policy.postToolUseFailure(state, 'brain_write', write, 'MCP error -32001: Request timed out', { now: T0 + 2000 }, FACTS);
+  // Datalum devolvió el índice, donde otra memoria tiene el mismo texto.
+  const index = { mode: 'index', total: 2, block: ['- avance · personal · viva · Proyecto B · id mem-9', AVANCE.body_md, '- hecho · personal · viva · Moneda · id mem-3'].join('\n') };
+  policy.postToolUse(state, 'list_memories', { memory: 'proyecto_a' }, index, { now: T0 + 3000 });
+  assert.equal(policy.preToolUse(state, 'brain_write', write, FACTS, { now: T0 + 4000, mode: 'default' }).decision, 'ask');
+});
+
+test('cambiar de agente como manda la Skill no vuelve a preguntar', () => {
+  // La persona elige Finanzas; el asistente suelta Ventas y elige Finanzas.
+  const state = policy.newState('2.0.1');
+  policy.postToolUse(state, 'list_agents', {}, KEYRING, { now: T0, at: iso(T0) });
+  const human = [answer('Ventas', T0 + 500), answer('Finanzas', T0 + 2000)];
+  assert.equal(select(state, 'Ventas', 'ag_ventas', human.slice(0, 1), T0 + 1000).decision, 'pass');
+  policy.postToolUse(state, 'release_agent', {}, { released: true }, { now: T0 + 3000, at: iso(T0 + 3000) });
+  assert.equal(select(state, 'Finanzas', 'ag_finanzas', human, T0 + 4000).decision, 'pass');
+  // Y la elección de Ventas, ya usada, no lo vuelve a elegir.
+  policy.postToolUse(state, 'release_agent', {}, { released: true }, { now: T0 + 5000, at: iso(T0 + 5000) });
+  assert.equal(select(state, 'Ventas', 'ag_ventas', human, T0 + 6000).decision, 'ask');
+});
+
+test('si elegir el agente nuevo choca con el anterior, soltarlo no anula la elección', () => {
+  const state = policy.newState('2.0.1');
+  policy.postToolUse(state, 'list_agents', {}, KEYRING, { now: T0, at: iso(T0) });
+  const human = [answer('Ventas', T0 + 500), answer('Finanzas', T0 + 2000)];
+  select(state, 'Ventas', 'ag_ventas', human.slice(0, 1), T0 + 1000);
+  const input = { agent: 'Finanzas', user_choice_quote: 'Finanzas' };
+  assert.equal(policy.preToolUse(state, 'use_agent', input, FACTS, { now: T0 + 2500, human }).decision, 'pass');
+  policy.postToolUseFailure(state, 'use_agent', input, JSON.stringify({ code: 'agent_seal_held' }), { now: T0 + 2600 }, FACTS);
+  policy.postToolUse(state, 'release_agent', {}, { released: true }, { now: T0 + 3000, at: iso(T0 + 3000) });
+  assert.equal(select(state, 'Finanzas', 'ag_finanzas', human, T0 + 4000).decision, 'pass');
+});
+
+test('una elección hecha antes de actualizar desde la 2.0.0 no vuelve a elegir', () => {
+  const state = policy.migrate({
+    v: 1, seal: { agent_id: 'ag_finanzas', agent_name: 'Finanzas', version: 1, selection_context: 'ctx-f', quote: 'Finanzas', sealed_at: iso(T0 + 1000) },
+    keyring: [{ id: 'ag_ventas', name: 'Ventas' }, { id: 'ag_finanzas', name: 'Finanzas' }],
+    seal_state: 'sealed', retired: [], reads: {}, listings: {}, previews: {}, failures: {}, writes: {},
+  }, '2.0.1', iso(T0 + 3000));
+  // Sigue trabajando con el agente que tenía elegido…
+  assert.equal(select(state, 'Finanzas', 'ag_finanzas', [], T0 + 4000).decision, 'pass');
+  // …pero tras soltarlo, la respuesta de antes de actualizar no lo vuelve a elegir.
+  policy.postToolUse(state, 'release_agent', {}, { released: true }, { now: T0 + 5000, at: iso(T0 + 5000) });
+  assert.equal(select(state, 'Finanzas', 'ag_finanzas', [answer('Finanzas', T0 + 500)], T0 + 6000).decision, 'ask');
+});
+
+test('con dos elecciones en paralelo, ninguna de las dos se vuelve a usar', () => {
+  const state = policy.newState('2.0.1');
+  policy.postToolUse(state, 'list_agents', {}, KEYRING, { now: T0, at: iso(T0) });
+  const human = [answer('Ventas', T0 + 500), answer('Finanzas', T0 + 1000)];
+  const finanzas = { agent: 'Finanzas', user_choice_quote: 'Finanzas' };
+  const ventas = { agent: 'Ventas', user_choice_quote: 'Ventas' };
+  assert.equal(policy.preToolUse(state, 'use_agent', finanzas, FACTS, { now: T0 + 2000, human, toolUseId: 'f' }).decision, 'pass');
+  assert.equal(policy.preToolUse(state, 'use_agent', ventas, FACTS, { now: T0 + 2000, human, toolUseId: 'v' }).decision, 'pass');
+  policy.postToolUse(state, 'use_agent', finanzas, seal('ag_finanzas', 'Finanzas'), { now: T0 + 2100, at: iso(T0 + 2100), toolUseId: 'f' });
+  policy.postToolUse(state, 'use_agent', ventas, seal('ag_ventas', 'Ventas'), { now: T0 + 2200, at: iso(T0 + 2200), toolUseId: 'v' });
+  policy.postToolUse(state, 'release_agent', {}, { released: true }, { now: T0 + 3000, at: iso(T0 + 3000) });
+  assert.equal(select(state, 'Finanzas', 'ag_finanzas', human, T0 + 4000).decision, 'ask');
+});

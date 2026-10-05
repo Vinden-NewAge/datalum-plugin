@@ -231,7 +231,7 @@ jobs:
           exit "$estado"
 
       - name: Avisar a una persona si algo no se resolvió solo
-        if: always() && contains(fromJSON('["incompatible","revision_requerida","contrato_no_disponible","contrato_no_coincide","despliegue_no_confirmado","pruebas_fallidas","publicacion_fallida","paquete_no_coincide"]'), steps.cierre.outputs.resultado)
+        if: always() && contains(fromJSON('["incompatible","revision_requerida","contrato_no_disponible","contrato_no_coincide","despliegue_no_confirmado","pruebas_fallidas","publicacion_fallida","paquete_no_coincide","retirada_fallida"]'), steps.cierre.outputs.resultado)
         env:
           GH_TOKEN: ${{ github.token }}
           RESULTADO: ${{ steps.cierre.outputs.resultado }}

@@ -4,6 +4,41 @@ Cada versión del plugin de Datalum dice qué cambia para quien usa la Skill, co
 versión del servidor se comprobó y qué hay que hacer para recibirla. La más reciente va
 primero.
 
+## [2.0.2] - 2026-10-05
+
+Corrige cuatro defectos que la auditoría de la 2.0.1 encontró con pruebas adicionales.
+La Skill no cambia; el contrato con Datalum tampoco.
+
+### Corregido
+
+- Después de soltar un agente, una respuesta vieja de la persona que seguía en la
+  conversación volvía a elegirlo. Ahora cada elección sirve una vez: la que ya eligió un
+  agente no vuelve a elegirlo tras soltarlo ni elige a otro, y tras soltar tampoco se da
+  por elegido el único agente de la lista. La elección que la persona hace para cambiar
+  de agente sigue valiendo aunque el modelo suelte el anterior antes de elegir el nuevo,
+  como indica la Skill.
+- Al migrar un estado de la 2.0.0, todas las escrituras pendientes se atribuían al
+  agente elegido en ese momento. Ahora sólo las posteriores a su elección; las
+  anteriores quedan sin dueño y repetirlas lo decide la persona. Lo que la persona eligió
+  antes de actualizar tampoco vuelve a elegir.
+- La recuperación de una escritura incierta no reconocía la forma real de la memoria
+  que devuelve Datalum: el archivo enmarcado con cada línea prefijada, el «no existe»
+  como `agent_memory_not_found` y el detalle anidado cuando se lee por la ruta del
+  cerebro. Un guardado comprobable podía seguir contando como incierto.
+- Al retirar una versión publicada con archivos que no se probaron, no se comprobaba que
+  la retirada funcionara, y un fallo no se podía recuperar. Ahora se comprueba; si sigue
+  a la vista, el resultado es `retirada_fallida` y el reintento la retira antes de
+  publicar lo probado. Una descarga fallida ya no se confunde con archivos distintos.
+
+### Servidor
+
+- Sin cambios de contrato: la misma producción, v2.243.0 (contrato `11e81846335d`).
+
+### Cómo recibirla
+
+- Como la 2.0.1: los pasos por aplicación están en `ACTUALIZAR.md`. Los estados
+  guardados por la 2.0.1 se leen sin cambios.
+
 ## [2.0.1] - 2026-10-05
 
 Corrige cuatro defectos de los controles del cliente de la 2.0.0. La Skill cambia en dos
