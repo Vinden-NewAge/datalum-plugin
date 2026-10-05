@@ -8,12 +8,15 @@ de GitHub son de mentira; git es el real. Ninguna toca la red.
 from __future__ import annotations
 
 import json
+import os
+import tempfile
 import unittest
+from pathlib import Path
 
 from . import support
 from .support import SHA_A, SHA_B, SHA_C, FakeProduction, Repo, base_tools, git, summary_of, tool
 
-from compatlib import contract, finalize, ledger, pipeline, versioning  # noqa: E402
+from compatlib import contract, finalize, ledger, pipeline, publish, versioning  # noqa: E402
 
 NOW = "2026-10-04T00:00:00Z"
 
@@ -376,6 +379,20 @@ class Flow(unittest.TestCase):
         self.assertNotEqual(release["assets"], bad, "se publicaron los archivos probados")
         self.assertEqual(self.remote_version(), "1.0.1")
 
+    def test_una_retirada_incierta_se_distingue_y_el_reintento_la_recupera(self):
+        tools = tools_with_change()
+        ev, prod = event(SHA_B, summary_of(tools)), FakeProduction(SHA_B, tools)
+        self.repo.forge.corrupt = {"published"}
+        # GitHub acepta la orden, pero después no se puede leer en qué estado quedó.
+        self.repo.forge.fail_on = {"state_after_unpublish"}
+        _, entry = self.run_flow(ev, prod)
+        self.assertEqual(entry["resultado"], "retirada_incierta")
+        self.repo.forge.corrupt = set()
+        _, retry = self.run_flow(ev, prod)
+        self.assertEqual(retry["resultado"], "actualizado")
+        self.assertFalse(self.repo.forge.releases["v1.0.1"]["draft"])
+        self.assertEqual(self.remote_version(), "1.0.1")
+
     def test_una_descarga_fallida_no_retira_una_version_correcta(self):
         tools = tools_with_change()
         ev, prod = event(SHA_B, summary_of(tools)), FakeProduction(SHA_B, tools)
@@ -535,6 +552,41 @@ class Flow(unittest.TestCase):
         self.assertEqual(entry["resultado"], "actualizado")
         self.assertTrue(entry["main"].startswith("pendiente"))
         self.assertEqual(self.repo.remote_main(), other)
+
+
+class GhForgeAgainstGh(unittest.TestCase):
+    """La forja real contra un `gh` de mentira: lo que contesta la CLI de GitHub."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.bin = Path(self._tmp.name)
+        self.addCleanup(self._tmp.cleanup)
+        self.forge = publish.GhForge(self.bin)
+        path = os.environ.get("PATH", "")
+        os.environ["PATH"] = f"{self.bin}{os.pathsep}{path}"
+        self.addCleanup(os.environ.__setitem__, "PATH", path)
+
+    def gh(self, script: str) -> None:
+        target = self.bin / "gh"
+        target.write_text("#!/bin/sh\n" + script, encoding="utf-8")
+        target.chmod(0o755)
+
+    def test_una_retirada_que_github_rechaza_se_informa(self):
+        self.gh('echo "HTTP 403: Resource not accessible by integration" >&2; exit 1\n')
+        self.assertIs(self.forge.unpublish("v1.0.1"), False)
+
+    def test_una_retirada_aceptada_se_informa(self):
+        self.gh("exit 0\n")
+        self.assertIs(self.forge.unpublish("v1.0.1"), True)
+
+    def test_una_version_que_no_existe_no_es_un_estado_desconocido(self):
+        self.gh('echo "release not found" >&2; exit 1\n')
+        self.assertIsNone(self.forge.release_state("v1.0.1"))
+
+    def test_un_estado_que_no_se_puede_leer_no_se_da_por_inexistente(self):
+        self.gh('echo "error connecting to api.github.com" >&2; exit 1\n')
+        with self.assertRaises(publish.StateUnknown):
+            self.forge.release_state("v1.0.1")
 
 
 class Events(unittest.TestCase):

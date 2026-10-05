@@ -1,0 +1,9 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\n  \"written\": \"memory\",\n  \"concept_id\": \"agents/ventas/memoria-compartida/moneda\",\n  \"memory\": {\n    \"outcome\": \"propuesta\",\n    \"memory_id\": null,\n    \"proposal_id\": \"6f1c0000-0000-4000-8000-00000000c003\",\n    \"agent_id\": \"6f1c0000-0000-4000-8000-00000000a001\",\n    \"kind\": \"hecho\",\n    \"title\": \"Moneda\",\n    \"slug\": \"moneda\",\n    \"scope\": \"compartida\",\n    \"notebook\": null,\n    \"notice\": \"Queda PROPUESTA, no escrita: una memoria compartida la aprueba una persona.\"\n  },\n  \"notice\": \"Queda PROPUESTA, no escrita: una memoria compartida la aprueba una persona.\"\n}"
+    }
+  ],
+  "isError": false
+}

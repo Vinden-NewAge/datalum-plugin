@@ -212,3 +212,45 @@ test('con dos elecciones en paralelo, ninguna de las dos se vuelve a usar', () =
   policy.postToolUse(state, 'release_agent', {}, { released: true }, { now: T0 + 3000, at: iso(T0 + 3000) });
   assert.equal(select(state, 'Finanzas', 'ag_finanzas', human, T0 + 4000).decision, 'ask');
 });
+
+// A escribe y se queda sin respuesta, se suelta A, se elige B, se actualiza el plugin
+// desde la 2.0.0 y se vuelve a A. La 2.0.0 no sabía de quién era cada escritura.
+function updatedAfterSwitch() {
+  const stable = (v) => (Array.isArray(v) ? '[' + v.map(stable).join(',') + ']' : v && typeof v === 'object' ? '{' + Object.keys(v).sort().map((k) => JSON.stringify(k) + ':' + stable(v[k])).join(',') + '}' : JSON.stringify(v));
+  const key = (tool, input) => tool + ':' + crypto.createHash('sha256').update(stable(input)).digest('hex').slice(0, 24);
+  const uncertain = { kind: 'avance', slug: 'proyecto_a', title: 'Proyecto A', body_md: 'Paso uno hecho.' };
+  const confirmed = { kind: 'hecho', slug: 'moneda', title: 'Moneda', body_md: 'Reporta en pesos.' };
+  const preview = { name: 'ventas_netas', expression: 'sum(neto)' };
+  const state = policy.migrate({
+    v: 1, seal: { agent_id: 'ag_finanzas', agent_name: 'Finanzas', version: 1, selection_context: 'ctx-f', quote: 'Finanzas', sealed_at: iso(T0 + 3000) },
+    keyring: [{ id: 'ag_ventas', name: 'Ventas' }, { id: 'ag_finanzas', name: 'Finanzas' }],
+    seal_state: 'sealed', retired: [], reads: {}, listings: {}, failures: {},
+    writes: {
+      [key('remember', uncertain)]: { status: 'uncertain', at: T0 + 1000, tool: 'remember', name: 'proyecto_a' },
+      [key('remember', confirmed)]: { status: 'confirmed', at: T0 + 1500, tool: 'remember', name: 'moneda' },
+    },
+    previews: { [key('upsert_metric', preview)]: T0 + 1800 },
+  }, '2.0.1', iso(T0 + 4000));
+  // Vuelve a Ventas con una elección nueva de la persona.
+  policy.postToolUse(state, 'release_agent', {}, { released: true }, { now: T0 + 5000, at: iso(T0 + 5000) });
+  assert.equal(select(state, 'Ventas', 'ag_ventas', [answer('Ventas', T0 + 5500)], T0 + 6000).decision, 'pass');
+  return { state, uncertain, confirmed, preview };
+}
+
+test('tras actualizar y volver al agente, su escritura incierta no se repite a ciegas', () => {
+  const { state, uncertain } = updatedAfterSwitch();
+  assert.equal(policy.preToolUse(state, 'remember', uncertain, FACTS, { now: T0 + 7000, mode: 'default' }).decision, 'ask');
+  assert.equal(policy.preToolUse(state, 'remember', uncertain, FACTS, { now: T0 + 7000, mode: 'bypassPermissions' }).decision, 'deny');
+});
+
+test('tras actualizar y volver al agente, su escritura confirmada no se repite a ciegas', () => {
+  const { state, confirmed } = updatedAfterSwitch();
+  assert.notEqual(policy.preToolUse(state, 'remember', confirmed, FACTS, { now: T0 + 7000, mode: 'default' }).decision, 'pass');
+});
+
+test('tras actualizar y volver al agente, una vista previa sin dueño no autoriza aplicar', () => {
+  const { state, preview } = updatedAfterSwitch();
+  const verdict = policy.preToolUse(state, 'upsert_metric', Object.assign({ confirm: true }, preview), FACTS, { now: T0 + 7000, mode: 'default' });
+  assert.equal(verdict.decision, 'deny');
+  assert.match(verdict.reason, /preview first/);
+});
