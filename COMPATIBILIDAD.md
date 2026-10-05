@@ -11,14 +11,15 @@ producción pasa a `datalum.ai` y la dirección anterior queda como qa.
 
 | Plugin | Servidor de Datalum | Contrato | Resultado |
 |---|---|---|---|
-| 2.0.3 | Producción nueva, `mcp.datalum.ai` | Sin medir | Sin comprobar: al preparar esta versión, `mcp.datalum.ai`, `api.datalum.ai` y `app.datalum.ai` contestan «Site Not Found» |
+| 2.0.3 | Producción nueva, `mcp.datalum.ai`, commit `4d49e2e7f2d3` (v2.244.0) | `11e81846335d`, 94 herramientas | Compatible: `/health` sirve ese commit y el cotejo sin sesión (protocolo, instrucciones y herramientas públicas) no encuentra diferencias. Los metadatos OAuth remiten a `api.datalum.ai/admin-api` |
 | 2.0.3 | qa, `mcp.datahub.vinden.cc`, commit `4d49e2e7f2d3` (v2.244.0) | `11e81846335d`, 94 herramientas, armado del código de ese commit sin red ni base | Compatible sin cambios: igual al de la v2.243.0 guardado |
 
 Qué se ejecutó: `python3 scripts/check.py`, las pruebas de `tests/` y
 `claude plugin validate .`. No hay reglas nuevas que medir con mutantes.
 
-Cuando la producción nueva responda, la lectura de cada hora verá su commit. Sin el
-aviso del servidor anotará `contrato_no_disponible`; la comprobación se lanza a mano con
+Al preparar esta versión la producción nueva todavía no respondía; se midió cuando la
+Publicación 33 la dio por verificada. La lectura de cada hora verá su commit; sin el
+aviso del servidor anotará `contrato_no_disponible`, y la comprobación se lanza a mano con
 el contrato de ese commit, como dice `MANTENER.md`.
 
 ## Versión 2.0.2
