@@ -5,8 +5,12 @@ segunda descarga y cotejo. `main` se mueve después, así que si algo falla ante
 instalaciones siguen recibiendo la última versión válida.
 
 Cada paso mira primero qué existe. Por eso el mismo despliegue se puede reintentar tras
-un fallo: lo hecho se reconoce y no se repite. Una etiqueta o una versión publicada con
-otro contenido detiene todo; nunca se sobrescriben.
+un fallo: lo hecho se reconoce y no se repite. Una etiqueta con otro contenido detiene
+todo, y una versión publicada con otros archivos también, salvo que la haya dejado así
+un intento anterior de este mismo proceso (`recover`): entonces se retira y se publica
+lo probado. Retirar es devolverla a borrador, y se comprueba en GitHub que quedó
+retirada: si sigue a la vista la retirada falló, y si no se puede leer cómo quedó es
+incierta. Las dos se recuperan en el reintento del mismo despliegue.
 """
 
 from __future__ import annotations
@@ -29,13 +33,44 @@ class PackageMismatch(RuntimeError):
     """Lo descargado no es lo que se probó."""
 
 
+class WithdrawFailed(RuntimeError):
+    """Una versión con archivos que no se probaron sigue a la vista."""
+
+
+class WithdrawUncertain(RuntimeError):
+    """No se pudo leer si una versión con archivos que no se probaron quedó retirada."""
+
+
+class StateUnknown(RuntimeError):
+    """GitHub no contestó en qué estado está una versión."""
+
+
+class DownloadFailed(RuntimeError):
+    """No se pudieron descargar los archivos de una versión para cotejarlos."""
+
+
+def withdraw(forge, tag: str) -> None:
+    """Devuelve la versión a borrador y comprueba en GitHub que dejó de estar a la vista."""
+    accepted = forge.unpublish(tag)
+    try:
+        state = forge.release_state(tag)
+    except StateUnknown as e:
+        raise WithdrawUncertain(f"no se sabe si la versión {tag}, con archivos que no se probaron, quedó retirada: {e}") from e
+    if state == "published":
+        refused = "" if accepted else "; GitHub rechazó la orden"
+        raise WithdrawFailed(f"la versión {tag}, con archivos que no se probaron, sigue publicada{refused}")
+
+
 def file_sha256(path: Path) -> str:
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def publish(forge, *, tag: str, commit: str, digest: str, title: str, notes: str, assets: dict) -> dict:
+def publish(
+    forge, *, tag: str, commit: str, digest: str, title: str, notes: str, assets: dict, recover: bool = False
+) -> dict:
     """`assets` es {nombre: ruta} de los archivos ya probados. `digest` es la huella
-    del contenido publicable del commit probado."""
+    del contenido publicable del commit probado. `recover` permite retirar una versión
+    publicada con otros archivos que dejó un intento anterior de este mismo proceso."""
     expected = {name: file_sha256(path) for name, path in sorted(assets.items())}
 
     existing = forge.remote_tag(tag)
@@ -46,9 +81,14 @@ def publish(forge, *, tag: str, commit: str, digest: str, title: str, notes: str
 
     state = forge.release_state(tag)
     if state == "published":
-        if forge.release_assets(tag) != expected:
+        if forge.release_assets(tag) == expected:
+            return {"estado": "ya_publicada", "activos": expected}
+        if not recover:
             raise Immutable(f"la versión {tag} ya está publicada con otros archivos")
-        return {"estado": "ya_publicada", "activos": expected}
+        # La etiqueta tiene el contenido probado y el empaquetado es reproducible: lo
+        # publicado no es lo que sale de ese contenido. Se retira y se publica bien.
+        withdraw(forge, tag)
+        state = "draft"
     if state == "draft" and forge.release_assets(tag) != expected:
         forge.delete_draft(tag)
         state = None
@@ -59,9 +99,9 @@ def publish(forge, *, tag: str, commit: str, digest: str, title: str, notes: str
         raise PackageMismatch(f"los archivos del borrador de {tag} no son los que se probaron")
     forge.publish(tag)
     if forge.release_assets(tag) != expected:
-        # Vuelve a borrador: deja de verse y deja de ser «la última». No queda a la
-        # vista una versión con archivos que no se probaron.
-        forge.unpublish(tag)
+        # Vuelve a borrador: deja de verse y deja de ser «la última». Si no lo consigue,
+        # lo dice, para no dejar a la vista sin aviso una versión que no se probó.
+        withdraw(forge, tag)
         raise PackageMismatch(f"los archivos publicados de {tag} no son los que se probaron")
     return {"estado": "publicada", "activos": expected}
 
@@ -96,16 +136,24 @@ class GhForge:
             return versioning.shipped_digest(Path(tmp))
 
     def release_state(self, tag: str) -> Optional[str]:
+        """`draft`, `published` o None si la versión no existe. Si GitHub no contesta,
+        no se supone nada."""
         result = self._run("gh", "release", "view", tag, "--json", "isDraft", check=False)
         if result.returncode != 0:
-            return None
+            if "not found" in result.stderr.lower():
+                return None
+            detail = result.stderr.strip().splitlines()[-1] if result.stderr.strip() else "sin detalle"
+            raise StateUnknown(f"no se pudo leer el estado de {tag} ({detail})")
         return "draft" if json.loads(result.stdout)["isDraft"] else "published"
 
     def release_assets(self, tag: str) -> dict:
         with tempfile.TemporaryDirectory() as tmp:
             result = self._run("gh", "release", "download", tag, "--dir", tmp, check=False)
             if result.returncode != 0:
-                return {}
+                if self.release_state(tag) is None:
+                    return {}
+                # La versión existe y no se pudo descargar: eso no es «otros archivos».
+                raise DownloadFailed(f"no se pudieron descargar los archivos de {tag}")
             return {p.name: file_sha256(p) for p in sorted(Path(tmp).iterdir()) if p.is_file()}
 
     def create_draft(self, tag: str, title: str, notes: str, assets: dict) -> None:
@@ -122,8 +170,10 @@ class GhForge:
     def publish(self, tag: str) -> None:
         self._run("gh", "release", "edit", tag, "--draft=false", "--latest")
 
-    def unpublish(self, tag: str) -> None:
-        self._run("gh", "release", "edit", tag, "--draft=true", check=False)
+    def unpublish(self, tag: str) -> bool:
+        """Pide volver a borrador. Devuelve si GitHub aceptó la orden; si quedó retirada
+        lo comprueba `withdraw` leyendo el estado."""
+        return self._run("gh", "release", "edit", tag, "--draft=true", check=False).returncode == 0
 
     def advance_main(self, commit: str, *, branch: str, title: str, body: str) -> str:
         """Lleva `main` al commit. Si las reglas del repositorio no dejan empujar,

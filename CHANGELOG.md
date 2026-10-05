@@ -4,6 +4,59 @@ Cada versión del plugin de Datalum dice qué cambia para quien usa la Skill, co
 versión del servidor se comprobó y qué hay que hacer para recibirla. La más reciente va
 primero.
 
+## [2.0.2] - 2026-10-05
+
+Corrige los pendientes que la auditoría de la 2.0.1 encontró con pruebas adicionales.
+La Skill cambia un paso de memoria; el contrato con Datalum no cambia.
+
+### Corregido
+
+- Después de soltar un agente, una respuesta vieja de la persona que seguía en la
+  conversación volvía a elegirlo. Ahora cada elección sirve una vez: la que ya eligió un
+  agente no vuelve a elegirlo tras soltarlo ni elige a otro, y tras soltar tampoco se da
+  por elegido el único agente de la lista. La elección que la persona hace para cambiar
+  de agente sigue valiendo aunque el modelo suelte el anterior antes de elegir el nuevo,
+  como indica la Skill.
+- Al migrar un estado de la 2.0.0, todas las escrituras pendientes se atribuían al
+  agente elegido en ese momento. Ahora sólo las posteriores a su elección; las
+  anteriores quedan sin dueño y repetirlas lo decide la persona. Lo que la persona eligió
+  antes de actualizar tampoco vuelve a elegir.
+- La recuperación de una escritura incierta no reconocía la forma real de la memoria
+  que devuelve Datalum: el archivo enmarcado con cada línea prefijada, el «no existe»
+  como `agent_memory_not_found` y el detalle anidado cuando se lee por la ruta del
+  cerebro. Un guardado comprobable podía seguir contando como incierto.
+- Una propuesta de memoria presentada por `brain_write` se anunciaba como guardada: el
+  cliente buscaba el recibo en la raíz y `brain_write` lo devuelve dentro de `memory`.
+  Ahora lee cada respuesta según su contrato y distingue cuatro casos: escrita,
+  propuesta que espera la aprobación de una persona, resultado incierto y escrita cuya
+  relectura falló. Una propuesta no se puede presentar dos veces.
+- Una lectura del detalle de otro agente, o el «no existe» de una memoria compartida,
+  resolvía una escritura incierta. Ahora no: una propuesta puede estar esperando
+  aprobación. Repetirla lo decide la persona, avisada de que puede duplicarla.
+- Los avisos de recuperación del cliente mandaban usar `list_memories`. Ahora remiten al
+  procedimiento de memoria del cerebro del agente, y el paso de memoria de la Skill
+  tampoco nombra una herramienta. El cliente sigue reconociendo las dos rutas.
+- Al retirar una versión publicada con archivos que no se probaron, se ignoraba el
+  rechazo de GitHub y no se comprobaba la retirada; un fallo no se podía recuperar.
+  Ahora se lee el estado en GitHub: si sigue a la vista, el resultado es
+  `retirada_fallida`; si no se puede leer, `retirada_incierta`. El reintento del mismo
+  despliegue recupera las dos antes de publicar lo probado. Una descarga fallida ya no
+  se confunde con archivos distintos.
+
+### Documentación
+
+- `INSTALAR.md` y el README dicen que el plugin no instala los recursos de entrega de un
+  agente, como `datalum-entregables` o el formato del Builder: los nombra su cerebro.
+
+### Servidor
+
+- Sin cambios de contrato: la misma producción, v2.243.0 (contrato `11e81846335d`).
+
+### Cómo recibirla
+
+- Como la 2.0.1: los pasos por aplicación están en `ACTUALIZAR.md`. Los estados
+  guardados por la 2.0.1 se leen sin cambios.
+
 ## [2.0.1] - 2026-10-05
 
 Corrige cuatro defectos de los controles del cliente de la 2.0.0. La Skill cambia en dos

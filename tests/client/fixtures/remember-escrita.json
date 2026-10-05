@@ -1,0 +1,9 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\n  \"outcome\": \"escrita\",\n  \"memory_id\": \"6f1c0000-0000-4000-8000-00000000b002\",\n  \"proposal_id\": null,\n  \"agent_id\": \"6f1c0000-0000-4000-8000-00000000a001\",\n  \"kind\": \"hecho\",\n  \"title\": \"Cierre de ventas · octubre\",\n  \"slug\": \"cierre_de_ventas\",\n  \"scope\": \"personal\",\n  \"notebook\": {\n    \"live\": 3,\n    \"invalidated\": 1,\n    \"chars\": 1820\n  },\n  \"notice\": \"Añadida a TU memoria sobre este agente. Nadie más la ve.\"\n}"
+    }
+  ],
+  "isError": false
+}

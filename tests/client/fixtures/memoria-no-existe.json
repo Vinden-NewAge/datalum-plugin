@@ -1,0 +1,19 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "No hay ninguna memoria tuya con ese identificador en este agente · pídelas con list_memories y usa el `id` que aparece ahí, o el nombre con el que se guardó."
+    },
+    {
+      "type": "text",
+      "text": "{\n  \"code\": \"agent_memory_not_found\",\n  \"category\": \"not_found\",\n  \"retryable\": false,\n  \"message\": \"No hay ninguna memoria tuya con ese identificador en este agente · pídelas con list_memories y usa el `id` que aparece ahí, o el nombre con el que se guardó.\"\n}"
+    }
+  ],
+  "isError": true,
+  "structuredContent": {
+    "code": "agent_memory_not_found",
+    "category": "not_found",
+    "retryable": false,
+    "message": "No hay ninguna memoria tuya con ese identificador en este agente · pídelas con list_memories y usa el `id` que aparece ahí, o el nombre con el que se guardó."
+  }
+}

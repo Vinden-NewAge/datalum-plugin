@@ -37,6 +37,10 @@ Installation steps for customers, in Spanish: [INSTALAR.md](INSTALAR.md).
 The checks use no network and install nothing. `scripts/`, `tests/`, `evals/` and
 `compat/` are for maintaining this repository and are not part of the skill package.
 
+The plugin brings the connection and the generic skill. It does not install an agent's
+delivery resources, such as `datalum-entregables` or the Builder's output format: the
+agent's brain names them and says how to get them.
+
 ## Install
 
 Claude Code:

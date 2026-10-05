@@ -8,12 +8,15 @@ de GitHub son de mentira; git es el real. Ninguna toca la red.
 from __future__ import annotations
 
 import json
+import os
+import tempfile
 import unittest
+from pathlib import Path
 
 from . import support
 from .support import SHA_A, SHA_B, SHA_C, FakeProduction, Repo, base_tools, git, summary_of, tool
 
-from compatlib import contract, finalize, ledger, pipeline, versioning  # noqa: E402
+from compatlib import contract, finalize, ledger, pipeline, publish, versioning  # noqa: E402
 
 NOW = "2026-10-04T00:00:00Z"
 
@@ -355,6 +358,96 @@ class Flow(unittest.TestCase):
         self.assertFalse(release["latest"])
         self.assertEqual(self.remote_version(), "1.0.0")
 
+    # Defecto de la 2.0.1: la retirada de una publicación incorrecta no se comprobaba.
+    def test_una_retirada_fallida_se_detecta_y_el_reintento_la_recupera(self):
+        tools = tools_with_change()
+        ev, prod = event(SHA_B, summary_of(tools)), FakeProduction(SHA_B, tools)
+        self.repo.forge.corrupt = {"published"}
+        self.repo.forge.fail_on = {"unpublish"}
+        _, entry = self.run_flow(ev, prod)
+        self.assertEqual(entry["resultado"], "retirada_fallida", "la retirada no se dio por hecha")
+        self.assertFalse(self.repo.forge.releases["v1.0.1"]["draft"], "la versión sigue a la vista")
+
+        # Lo publicado ya no está corrupto, pero sigue con los archivos equivocados.
+        self.repo.forge.corrupt = set()
+        bad = {name: "0" * 64 for name in self.repo.forge.releases["v1.0.1"]["assets"]}
+        self.repo.forge.releases["v1.0.1"]["assets"] = bad
+        _, retry = self.run_flow(ev, prod)
+        self.assertEqual(retry["resultado"], "actualizado")
+        release = self.repo.forge.releases["v1.0.1"]
+        self.assertFalse(release["draft"])
+        self.assertNotEqual(release["assets"], bad, "se publicaron los archivos probados")
+        self.assertEqual(self.remote_version(), "1.0.1")
+
+    def test_una_retirada_incierta_se_distingue_y_el_reintento_la_recupera(self):
+        tools = tools_with_change()
+        ev, prod = event(SHA_B, summary_of(tools)), FakeProduction(SHA_B, tools)
+        self.repo.forge.corrupt = {"published"}
+        # GitHub acepta la orden, pero después no se puede leer en qué estado quedó.
+        self.repo.forge.fail_on = {"state_after_unpublish"}
+        _, entry = self.run_flow(ev, prod)
+        self.assertEqual(entry["resultado"], "retirada_incierta")
+        self.repo.forge.corrupt = set()
+        _, retry = self.run_flow(ev, prod)
+        self.assertEqual(retry["resultado"], "actualizado")
+        self.assertFalse(self.repo.forge.releases["v1.0.1"]["draft"])
+        self.assertEqual(self.remote_version(), "1.0.1")
+
+    def test_una_retirada_rechazada_y_sin_estado_se_recupera_en_el_reintento(self):
+        tools = tools_with_change()
+        ev, prod = event(SHA_B, summary_of(tools)), FakeProduction(SHA_B, tools)
+        self.repo.forge.corrupt = {"published"}
+        # GitHub rechaza la orden y además no contesta cómo quedó: sigue a la vista.
+        self.repo.forge.fail_on = {"unpublish", "state_after_unpublish"}
+        _, entry = self.run_flow(ev, prod)
+        self.assertEqual(entry["resultado"], "retirada_incierta")
+        self.assertFalse(self.repo.forge.releases["v1.0.1"]["draft"])
+        self.repo.forge.corrupt = set()
+        bad = {name: "0" * 64 for name in self.repo.forge.releases["v1.0.1"]["assets"]}
+        self.repo.forge.releases["v1.0.1"]["assets"] = bad
+        _, retry = self.run_flow(ev, prod)
+        self.assertEqual(retry["resultado"], "actualizado")
+        self.assertNotEqual(self.repo.forge.releases["v1.0.1"]["assets"], bad, "se publicaron los archivos probados")
+
+    def test_una_descarga_fallida_no_retira_una_version_correcta(self):
+        tools = tools_with_change()
+        ev, prod = event(SHA_B, summary_of(tools)), FakeProduction(SHA_B, tools)
+        # Falla la descarga de después de publicar: no se sabe qué quedó, no que esté mal.
+        original = self.repo.forge.publish
+
+        def publish_then_lose_download(tag):
+            original(tag)
+            self.repo.forge.fail_on.add("download")
+
+        self.repo.forge.publish = publish_then_lose_download
+        _, entry = self.run_flow(ev, prod)
+        self.assertEqual(entry["resultado"], "publicacion_fallida")
+        self.assertNotIn("unpublish", self.repo.forge.calls)
+        self.assertFalse(self.repo.forge.releases["v1.0.1"]["draft"], "la versión correcta sigue publicada")
+        self.repo.forge.publish = original
+        _, retry = self.run_flow(ev, prod)
+        self.assertEqual(retry["resultado"], "actualizado")
+        self.assertEqual(retry["publicacion"]["estado"], "ya_publicada")
+
+    def test_sin_un_intento_propio_anterior_no_se_toca_una_version_publicada(self):
+        tools = tools_with_change()
+        ev, prod = event(SHA_B, summary_of(tools)), FakeProduction(SHA_B, tools)
+        # Una versión v1.0.1 ya publicada con otros archivos, sin intento previo de este
+        # despliegue en el registro: no se retira ni se cambia.
+        self.run_flow(event(SHA_A, summary_of(base_tools())), FakeProduction(SHA_A, base_tools()))
+        self.repo.forge.corrupt = {"published"}
+        self.repo.forge.fail_on = {"unpublish"}
+        self.run_flow(ev, prod)  # deja v1.0.1 publicada con archivos malos: retirada_fallida
+        self.repo.forge.corrupt = set()
+        bad = {name: "0" * 64 for name in self.repo.forge.releases["v1.0.1"]["assets"]}
+        self.repo.forge.releases["v1.0.1"]["assets"] = bad
+        from compatlib import publish as pub
+        assets = self.repo.package()
+        with self.assertRaises(pub.Immutable):
+            pub.publish(self.repo.forge, tag="v1.0.1", commit="HEAD", digest=self.repo.forge.tag_digest("v1.0.1"),
+                        title="t", notes="n", assets=assets, recover=False)
+        self.assertEqual(self.repo.forge.releases["v1.0.1"]["assets"], bad)
+
     def test_tras_volver_a_borrador_el_reintento_publica_lo_probado(self):
         tools = tools_with_change()
         ev, prod = event(SHA_B, summary_of(tools)), FakeProduction(SHA_B, tools)
@@ -475,6 +568,41 @@ class Flow(unittest.TestCase):
         self.assertEqual(entry["resultado"], "actualizado")
         self.assertTrue(entry["main"].startswith("pendiente"))
         self.assertEqual(self.repo.remote_main(), other)
+
+
+class GhForgeAgainstGh(unittest.TestCase):
+    """La forja real contra un `gh` de mentira: lo que contesta la CLI de GitHub."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.bin = Path(self._tmp.name)
+        self.addCleanup(self._tmp.cleanup)
+        self.forge = publish.GhForge(self.bin)
+        path = os.environ.get("PATH", "")
+        os.environ["PATH"] = f"{self.bin}{os.pathsep}{path}"
+        self.addCleanup(os.environ.__setitem__, "PATH", path)
+
+    def gh(self, script: str) -> None:
+        target = self.bin / "gh"
+        target.write_text("#!/bin/sh\n" + script, encoding="utf-8")
+        target.chmod(0o755)
+
+    def test_una_retirada_que_github_rechaza_se_informa(self):
+        self.gh('echo "HTTP 403: Resource not accessible by integration" >&2; exit 1\n')
+        self.assertIs(self.forge.unpublish("v1.0.1"), False)
+
+    def test_una_retirada_aceptada_se_informa(self):
+        self.gh("exit 0\n")
+        self.assertIs(self.forge.unpublish("v1.0.1"), True)
+
+    def test_una_version_que_no_existe_no_es_un_estado_desconocido(self):
+        self.gh('echo "release not found" >&2; exit 1\n')
+        self.assertIsNone(self.forge.release_state("v1.0.1"))
+
+    def test_un_estado_que_no_se_puede_leer_no_se_da_por_inexistente(self):
+        self.gh('echo "error connecting to api.github.com" >&2; exit 1\n')
+        with self.assertRaises(publish.StateUnknown):
+            self.forge.release_state("v1.0.1")
 
 
 class Events(unittest.TestCase):

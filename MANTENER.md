@@ -69,7 +69,9 @@ el entorno previo (`candidata.promovida`).
 | `contrato_no_coincide` | El contrato del aviso no es el que sirve el servidor | Sí |
 | `pruebas_fallidas` | Las pruebas no pasan con el contrato nuevo | Sí |
 | `publicacion_fallida` | Algún paso de la publicación falló | Sí |
-| `paquete_no_coincide` | Lo descargado no es lo que se probó | Sí |
+| `paquete_no_coincide` | Lo descargado no es lo que se probó; la versión volvió a borrador | Sí |
+| `retirada_fallida` | Lo publicado no es lo que se probó y no se pudo devolver a borrador: sigue a la vista | Sí, y el reintento la retira antes de publicar |
+| `retirada_incierta` | Lo publicado no es lo que se probó, se pidió devolverlo a borrador y GitHub no contestó cómo quedó | Sí, y el reintento la retira si sigue a la vista |
 
 Mientras el último despliegue confirmado de producción esté en un resultado cerrado,
 repetir el mismo aviso no hace nada. Con un resultado que se reintenta, la lectura de la
@@ -86,7 +88,8 @@ hora siguiente vuelve a intentarlo.
 | Dos corridas que escriben a la vez | El cierre parte del mismo commit que la comprobación. Si `main` se movió, no lo pisa: deja una rama, abre el PR si puede y la corrida termina en rojo |
 | Dos versiones por el mismo despliegue | Un despliegue cerrado no se vuelve a procesar; una etiqueta que existe se reutiliza |
 | Cambiar una versión publicada | Una etiqueta o una versión con otro contenido detiene todo |
-| Publicar algo distinto de lo probado | Se compara la huella del contenido antes de etiquetar, y la de los archivos antes y después de publicar |
+| Publicar algo distinto de lo probado | Se compara la huella del contenido antes de etiquetar, y la de los archivos antes y después de publicar. Si lo publicado no coincide, vuelve a borrador y se comprueba en GitHub que volvió; si sigue a la vista, el resultado es `retirada_fallida`, y si no se puede leer cómo quedó, `retirada_incierta` |
+| Confundir una descarga fallida con otros archivos | Si no se pueden descargar los archivos de una versión que existe, el intento termina en `publicacion_fallida` sin retirar nada |
 | Anunciar una actualización que no terminó | `main` se mueve al final. Si algo falla antes, la última versión válida sigue siendo la vigente y el flujo termina en rojo |
 | Revertir producción por un fallo del plugin | El flujo no tiene permisos ni código para tocar el servidor |
 
@@ -97,7 +100,7 @@ hora siguiente vuelve a intentarlo.
 | El paso de aviso y la sonda de contrato | Repositorio del servidor | Que el despliegue avise cuando termina, con su contrato | La lectura de cada hora ve el cambio de commit y anota `contrato_no_disponible` |
 | Secreto `DATALUM_PLUGIN_DISPATCH_TOKEN` | Repositorio del servidor | Disparar `compat.yml`. Permiso: Actions, lectura y escritura, sólo sobre este repositorio | No hay aviso |
 | Variable `COMPAT_ACTORES` | Este repositorio | Aceptar avisos sólo de esa cuenta | Se acepta el aviso de cualquiera que pueda lanzar el flujo. El servidor lo confirma igual |
-| Secreto `DATALUM_COMPAT_TOKEN` | Este repositorio | Leer el catálogo completo del servidor desplegado | El cotejo es parcial: commit, instrucciones y protocolo |
+| Secreto `DATALUM_COMPAT_TOKEN` | Este repositorio | Leer el catálogo completo del servidor desplegado. Hoy no hay con qué: Datalum emite tokens de una hora, con renovación de 30 días que cambia en cada uso | El cotejo es parcial: commit, instrucciones y protocolo |
 | «Allow GitHub Actions to create and approve pull requests» | Ajustes de este repositorio | Abrir el PR cuando `main` no admita el empuje directo | Queda la rama `auto/compat-…` y el flujo lo dice; alguien abre el PR |
 
 Qué tiene que mandar el servidor está en `integracion-servidor/README.md`. GitHub apaga
@@ -129,7 +132,9 @@ gh workflow run compat.yml -f entorno=prod -f sha=<commit de 40 caracteres> -f c
 | `despliegue_no_confirmado` | Mira `/health`. Si el servidor está sano y sirve otro commit, el aviso era de un despliegue que no quedó: no hay nada que hacer |
 | `pruebas_fallidas` | Corre las pruebas en local con el contrato de `compat/contratos/<commit>.json`. El fallo dice qué supuesto del plugin dejó de valer |
 | `publicacion_fallida` | Vuelve a lanzar el flujo. Reconoce la etiqueta y el borrador que quedaron y sigue desde ahí. Si el detalle dice que la etiqueta existe con otro contenido, alguien publicó esa versión a mano: sube la versión por PR |
-| `paquete_no_coincide` | No se publicó, o se retiró de «última versión». Vuelve a lanzar. Si se repite, compara el zip de la versión con `python3 scripts/package.py` en la etiqueta |
+| `paquete_no_coincide` | La versión volvió a borrador. Vuelve a lanzar. Si se repite, compara el zip de la versión con `python3 scripts/package.py` en la etiqueta |
+| `retirada_fallida` | Urgente: hay a la vista una versión con archivos que no se probaron. Vuelve a lanzar la comprobación: como el intento anterior fue suyo, la retira, comprueba que quedó en borrador y publica lo probado. Si tampoco puede, devuélvela a borrador a mano en Releases. Para una versión publicada a mano: `python3 scripts/compat.py publicar --tag vX.Y.Z --recuperar` |
+| `retirada_incierta` | Urgente hasta saber cómo quedó. Mira la versión en Releases: si es borrador, ya está retirada; si sigue publicada, haz lo mismo que con `retirada_fallida`. Volver a lanzar la comprobación cubre los dos casos |
 | La corrida terminó en rojo con «main no avanzó» | Otra corrida movió `main` mientras ésta trabajaba. Vuelve a lanzar la corrida desde Actions con «Re-run»: conserva las entradas, contrato incluido, y parte del `main` nuevo. Si había publicado una versión, la reconoce y no la duplica. Borra después la rama `auto/compat-…` que quedó |
 
 Tras un rollback de producción la lectura de cada hora ve el commit anterior, usa su

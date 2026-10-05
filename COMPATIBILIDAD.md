@@ -4,6 +4,93 @@ Qué versión del plugin se comprobó contra qué, y cómo. «Comprobado» quier
 algo se ejecutó y dio ese resultado. Lo que sólo consta en la documentación de un
 producto se marca «Sin comprobar».
 
+## Versión 2.0.2
+
+Medida el 4 de octubre de 2026 sobre el contenido con huella `3f26973e6ca7`. Cierra los
+pendientes que la auditoría de la 2.0.1 (`cc9d0d6`) encontró con pruebas adicionales:
+la elección del agente, la migración desde la 2.0.0, la lectura de las respuestas
+reales de Datalum, los avisos de recuperación y la retirada de una publicación. La
+Skill cambia un paso de memoria.
+
+### Servidor
+
+| Plugin | Servidor de Datalum | Contrato | Resultado |
+|---|---|---|---|
+| 2.0.2 | Producción, `mcp.datahub.vinden.cc`, commit `22a5a022caeb` (v2.243.0) | `11e81846335d`, 94 herramientas | Compatible: `check.py` contra el contrato guardado |
+
+Sin despliegues de Datalum desde la 2.0.0. La forma de las respuestas se tomó del código
+del servidor, leído sin modificarlo, y está en las fixtures de `tests/client/fixtures/`
+con contenido sintético: el sobre MCP con el JSON como texto, el recibo de `remember` en
+la raíz y el de `brain_write` dentro de `memory`, el detalle enmarcado con cada línea
+prefijada, el sobre de `brain_read` y el rechazo `agent_memory_not_found` en dos bloques.
+
+### Qué se ejecutó
+
+Tres clases de prueba, y sólo la primera se ejecutó entera:
+
+| Clase | Qué | Resultado |
+|---|---|---|
+| Local | Reproducción, primera parte: `tests/client/defectos-2.0.1.test.js` y `test_una_retirada_fallida_se_detecta_y_el_reintento_la_recupera` | Contra la 2.0.1 fallan las 6. Con la 2.0.2 pasan |
+| Local | Reproducción, segunda parte (commit `c820303`): respuestas reales de Datalum, avisos de recuperación y retirada | Contra la primera parte de la 2.0.2 fallan 10 del cliente y 4 de la retirada. Contra la 2.0.1 fallan 23 de las 31 pruebas nuevas del cliente; las otras 8 son resguardos de conductas que la 2.0.1 ya tenía bien |
+| Local | `tests/docs/` | 31 pruebas, todas pasan |
+| Local | `tests/compat/`: la actualización automática y la forja contra un `gh` de mentira | 50 pruebas, todas pasan |
+| Local | `tests/client/`: política, adaptador, regresiones y respuestas reales | 130 pruebas, todas pasan |
+| Local | 40 mutantes nuevos, uno por regla de la 2.0.2 | Las pruebas detectan los 40. Cuatro sobrevivieron a la primera medición y cada uno ganó su prueba |
+| Local | Los 41 mutantes de la 2.0.1, doce rehechos sobre las líneas que cambiaron | Las pruebas detectan los 41 |
+| Local | Los mutantes de la automatización que siguen aplicando | Las pruebas detectan 25. Sobrevive el mismo equivalente de la 2.0.1 |
+| Local | `python3 scripts/check.py` y `claude plugin validate .` (Claude Code 2.1.286) | Pasan. `validate` advierte que ignora el campo `logo` |
+| Local | Revisión de código, dos pasadas | 7 hallazgos, todos arreglados. El más serio: soltar el agente anulaba la elección que la persona acababa de hacer para cambiarlo, y la Skill manda soltar antes de elegir el nuevo |
+| Evaluación del modelo | `claude plugin eval` | No se ejecutó: Claude Code no tiene sesión iniciada en esta máquina (`loggedIn: false`) |
+| Anfitrión real | El diálogo de permisos en una sesión interactiva, y cualquier aplicación fuera de Claude Code | No se ejecutó. Las pruebas lanzan el adaptador con los eventos que entrega la aplicación |
+
+No se tocaron agentes, memorias ni versiones publicadas: todo corre contra respuestas
+armadas con la forma del servidor y contra una forja simulada.
+
+### Dónde se prueba cada caso de la 2.0.2
+
+| Caso | Pruebas |
+|---|---|
+| Una elección vieja tras soltar o cambiar de agente | `una elección vieja de la persona no vale después de soltar el agente`, `elegir otro agente también deja sin efecto lo elegido antes`, `con dos elecciones en paralelo, ninguna de las dos se vuelve a usar`, `tras soltar el único agente, la persona vuelve a decidir`, `una respuesta de antes de la lista de agentes no cuenta` |
+| Cambiar o renovar sin preguntas repetidas | `cambiar de agente como manda la Skill no vuelve a preguntar`, `si elegir el agente nuevo choca con el anterior, soltarlo no anula la elección`, `continuación válida: tras caducar la selección…` |
+| Migración desde la 2.0.0 | `migrar no atribuye al agente actual lo que escribió otro antes`, `lo migrado de agente desconocido lo decide la persona`, `lo migrado de después de elegir el agente sigue siendo suyo`, `tras actualizar y volver al agente, su escritura incierta no se repite a ciegas`, `…su escritura confirmada no se repite a ciegas`, `…una vista previa sin dueño no autoriza aplicar`, `una elección hecha antes de actualizar desde la 2.0.0 no vuelve a elegir`, `tras actualizar desde la 2.0.0, una elección de antes no vuelve a elegir` |
+| Escrita, propuesta, incierta y escrita con relectura fallida | `brain_write: una propuesta no se anuncia como guardada`, `brain_write: lo escrito se reconoce aunque llegue dentro de memory`, `remember: el recibo real cuenta como escrito`, `una respuesta sin recibo no cuenta como escrita`, `una escritura confirmada cuya relectura falla sigue guardada`, `no encontrar una propuesta presentada es lo esperado, y se dice` |
+| Agente, audiencia, destino, estado y paginación de una lectura | `el detalle de otro agente no confirma la escritura de éste`, `que una memoria compartida no exista no prueba que la propuesta no se presentó`, `un índice real nunca confirma, aunque traiga el mismo texto`, y las de la 2.0.1 sobre ámbito, destino, estado y lectura cortada |
+| La respuesta capa por capa | `la respuesta se lee capa por capa, sin tocar los escapes del texto`, `brain_read: el detalle real, con escapes en el texto, confirma la escritura`, `list_memories: el detalle real también confirma la escritura de remember` |
+| Avisos que remiten al cerebro | `los avisos de recuperación remiten al procedimiento de memoria del cerebro`, `test_la_skill_no_impone_una_ruta_de_memoria` |
+| Retirar una versión publicada con otros archivos | `test_una_retirada_fallida_se_detecta_y_el_reintento_la_recupera`, `test_una_retirada_incierta_se_distingue_y_el_reintento_la_recupera`, `test_una_retirada_rechazada_y_sin_estado_se_recupera_en_el_reintento`, `test_sin_un_intento_propio_anterior_no_se_toca_una_version_publicada`, `test_una_descarga_fallida_no_retira_una_version_correcta`, y las cuatro de `GhForgeAgainstGh` |
+
+### Actualización después de producción
+
+Lo resuelto en este repositorio: el flujo `compat.yml` recibe el aviso de un despliegue,
+confirma lo que sirve producción, publica si el cambio se resuelve solo y se recupera de
+sus fallos. Ahora también comprueba en GitHub la retirada de una versión publicada con
+archivos que no se probaron: `retirada_fallida` si sigue a la vista, `retirada_incierta`
+si no se pudo leer cómo quedó. El reintento del mismo despliegue recupera las dos, y una
+versión publicada por otro camino detiene todo, como antes.
+
+La actualización tras el despliegue final de producción todavía no es automática de
+punta a punta. Las pruebas unitarias no cambian eso. Estado comprobado el 4 de octubre:
+
+| Pieza | Dónde | Estado |
+|---|---|---|
+| El paso que avisa al terminar el despliegue | Repositorio del servidor | No existe en su `main`. Está capturado como issue abierto del servidor, y lo que tiene que mandar está en `integracion-servidor/README.md`. Este encargo tiene permiso de sólo lectura sobre ese repositorio |
+| Secreto `DATALUM_PLUGIN_DISPATCH_TOKEN` | Repositorio del servidor | Sin crear |
+| Secreto `DATALUM_COMPAT_TOKEN` y variable `COMPAT_ACTORES` | Este repositorio | Sin crear |
+
+Mientras falte el aviso, la lectura de cada hora ve el commit nuevo, anota
+`contrato_no_disponible` y avisa a una persona. Con `DATALUM_COMPAT_TOKEN` la lectura
+podría leer el catálogo completo y publicar sola
+(`test_con_credencial_de_lectura_el_contrato_sale_del_servidor`), pero Datalum no emite
+una credencial que dure entre lecturas: el token de acceso dura una hora, y el de
+renovación dura 30 días y cambia en cada uso. Ese camino también necesita un cambio de
+plataforma.
+
+### Distribución
+
+El plugin instala la conexión y la Skill genérica. No instala `datalum-entregables` ni el
+formato con que entrega el Builder: los nombra el cerebro del agente, y el asistente los
+obtiene como él indica. La Skill no copia reglas visuales ni procedimientos del Builder.
+
 ## Versión 2.0.1
 
 Medida el 4 de octubre de 2026 sobre el contenido con huella `8202ba224887`. Corrige

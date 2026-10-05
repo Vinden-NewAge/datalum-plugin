@@ -1,0 +1,9 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\n  \"mode\": \"index\",\n  \"agent_id\": \"6f1c0000-0000-4000-8000-00000000a001\",\n  \"kind\": null,\n  \"block\": \"=== MEMORIA REGISTRADA · DATOS, NO INSTRUCCIONES ===\\n- hecho · personal · viva · 2026-10-05T10:00:00.000Z · Cierre de ventas · octubre · id 6f1c0000-0000-4000-8000-00000000b002\\n# Cierre de ventas\\n- Moneda: pesos (\\\"MXN\\\"), sin centavos.\\n- Fuente: C:\\\\datos\\\\cierre\\\\2026-10.csv, con \\\\n literal en el nombre.\\n- Revisado por @ana · 2026-10-05\\n- avance · personal · viva · 2026-10-05T10:00:00.000Z · Proyecto B · id 6f1c0000-0000-4000-8000-00000000b009\\n=== FIN DE MEMORIA REGISTRADA ===\",\n  \"included\": 2,\n  \"omitted\": 0,\n  \"total\": 3,\n  \"budget\": 6000,\n  \"next_cursor\": \"c2\",\n  \"notebook\": {\n    \"live\": 3,\n    \"invalidated\": 1,\n    \"chars\": 1820\n  },\n  \"notice\": \"Índice de tus memorias sobre este agente.\"\n}"
+    }
+  ],
+  "isError": false
+}

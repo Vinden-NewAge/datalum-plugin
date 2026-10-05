@@ -119,6 +119,9 @@ class LocalForge(publish.GhForge):
             raise subprocess.CalledProcessError(1, ["gh", "release", step], stderr="fallo inyectado")
 
     def release_state(self, tag):
+        if "state_after_unpublish" in self.fail_on and self.calls and self.calls[-1] == "unpublish":
+            self.fail_on.discard("state_after_unpublish")
+            raise publish.StateUnknown(f"no se pudo leer el estado de {tag}")
         release = self.releases.get(tag)
         return None if release is None else ("draft" if release["draft"] else "published")
 
@@ -126,6 +129,9 @@ class LocalForge(publish.GhForge):
         release = self.releases.get(tag)
         if release is None:
             return {}
+        if "download" in self.fail_on:
+            self.fail_on.discard("download")
+            raise publish.DownloadFailed(f"no se pudieron descargar los archivos de {tag}")
         stage = "draft" if release["draft"] else "published"
         assets = dict(release["assets"])
         if stage in self.corrupt:
@@ -149,7 +155,12 @@ class LocalForge(publish.GhForge):
 
     def unpublish(self, tag):
         self.calls.append("unpublish")
+        if "unpublish" in self.fail_on:
+            # GitHub rechaza la orden y la versión sigue publicada: la retirada falló.
+            self.fail_on.discard("unpublish")
+            return False
         self.releases[tag].update(draft=True, latest=False)
+        return True
 
     def advance_main(self, commit, *, branch, title, body):
         pushed = self._run("git", "push", self.remote, f"{commit}:refs/heads/{self.main}", check=False)

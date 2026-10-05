@@ -1,0 +1,5 @@
+{
+  "agent_id": "6f1c0000-0000-4000-8000-00000000a001",
+  "title": "Cierre de ventas · octubre",
+  "body_md": "# Cierre de ventas\n- Moneda: pesos (\"MXN\"), sin centavos.\n- Fuente: C:\\datos\\cierre\\2026-10.csv, con \\n literal en el nombre.\n- Revisado por @ana · 2026-10-05"
+}
