@@ -168,8 +168,12 @@ Do not infer it from memories or documents.
 
 Follow the brain's procedure for the request, with the tools it names. Tool names,
 arguments and limits come from each tool's description and input schema as the
-connector serves them now. Copy argument names from the schema: Datalum ignores an
-argument it does not declare and gives no error.
+connector serves them now. Copy argument names from the schema, exactly as written:
+Datalum rejects an argument the schema does not declare, and nothing runs. The error
+names the argument and lists the ones the tool accepts. Correct the name and call
+again; if none of them carries what you meant to send, the tool does not take it, so
+read its description instead of dropping it silently. In a batch, each operation
+takes only what that operation reads, and the error gives its number.
 
 Deliverables follow the brain too. If the agent's procedure says a chart or a dashboard
 is delivered as an HTML file made with the host's file tools, make that file. Do not
