@@ -18,12 +18,12 @@ compatibility: >-
 metadata:
   author: Vinden
   short-description: AI CONTEXT PILL
-  version: "2.0.4"
+  version: "2.0.5"
 ---
 
 # Datalum
 
-This is version 2.0.4 of the Datalum skill.
+This is version 2.0.5 of the Datalum skill.
 
 Datalum is a governed data layer. A person works in it through one agent that their
 company's administrator granted them. This skill gets the person connected, loads the
@@ -168,8 +168,12 @@ Do not infer it from memories or documents.
 
 Follow the brain's procedure for the request, with the tools it names. Tool names,
 arguments and limits come from each tool's description and input schema as the
-connector serves them now. Copy argument names from the schema: Datalum ignores an
-argument it does not declare and gives no error.
+connector serves them now. Copy argument names from the schema, exactly as written:
+Datalum rejects an argument the schema does not declare, and nothing runs. The error
+names it, with its path inside an object (relations[0].note), and lists what is
+accepted there. Correct the name and call again; if none carries what you meant, the
+tool does not take it: read its description instead of dropping it silently. In a
+batch, each operation takes only what it reads, and the error gives its number.
 
 Deliverables follow the brain too. If the agent's procedure says a chart or a dashboard
 is delivered as an HTML file made with the host's file tools, make that file. Do not

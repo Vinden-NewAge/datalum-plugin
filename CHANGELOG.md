@@ -4,6 +4,24 @@ Cada versión del plugin de Datalum dice qué cambia para quien usa la Skill, co
 versión del servidor se comprobó y qué hay que hacer para recibirla. La más reciente va
 primero.
 
+## [2.0.5] - 2026-10-07
+
+Datalum rechaza el argumento que el esquema de una herramienta no declara.
+
+### Cambiado
+
+- La Skill dice que un argumento que el esquema no declara se rechaza y no corre nada.
+  Antes Datalum lo ignoraba en silencio. El error lo nombra, con su ruta dentro de un
+  objeto (`relations[0].note`), y dice qué se acepta ahí. La Skill pide corregir el
+  nombre y volver a llamar, y, si ninguno sirve, leer la descripción de la herramienta
+  en vez de quitarlo sin decir nada. En un lote, cada operación toma sólo lo que lee y
+  el error da su número.
+
+### Servidor
+
+- Datalum R18 (Publicación 31): el conector rechaza en todas sus herramientas lo que el
+  esquema no declara, también dentro de los objetos. Los esquemas de entrada no cambian.
+
 ## [2.0.4] - 2026-10-05
 
 Las gráficas y los tableros de Datalum quedan en pausa en el plugin.
