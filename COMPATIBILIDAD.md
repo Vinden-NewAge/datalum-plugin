@@ -4,6 +4,26 @@ Qué versión del plugin se comprobó contra qué, y cómo. «Comprobado» quier
 algo se ejecutó y dio ese resultado. Lo que sólo consta en la documentación de un
 producto se marca «Sin comprobar».
 
+## Versión 2.0.5
+
+Preparada el 7 de octubre de 2026. La Skill dice que Datalum rechaza el argumento que el
+esquema de una herramienta no declara, también dentro de un objeto. Se publica en la
+misma ventana que Datalum R18 (v2.247.0), que es quien lo empieza a rechazar.
+
+| Plugin | Servidor de Datalum | Contrato | Resultado |
+|---|---|---|---|
+| 2.0.5 | Producción, `mcp.datalum.ai`, commit `d0bab810dbfb` (v2.247.0) | El último guardado (`11e81846335d`, 94 herramientas); R18 no cambia ningún esquema de entrada | Compatible: `check.py` contra el contrato guardado, y la instrucción servida en qa dice «uno no declarado se rechaza nombrándolo, con los que acepta» |
+
+| Qué | Dónde se prueba |
+|---|---|
+| La Skill pide copiar los nombres del esquema y explica el rechazo y qué hacer | `tests/docs/test_documentos.py` |
+| La estructura del plugin sigue coherente con el contrato | `python3 scripts/check.py` |
+
+Sin comprobar: el contrato completo que sirve v2.247.0, porque la comprobación de cada
+hora no tiene credencial de lectura y registra `contrato_no_disponible`, como con
+v2.245.0 y v2.246.1. Tampoco se probó con un modelo que el rechazo lleve a corregir el
+nombre en una conversación real.
+
 ## Versión 2.0.4
 
 Preparada el 4 de octubre de 2026. Pone en pausa las gráficas y los tableros de
