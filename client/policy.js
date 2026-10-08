@@ -254,24 +254,35 @@ function operation(state, tool, input, facts) {
     scope = String(input.connector || input.tenant || '');
     delete args.connector;
     delete args.tenant;
-    // La 2.x dejaba el conector en el contenido, como `tenant`. Con su llave se reconoce
-    // un cambio que confirmó antes de actualizar el plugin en la misma conversación.
+    // La 2.x dejaba el conector en el contenido, como `tenant`: así reconoce la 3.0.0 lo
+    // que la 2.x guardó antes de actualizar el plugin en la misma conversación.
     if (scope) before = Object.assign({}, args, { tenant: scope });
     // El destino lo dice el contrato (client/contract-facts.json); sin él, `name`.
     const field = ((facts && facts.destinos) || {})[tool] || 'name';
     target = input[field] !== undefined ? `${field}=${stable(input[field])}` : '';
   }
   const targetKey = [agent, op, scope, digest(target)].join('|');
+  const content = digest(stable(args));
   return {
     kind,
     agent,
     op,
     scope,
     targetKey,
-    key: targetKey + '|' + digest(stable(args)),
-    keyBefore: before ? targetKey + '|' + digest(stable(before)) : null,
+    key: targetKey + '|' + content,
+    contents: before ? [content, digest(stable(before))] : [content],
     memory,
   };
+}
+
+// ¿Es `key` la llave de esta misma escritura, aunque la haya guardado otra versión del
+// plugin? Lo es si coinciden el agente, la operación, el ámbito y el contenido. El
+// destino no hace falta compararlo: sale del contenido, y cada versión lo elige con su
+// contrato, así que al actualizar puede cambiar.
+function sameWrite(key, op) {
+  if (key === op.key) return true;
+  const parts = key.split('|');
+  return parts.length === 5 && parts[0] === op.agent && parts[1] === op.op && parts[2] === op.scope && op.contents.includes(parts[4]);
 }
 
 // Huellas del contenido que se intentó escribir en una memoria: con ellas se reconoce
@@ -560,10 +571,10 @@ function preSelect(state, input, ctx, now) {
 // no se repite. Una incierta sólo se repite cuando una lectura del mismo destino
 // demostró que no se aplicó, o cuando la persona lo aprueba en la aplicación.
 function checkRepeat(state, tool, input, op, ctx, now) {
-  const exact = [op.key, op.keyBefore]
-    .map((key) => key && state.ops[key])
-    .find((rec) => rec && DONE.has(rec.status) && now - rec.at < WRITE_WINDOW_MS);
-  if (exact) return duplicate(exact);
+  const exact = Object.entries(state.ops).find(
+    ([key, rec]) => sameWrite(key, op) && DONE.has(rec.status) && now - rec.at < WRITE_WINDOW_MS
+  );
+  if (exact) return duplicate(exact[1]);
   const legacy = state.legacy.writes[legacyKey(tool, input)];
   const legacyRecent = legacy && now - legacy.at < WRITE_WINDOW_MS;
   const legacyLive = legacyRecent && legacy.agent === op.agent;
@@ -585,7 +596,10 @@ function checkRepeat(state, tool, input, op, ctx, now) {
   }
 
   const pending = Object.entries(state.ops).find(
-    ([key, rec]) => key.startsWith(op.targetKey + '|') && ['uncertain', 'absent', 'retrying'].includes(rec.status) && now - rec.at < WRITE_WINDOW_MS
+    ([key, rec]) =>
+      (key.startsWith(op.targetKey + '|') || sameWrite(key, op)) &&
+      ['uncertain', 'absent', 'retrying'].includes(rec.status) &&
+      now - rec.at < WRITE_WINDOW_MS
   );
   if (!pending) return null;
   const [, rec] = pending;

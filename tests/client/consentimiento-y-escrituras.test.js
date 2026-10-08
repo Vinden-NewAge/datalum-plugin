@@ -395,6 +395,31 @@ test('un cambio confirmado con la 2.0.5 no se repite tras actualizar en la misma
   }
 });
 
+// El destino de una herramienta lo elige el contrato de cada versión del plugin. Al
+// actualizar en la misma conversación puede cambiar: la 3.0.0 ya no tiene el de las
+// herramientas que Datalum R12 renombra, y producción las sigue sirviendo hasta tener R12.
+test('un cambio confirmado o incierto se reconoce aunque la versión nueva elija otro destino, y otro contenido pasa', () => {
+  const withTarget = Object.assign({}, FACTS, { destinos: { propose_solution_install: 'template_id' } });
+  const install = (template) => ({ connector: 'norte', template_id: template });
+  for (const [result, expected] of [[{ status: 'propuesto' }, 'deny'], [TIMEOUT, 'ask']]) {
+    const state = listed();
+    select(state, 'Ventas', 'ag_ventas', { human: [answer('Ventas', T0 + 500)] });
+    const apply = (template) => Object.assign({ confirm: true }, install(template));
+    policy.postToolUse(state, 'propose_solution_install', install('cierre'), { preview: true }, { now: T0 + 3000 }, withTarget);
+    if (result === TIMEOUT) policy.postToolUseFailure(state, 'propose_solution_install', apply('cierre'), TIMEOUT, { now: T0 + 4000 }, withTarget);
+    else policy.postToolUse(state, 'propose_solution_install', apply('cierre'), result, { now: T0 + 4000 }, withTarget);
+    // La versión siguiente no le da destino a la herramienta.
+    for (const [template, wanted, why] of [['cierre', expected, 'el mismo cambio'], ['ventas', 'pass', 'otro contenido es otro cambio']]) {
+      policy.postToolUse(state, 'propose_solution_install', install(template), { preview: true }, { now: T0 + 5000 }, FACTS);
+      const verdict = policy.preToolUse(state, 'propose_solution_install', apply(template), FACTS, { now: T0 + 6000, mode: 'default' });
+      assert.equal(verdict.decision, wanted, `${result === TIMEOUT ? 'incierto' : 'confirmado'}: ${why}`);
+    }
+    // Otra herramienta con el mismo contenido es otra operación.
+    policy.postToolUse(state, 'apply_solution_update', install('cierre'), { preview: true }, { now: T0 + 7000 }, FACTS);
+    assert.equal(policy.preToolUse(state, 'apply_solution_update', apply('cierre'), FACTS, { now: T0 + 8000, mode: 'default' }).decision, 'pass');
+  }
+});
+
 test('una vista previa de un agente no autoriza aplicar con otro', () => {
   const state = listed();
   select(state, 'Ventas', 'ag_ventas', { human: [answer('Ventas', T0 + 500)] });
