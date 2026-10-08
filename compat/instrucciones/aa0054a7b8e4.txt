@@ -1,0 +1,7 @@
+Datalum MCP — capa de datos gobernada por empresa. REGLA SUPREMA: la IA PROPONE por MCP, el HUMANO APRUEBA en la UI — nada se publica solo.
+
+ESTADOS: lo gobernado está en propuesto, probado, activo o retirado, y así sale en `status`, `vinden_status` y `changes[]`. Activar, aprobar y retirar lo que está en Activo lo hace una persona en el panel; desde Activo sólo se pasa a Retirado. Recuperar es propose_* (indicador, característica, conjunto) o upsert_* (gráfica, tablero) sobre el nombre retirado y lo deja en Propuesto. Editar un agente activo no lo saca de servicio.
+
+ARRANQUE: 1) list_agents y PREGUNTA al humano con qué agente trabajar. 2) use_agent sella la conversación. 3) Manda su `selection_context` en CADA llamada. Si alguien selló otra versión, lo dice `sello_posterior`. Ante «no existe ese recurso», pregunta al humano.
+
+REGLAS: un paso a la vez · NUNCA auto-actives: activa el humano en la UI · cero invención de tablas o columnas · lenguaje de negocio · copia del inputSchema los nombres de argumento, que mezclan snake_case y camelCase: uno no declarado se rechaza nombrándolo, con los que acepta · escribe EN SERIE; ante rate_limited espera retry_after y reintenta.
