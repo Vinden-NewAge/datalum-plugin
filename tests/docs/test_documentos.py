@@ -176,6 +176,32 @@ class LaVersion204(unittest.TestCase):
         self.assertIn("| Gráficas y tableros de Datalum en pausa |", read("CONTROLES.md"))
 
 
+class LaVersion300(unittest.TestCase):
+    """Datalum R12: el conector se llama `connector`, ocho herramientas cambian de nombre
+    y salen las herramientas, los códigos de estado y el cursor que estaban anunciados."""
+
+    def test_la_skill_pide_el_conector_en_connector(self):
+        self.assertIn(flat("Pass a connector's `slug` as `connector` where a\n   tool asks for it"), flat(SKILL))
+        self.assertNotIn("`tenant`", SKILL)
+
+    def test_la_skill_no_nombra_lo_que_r12_renombra_o_retira(self):
+        for gone in (
+            "upsert_metric", "upsert_dataset", "upsert_dimension", "port_draft_connector", "propose_install",
+            "apply_update", "edit_agent_ficha",
+            "start_agent_edit", "finish_agent_edit", "_status", "deprecate_", "publish_bundle",
+            "siguiente_cursor", "2026-11-04",
+            "`propuesta`", "`borrador`", "`probada`", "`activa`", "`en edicion`", "`deprecada`", "`obsoleta`", "`retirada`",
+        ):
+            self.assertNotIn(gone, SKILL, f"la Skill nombra {gone}")
+
+    def test_compatibilidad_dice_que_el_cliente_lee_los_dos_nombres(self):
+        text = read("COMPATIBILIDAD.md")
+        self.assertIn("## Versión 3.0.0", text)
+        section = flat(text.split("## Versión 3.0.0", 1)[1].split("\n## Versión 2.0.5", 1)[0])
+        self.assertIn(flat("Los controles del cliente leen el conector de `connector` y de `tenant`"), section)
+        self.assertIn(flat("Lo que la Skill pide es `connector` y los nombres nuevos"), section)
+
+
 class LasGuias(unittest.TestCase):
     def test_actualizar_distingue_los_cuatro_pasos_y_no_promete_de_mas(self):
         text = read("ACTUALIZAR.md")

@@ -55,7 +55,7 @@
    "inputSchema": {
     "type": "object",
     "properties": {
-     "tenant": {
+     "connector": {
       "type": "string",
       "description": "Slug del conector."
      },
@@ -108,7 +108,7 @@
    "inputSchema": {
     "type": "object",
     "properties": {
-     "tenant": {
+     "connector": {
       "type": "string",
       "description": "Slug del conector."
      },
@@ -284,7 +284,7 @@
   },
   {
    "name": "brain_write",
-   "description": "Crea una memoria por su ruta en el cerebro del agente, o un agente nuevo en borrador.",
+   "description": "Crea una memoria por su ruta en el cerebro del agente, o un agente nuevo en propuesto.",
    "inputSchema": {
     "type": "object",
     "properties": {
@@ -367,7 +367,7 @@
    "inputSchema": {
     "type": "object",
     "properties": {
-     "tenant": {
+     "connector": {
       "type": "string",
       "description": "Slug del conector."
      },
@@ -390,7 +390,7 @@
      }
     },
     "required": [
-     "tenant"
+     "connector"
     ],
     "additionalProperties": false
    }
@@ -401,7 +401,7 @@
    "inputSchema": {
     "type": "object",
     "properties": {
-     "tenant": {
+     "connector": {
       "type": "string",
       "description": "Slug del conector."
      },
@@ -516,7 +516,7 @@
      }
     },
     "required": [
-     "tenant"
+     "connector"
     ],
     "additionalProperties": false
    }
@@ -527,7 +527,7 @@
    "inputSchema": {
     "type": "object",
     "properties": {
-     "tenant": {
+     "connector": {
       "type": "string",
       "description": "Slug del conector."
      },
@@ -554,7 +554,7 @@
      }
     },
     "required": [
-     "tenant",
+     "connector",
      "dataset"
     ],
     "additionalProperties": false
@@ -566,7 +566,7 @@
    "inputSchema": {
     "type": "object",
     "properties": {
-     "tenant": {
+     "connector": {
       "type": "string",
       "description": "Slug del conector."
      },
@@ -604,7 +604,7 @@
      }
     },
     "required": [
-     "tenant",
+     "connector",
      "sql"
     ],
     "additionalProperties": false
@@ -616,7 +616,7 @@
    "inputSchema": {
     "type": "object",
     "properties": {
-     "tenant": {
+     "connector": {
       "type": "string",
       "description": "Slug del conector."
      },
@@ -668,7 +668,7 @@
      }
     },
     "required": [
-     "tenant",
+     "connector",
      "chart"
     ],
     "additionalProperties": false
@@ -680,7 +680,7 @@
    "inputSchema": {
     "type": "object",
     "properties": {
-     "tenant": {
+     "connector": {
       "type": "string",
       "description": "Slug del conector."
      },
@@ -696,7 +696,7 @@
      }
     },
     "required": [
-     "tenant",
+     "connector",
      "dashboard"
     ],
     "additionalProperties": false
@@ -704,11 +704,11 @@
   },
   {
    "name": "upsert_chart",
-   "description": "[Escribe] Crea o edita una gráfica en el catálogo de Datalum. Nace en borrador y la activa una persona. Sin `confirm: true` sólo previsualiza.",
+   "description": "[Escribe] Crea o edita una gráfica en el catálogo de Datalum. Nace en propuesto y la activa una persona. Sin `confirm: true` sólo previsualiza.",
    "inputSchema": {
     "type": "object",
     "properties": {
-     "tenant": {
+     "connector": {
       "type": "string",
       "description": "Slug del conector."
      },
@@ -1717,7 +1717,7 @@
      }
     },
     "required": [
-     "tenant",
+     "connector",
      "name",
      "chart_type",
      "spec"
@@ -1727,11 +1727,11 @@
   },
   {
    "name": "upsert_dashboard",
-   "description": "[Escribe] Crea o edita un tablero en el catálogo de Datalum. Nace en borrador y lo activa una persona. Sin `confirm: true` sólo previsualiza.",
+   "description": "[Escribe] Crea o edita un tablero en el catálogo de Datalum. Nace en propuesto y lo activa una persona. Sin `confirm: true` sólo previsualiza.",
    "inputSchema": {
     "type": "object",
     "properties": {
-     "tenant": {
+     "connector": {
       "type": "string",
       "description": "Slug del conector."
      },
@@ -1757,7 +1757,7 @@
      }
     },
     "required": [
-     "tenant",
+     "connector",
      "name",
      "spec"
     ],
@@ -1766,11 +1766,11 @@
   },
   {
    "name": "upsert_custom_dashboard",
-   "description": "[Escribe] Crea o edita un tablero en código (HTML) dentro del catálogo de Datalum. Nace en borrador y lo activa una persona. Sin `confirm: true` sólo previsualiza.",
+   "description": "[Escribe] Crea o edita un tablero en código (HTML) dentro del catálogo de Datalum. Nace en propuesto y lo activa una persona. Sin `confirm: true` sólo previsualiza.",
    "inputSchema": {
     "type": "object",
     "properties": {
-     "tenant": {
+     "connector": {
       "type": "string",
       "description": "Slug del conector."
      },
@@ -1808,7 +1808,7 @@
      }
     },
     "required": [
-     "tenant",
+     "connector",
      "name",
      "template"
     ],

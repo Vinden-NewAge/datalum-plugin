@@ -7,16 +7,19 @@
   },
   "definiciones_revisadas": {
     "brain_index": [
-      "16c19bb9306cfd83b6f0116498ff81d736cb82efb4a6148d1d73e7ed159884a1"
+      "16c19bb9306cfd83b6f0116498ff81d736cb82efb4a6148d1d73e7ed159884a1",
+      "3b9862da88fbe5441e4d60409ddd7e3073742a73a594705e2c86e5cf4fa38a12"
     ],
     "brain_read": [
-      "201a4172406fc1e955c60e13a2640b318d53ab093c778d7e186b4bcf13b6fe4f"
+      "201a4172406fc1e955c60e13a2640b318d53ab093c778d7e186b4bcf13b6fe4f",
+      "d4e046a7f0f3c644e9d09eb37df3d960a2614dbe608a5bd329b67330897db091"
     ],
     "forget": [
       "650aa001afd624f286b81844bf1882eea3be0e42589840121a9a55846a7423e1"
     ],
     "list_agents": [
-      "48a62ab647c7ce9acba97c6702b810b5c1efa59174baa700f7f094cb42eca4ed"
+      "48a62ab647c7ce9acba97c6702b810b5c1efa59174baa700f7f094cb42eca4ed",
+      "bb30a4a9a839fe18b862e3603af241a3fdc948a055d2c6f158907fac063dd0d4"
     ],
     "list_memories": [
       "1f3c4aaa79c06b3b8f660187de2eabbfbb77416499edcdcf3b6f78889372aa00"
@@ -28,7 +31,8 @@
       "5b076eb5e6161454d63ed795fae84c0e1411467754a942c5222c8039ce9c31c2"
     ],
     "use_agent": [
-      "1c6a9d12b6fc335ee6bb6f7473501bf22a1e080c77baa7cd82d26902dde5ccf3"
+      "1c6a9d12b6fc335ee6bb6f7473501bf22a1e080c77baa7cd82d26902dde5ccf3",
+      "4e431ad77725295fbdc0f22ee89e9df1cf5103a654167435f7d8cff96b436d23"
     ]
   },
   "en_pausa": {
@@ -47,7 +51,7 @@
         "path",
         "cursor",
         "limit",
-        "tenant",
+        "connector",
         "unit",
         "selection_context"
       ]
@@ -60,7 +64,7 @@
         "concept_id",
         "offset",
         "max_bytes",
-        "tenant",
+        "connector",
         "unit",
         "selection_context"
       ]
@@ -121,7 +125,8 @@
     }
   },
   "instrucciones_revisadas": [
-    "3faf86c24e3a8800ccb0696ca2888adc1fc48e9b128cec2ecc3a41cd17fa2320"
+    "3faf86c24e3a8800ccb0696ca2888adc1fc48e9b128cec2ecc3a41cd17fa2320",
+    "aa0054a7b8e474561f19cc29b8968275581d57484bd1b32bc92531853047a978"
   ],
   "protocolos": [
     "2025-06-18"

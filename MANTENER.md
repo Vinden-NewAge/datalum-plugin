@@ -148,7 +148,7 @@ se actualizan solas y conversaciones abiertas con la versión anterior cargada
 (`ACTUALIZAR.md`). El orden es:
 
 1. El servidor anuncia el cambio con fecha y conserva el contrato anterior hasta esa
-   fecha, como hizo con los códigos de estado del 4 de noviembre.
+   fecha.
 2. El plugin publica una versión que funciona con los dos contratos. Mientras dure la
    transición, `compat/requisitos.json` declara sólo lo común a los dos.
 3. Se avisa a quienes actualizan a mano, con la sección del CHANGELOG.
@@ -156,6 +156,9 @@ se actualizan solas y conversaciones abiertas con la versión anterior cargada
    ya no lo menciona.
 
 El aviso del entorno previo sirve para enterarse en el paso 1 y no en producción.
+
+Datalum R12 no siguió este orden: rechaza `tenant` desde que se despliega. La 3.0.0 sale
+con él; lo que hace mientras producción no lo tiene está en `COMPATIBILIDAD.md`.
 
 ## Herramientas en pausa
 

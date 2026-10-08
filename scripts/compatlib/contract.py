@@ -149,9 +149,10 @@ def derive_facts(summary: dict, requirements: dict) -> dict:
         if name in tools and arg in tools[name]["p"]
     }
     # El argumento que nombra el destino de cada herramienta: `name` si es obligatorio;
-    # si no, el primer obligatorio. Los controles del cliente lo usan para reconocer la
-    # misma operación sin conocer los objetos del catálogo.
-    skip = {"tenant", "confirm", "selection_context"} | set(requirements.get("citas_humanas", {}).values())
+    # si no, el primer obligatorio que no sea el conector, la confirmación, el contexto
+    # ni una cita. Los controles del cliente lo usan para reconocer la misma operación
+    # sin conocer los objetos del catálogo.
+    skip = {"connector", "confirm", "selection_context"} | set(requirements.get("citas_humanas", {}).values())
     targets = {}
     for entry in summary["herramientas"]:
         required = [arg for arg in entry["r"] if arg not in skip]

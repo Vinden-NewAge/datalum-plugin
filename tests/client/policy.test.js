@@ -277,24 +277,24 @@ test('una propuesta de memoria compartida no se anuncia como guardada', () => {
 });
 
 // ── Cambios con vista previa ────────────────────────────────────────────────────
-const METRIC = { tenant: 'ventas', name: 'margen_bruto', sql: 'sum(margen)' };
+const METRIC = { connector: 'ventas', name: 'margen_bruto', sql: 'sum(margen)' };
 
 test('aplicar un cambio exige haber pedido antes su vista previa', () => {
   const state = sealed();
-  assert.equal(pre(state, 'upsert_metric', Object.assign({ confirm: true }, METRIC)).decision, 'deny');
-  policy.postToolUse(state, 'upsert_metric', METRIC, { preview: true, changes: [] }, { now: T0 });
-  assert.equal(pre(state, 'upsert_metric', Object.assign({ confirm: true }, METRIC)).decision, 'pass');
-  assert.equal(pre(state, 'upsert_metric', Object.assign({ confirm: true }, METRIC, { sql: 'sum(otra)' })).decision, 'deny', 'la vista previa es de esos argumentos');
+  assert.equal(pre(state, 'propose_metric', Object.assign({ confirm: true }, METRIC)).decision, 'deny');
+  policy.postToolUse(state, 'propose_metric', METRIC, { preview: true, changes: [] }, { now: T0 });
+  assert.equal(pre(state, 'propose_metric', Object.assign({ confirm: true }, METRIC)).decision, 'pass');
+  assert.equal(pre(state, 'propose_metric', Object.assign({ confirm: true }, METRIC, { sql: 'sum(otra)' })).decision, 'deny', 'la vista previa es de esos argumentos');
 });
 
 test('un cambio aplicado no se aplica dos veces; uno parcial sí se repite', () => {
   const state = sealed();
   const apply = Object.assign({ confirm: true }, METRIC);
-  policy.postToolUse(state, 'upsert_metric', METRIC, { preview: true }, { now: T0 });
-  policy.postToolUse(state, 'upsert_metric', apply, { content: [{ type: 'text', text: JSON.stringify({ code: 'partial_write', category: 'retryable', retryable: true, retry_after: 2 }) }], isError: true }, { now: T0 });
-  assert.equal(pre(state, 'upsert_metric', apply, undefined, T0 + 1000).decision, 'pass');
-  policy.postToolUse(state, 'upsert_metric', apply, { status: 'propuesta' }, { now: T0 + 2000 });
-  assert.equal(pre(state, 'upsert_metric', apply, undefined, T0 + 3000).decision, 'deny');
+  policy.postToolUse(state, 'propose_metric', METRIC, { preview: true }, { now: T0 });
+  policy.postToolUse(state, 'propose_metric', apply, { content: [{ type: 'text', text: JSON.stringify({ code: 'partial_write', category: 'retryable', retryable: true, retry_after: 2 }) }], isError: true }, { now: T0 });
+  assert.equal(pre(state, 'propose_metric', apply, undefined, T0 + 1000).decision, 'pass');
+  policy.postToolUse(state, 'propose_metric', apply, { status: 'propuesto' }, { now: T0 + 2000 });
+  assert.equal(pre(state, 'propose_metric', apply, undefined, T0 + 3000).decision, 'deny');
 });
 
 // ── Reintentos ──────────────────────────────────────────────────────────────────
@@ -424,29 +424,29 @@ test('ni una lectura del cerebro ni el índice de la memoria comprueban una escr
 test('un cambio del catálogo incierto se repite sólo si la persona lo aprueba', () => {
   const state = sealed();
   const apply = Object.assign({ confirm: true }, METRIC);
-  policy.postToolUse(state, 'upsert_metric', METRIC, { preview: true }, { now: T0 });
-  policy.postToolUseFailure(state, 'upsert_metric', apply, 'MCP error: request timed out', { now: T0 + 1000 });
+  policy.postToolUse(state, 'propose_metric', METRIC, { preview: true }, { now: T0 });
+  policy.postToolUseFailure(state, 'propose_metric', apply, 'MCP error: request timed out', { now: T0 + 1000 });
   // Antes de la 2.0.1 cualquier lectura posterior del catálogo lo liberaba. El cliente
   // no sabe leer el estado de cada objeto del catálogo: decide la persona.
-  policy.postToolUse(state, 'upsert_metric', METRIC, { preview: true, changes: [] }, { now: T0 + 2000 });
-  const verdict = policy.preToolUse(state, 'upsert_metric', apply, FACTS, { now: T0 + 3000, toolUseId: 'toolu_reintento', mode: 'default' });
+  policy.postToolUse(state, 'propose_metric', METRIC, { preview: true, changes: [] }, { now: T0 + 2000 });
+  const verdict = policy.preToolUse(state, 'propose_metric', apply, FACTS, { now: T0 + 3000, toolUseId: 'toolu_reintento', mode: 'default' });
   assert.equal(verdict.decision, 'ask');
   assert.match(verdict.reason, /duplicarlo/);
-  policy.postToolUse(state, 'upsert_metric', apply, { status: 'propuesta' }, { now: T0 + 4000, toolUseId: 'toolu_reintento' });
-  assert.equal(pre(state, 'upsert_metric', apply, undefined, T0 + 5000).decision, 'deny', 'ya confirmado, no se repite');
+  policy.postToolUse(state, 'propose_metric', apply, { status: 'propuesto' }, { now: T0 + 4000, toolUseId: 'toolu_reintento' });
+  assert.equal(pre(state, 'propose_metric', apply, undefined, T0 + 5000).decision, 'deny', 'ya confirmado, no se repite');
 });
 
 test('muchas lecturas entre la vista previa y la aprobación no la borran', () => {
   const state = sealed();
-  policy.postToolUse(state, 'upsert_metric', METRIC, { preview: true }, { now: T0 });
+  policy.postToolUse(state, 'propose_metric', METRIC, { preview: true }, { now: T0 });
   for (let i = 0; i < 120; i++) policy.postToolUse(state, 'brain_read', { concept_id: `doc/${i}` }, { body: 'x' }, { now: T0 + i });
-  assert.equal(pre(state, 'upsert_metric', Object.assign({ confirm: true }, METRIC), undefined, T0 + 60000).decision, 'pass');
+  assert.equal(pre(state, 'propose_metric', Object.assign({ confirm: true }, METRIC), undefined, T0 + 60000).decision, 'pass');
 });
 
 test('una vista previa vieja ya no autoriza aplicar', () => {
   const state = sealed();
-  policy.postToolUse(state, 'upsert_metric', METRIC, { preview: true }, { now: T0 });
-  assert.equal(pre(state, 'upsert_metric', Object.assign({ confirm: true }, METRIC), undefined, T0 + 31 * 60000).decision, 'deny');
+  policy.postToolUse(state, 'propose_metric', METRIC, { preview: true }, { now: T0 });
+  assert.equal(pre(state, 'propose_metric', Object.assign({ confirm: true }, METRIC), undefined, T0 + 31 * 60000).decision, 'deny');
 });
 
 test('una herramienta en pausa se niega con el aviso del contrato, y las demás pasan', () => {

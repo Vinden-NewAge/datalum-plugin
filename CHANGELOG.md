@@ -4,6 +4,67 @@ Cada versión del plugin de Datalum dice qué cambia para quien usa la Skill, co
 versión del servidor se comprobó y qué hay que hacer para recibirla. La más reciente va
 primero.
 
+## [3.0.0] - 2026-10-08
+
+Datalum R12 nombra el conector `connector` y rechaza `tenant`. La Skill 2.x pide
+`tenant`, así que con ese servidor sus llamadas se rechazan: por eso sube el número
+mayor.
+
+### Cambiado
+
+- La Skill pide el `slug` del conector en `connector` donde una herramienta lo pide. La
+  2.x lo pedía en `tenant`, y Datalum R12 rechaza esa llamada nombrando `connector`, en
+  cada herramienta y en las operaciones de `apply_batch`.
+- Los controles del cliente sacan de `connector` el conector de un cambio. Mientras la
+  producción de Datalum no tenga R12 también lo leen de `tenant`. Si el servidor cambia a
+  mitad de la conversación, el mismo cambio con uno u otro nombre es el mismo cambio: el
+  incierto no se repite a ciegas y el confirmado no se repite.
+- Los controles reconocen una escritura por el agente, la operación, el ámbito y el
+  contenido, sin comparar el destino, que cada versión elige con su contrato. Al
+  actualizar desde la 2.0.5 en la misma conversación, un cambio que la 2.0.5 confirmó no
+  se repite y uno incierto sigue esperando a la persona.
+- `client/contract-facts.json` se deriva de la lista de herramientas de R12: nombra las
+  ocho por su nombre nuevo y ya no trae `start_agent_edit` ni `finish_agent_edit`.
+- `compat/requisitos.json` declara `connector` en `brain_index` y `brain_read`, y al
+  derivar `client/contract-facts.json` el conector ya no puede ser el destino de una
+  herramienta.
+- Las evaluaciones y las pruebas usan lo de R12: el conector simulado declara
+  `connector`, los cerebros de prueba lo nombran así, lo nuevo nace en `propuesto`, el
+  simulacro de `get_model` dice la versión 8.0.0 de su contrato y las pruebas del cliente
+  escriben con `propose_metric`.
+
+### Servidor
+
+- Datalum R12 (v2.249.0). Además del conector, ocho herramientas cambian de
+  nombre y el anterior sigue respondiendo fuera de la lista: `upsert_metric` pasa a
+  `propose_metric`, `upsert_dataset` a `propose_dataset`, `upsert_dimension` a
+  `propose_dimension`, `port_draft_connector` a `attach_draft_connector`,
+  `unport_draft_connector` a `detach_draft_connector`, `propose_install` a
+  `propose_solution_install`, `apply_update` a `apply_solution_update` y
+  `edit_agent_ficha` a `edit_agent_profile`. Los códigos de estado quedan en
+  `propuesto`, `probado`, `activo` y `retirado`. Salen `start_agent_edit`,
+  `finish_agent_edit`, los `set_*_status`, los `deprecate_*`, `publish_bundle` y el
+  aviso del 2026-11-04, y `run_dataset` y `run_metric` dan la página siguiente sólo en
+  `next_cursor`. La Skill y los controles no nombran las herramientas anteriores, las
+  que salen ni los códigos viejos.
+- Se comprobó con el contrato del código que sirve R12, commit `fe05777db569`
+  (`625b37c7b57b`, 91 herramientas), que pasa a ser el contrato de producción guardado.
+  qa sirve ese commit y sus instrucciones son las del contrato. Las instrucciones y las
+  definiciones de `brain_index`, `brain_read`, `list_agents` y `use_agent` cambiaron; se
+  leyeron contra la Skill, que no necesitó otro cambio, y sus huellas quedan como
+  revisadas en `compat/requisitos.json`. Derivado de ese contrato,
+  `client/contract-facts.json` sale igual al que ya traía la versión. El detalle está en
+  `COMPATIBILIDAD.md`.
+
+### Cómo recibirla
+
+- Sale con Datalum R12. Los pasos por aplicación están en `ACTUALIZAR.md`. Después de
+  actualizar, empieza una conversación nueva: la que se abrió con la 2.x sigue pidiendo
+  `tenant`.
+- En ChatGPT, quien administra el conector pulsa Actualizar en él. ChatGPT guarda la
+  lista de herramientas con sus argumentos, y hasta entonces sigue mandando `tenant`, que
+  Datalum R12 rechaza, y los nombres anteriores, que siguen respondiendo.
+
 ## [2.0.5] - 2026-10-07
 
 Datalum rechaza el argumento que el esquema de una herramienta no declara.

@@ -18,12 +18,12 @@ compatibility: >-
 metadata:
   author: Vinden
   short-description: AI CONTEXT PILL
-  version: "2.0.5"
+  version: "3.0.0"
 ---
 
 # Datalum
 
-This is version 2.0.5 of the Datalum skill.
+This is version 3.0.0 of the Datalum skill.
 
 Datalum is a governed data layer. A person works in it through one agent that their
 company's administrator granted them. This skill gets the person connected, loads the
@@ -114,9 +114,9 @@ Do this before any work specific to the agent.
 1. Read the whole `use_agent` response. `agent` gives the name, version and family, and
    its `herramientasRetiradas` lists tools withdrawn for this agent; do not call them.
    `mission` carries the agent's guardrails, rules and persona, complete. `connectors`
-   lists the data sources it reaches. Pass a connector's `slug` as `tenant` where a tool
-   asks for it, and if the agent reaches several and the request does not say which,
-   ask.
+   lists the data sources it reaches. Pass a connector's `slug` as `connector` where a
+   tool asks for it, and if the agent reaches several and the request does not say
+   which, ask.
 2. Find the procedure for the request. `index` shows one level of the agent's branch.
    List the level you need with `brain_index` and its `path`, then open the document that
    covers the request with `brain_read`, copying its `concept_id` as returned. Open the

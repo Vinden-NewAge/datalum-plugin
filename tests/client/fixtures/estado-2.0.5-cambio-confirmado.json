@@ -1,0 +1,59 @@
+{
+  "v": 2,
+  "plugin_version": "2.0.5",
+  "server": null,
+  "seal": {
+    "agent_id": "ag_ventas",
+    "agent_name": "Ventas",
+    "version": 1,
+    "family": null,
+    "selection_context": "ctx-ventas",
+    "expires_at": null,
+    "sealed_at": "2026-10-07T10:00:02.000Z"
+  },
+  "seal_state": "sealed",
+  "newer_version": null,
+  "retired": [],
+  "keyring": [
+    {
+      "id": "ag_ventas",
+      "name": "Ventas"
+    },
+    {
+      "id": "ag_finanzas",
+      "name": "Finanzas"
+    }
+  ],
+  "keyring_at": "2026-10-07T10:00:00.000Z",
+  "choice_floor": "2026-10-07T10:00:00.500Z",
+  "released_at": null,
+  "authorized": {
+    "ag_ventas": {
+      "via": "pregunta",
+      "at": "2026-10-07T10:00:02.000Z",
+      "name": "Ventas"
+    }
+  },
+  "pending": {},
+  "approved": {},
+  "reads": {},
+  "listings": {},
+  "previews": {
+    "sin-agente|list_agents||e3b0c44298fc1c149afbf4c8|44136fa355b3678a1146ad16": 1791367200000,
+    "sin-agente|use_agent||e3b0c44298fc1c149afbf4c8|b58f0d12ee110a432d07048c": 1791367202000
+  },
+  "ops": {
+    "ag_ventas|upsert_filter_set|norte|0cc9e245f7d123e01176d371|5e889a1be059ab13cd01771a": {
+      "status": "confirmed",
+      "at": 1791367205000,
+      "agent": "ag_ventas",
+      "op": "upsert_filter_set"
+    }
+  },
+  "seen": {},
+  "failures": {},
+  "legacy": {
+    "writes": {},
+    "previews": {}
+  }
+}
