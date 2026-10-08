@@ -198,8 +198,8 @@ class LaVersion300(unittest.TestCase):
         text = read("COMPATIBILIDAD.md")
         self.assertIn("## Versión 3.0.0", text)
         section = flat(text.split("## Versión 3.0.0", 1)[1].split("\n## Versión 2.0.5", 1)[0])
-        self.assertIn(flat("los controles del cliente leen el conector de `connector` y de `tenant`"), section)
-        self.assertIn(flat("lo que la Skill pide es `connector`"), section)
+        self.assertIn(flat("Los controles del cliente leen el conector de `connector` y de `tenant`"), section)
+        self.assertIn(flat("Lo que la Skill pide es `connector` y los nombres nuevos"), section)
 
 
 class LasGuias(unittest.TestCase):

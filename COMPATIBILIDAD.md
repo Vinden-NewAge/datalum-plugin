@@ -4,6 +4,75 @@ Qué versión del plugin se comprobó contra qué, y cómo. «Comprobado» quier
 algo se ejecutó y dio ese resultado. Lo que sólo consta en la documentación de un
 producto se marca «Sin comprobar».
 
+## Versión 3.0.0
+
+Preparada el 7 de octubre de 2026 para salir con Datalum R12, que todavía no está
+publicado. R12 nombra el conector `connector` en toda herramienta que lo pide y rechaza
+`tenant` desde que se despliega, sin conservar el contrato anterior hasta una fecha como
+pide «Cambios incompatibles» en `MANTENER.md`. Por eso el plugin sale con el servidor, y
+`compat/requisitos.json` declara lo de R12 en vez de lo común a los dos contratos.
+
+| Plugin | Servidor de Datalum | Contrato | Resultado |
+|---|---|---|---|
+| 3.0.0 | Datalum R12, sin publicar todavía | No hay contrato servido. Se usó el guardado (`11e81846335d`) con `tenant` y `tenantSlug` renombrados a `connector` | Compatible: `ElConectorDeR12` en `tests/compat/test_automation.py`. El código de R12, leído sin ejecutarlo, declara `connector` en `brain_index` y `brain_read` |
+| 3.0.0 | Producción, `mcp.datalum.ai`, commit `d0bab810dbfb` (v2.247.0) | El guardado (`11e81846335d`), de antes de R12 | Incompatible para `check.py`: `brain_index` y `brain_read` no aceptan `connector` |
+
+### Mientras producción no tenga R12
+
+Lo que la Skill pide es `connector` y los nombres nuevos. La Skill no nombra ninguna de
+las ocho herramientas que cambian de nombre, ni las que R12 retira, ni sus códigos de
+estado. Los controles del cliente leen el conector de `connector` y de `tenant`, para no
+romper mientras el servidor publicado siga en v2.247.0: un cambio incierto sigue siendo
+el mismo aunque el servidor cambie a mitad de la conversación. La lectura de `tenant`
+sólo sirve hasta que producción tenga R12.
+
+Contra v2.247.0, una llamada con `connector` se rechaza nombrándolo y listando lo que
+acepta, `tenant` entre ellos, y la Skill pide corregir el nombre y volver a llamar. Sin
+comprobar con un modelo.
+
+`check.py` compara con el contrato de producción guardado, que es el de antes de R12, y
+falla con tres motivos:
+
+| Motivo | Por qué |
+|---|---|
+| `brain_index` ya no acepta `connector` | El contrato guardado lo llama `tenant` |
+| `brain_read` ya no acepta `connector` | Lo mismo |
+| `client/contract-facts.json` no es el que se deriva del contrato de producción | El destino de una herramienta ya no puede ser `connector`, y nueve herramientas del contrato guardado que sólo piden `tenant` lo tendrían por destino |
+
+El contrato se deja como está. Al publicar R12 se guarda el suyo y se regeneran
+`client/contract-facts.json` y su lista de destinos; las instrucciones nuevas, sin el
+aviso del 2026-11-04, y las definiciones de las herramientas que el plugin usa piden la
+revisión de una persona, como cualquier despliegue (`MANTENER.md`). Hasta entonces
+`client/contract-facts.json` nombra las herramientas por su nombre anterior y una
+herramienta con nombre nuevo usa el destino por defecto del cliente (`name`).
+
+Medido en una copia: con el contrato guardado en la forma de R12 (el conector renombrado,
+los ocho nombres nuevos, sin las tres retiradas que servía, 91 herramientas) y
+`client/contract-facts.json` derivado de él, `check.py` pasa y ningún destino es el
+conector. Las huellas de las definiciones y de las instrucciones siguen siendo las
+guardadas, así que eso no mide la revisión que pedirá el contrato real.
+
+### Qué se ejecutó
+
+| Qué | Resultado |
+|---|---|
+| `python3 scripts/check.py` | Falla con los tres motivos de arriba, todos del contrato guardado |
+| `python3 -m unittest discover -s tests -t .` | 93 pruebas, todas pasan |
+| `node --test tests/client/*.test.js` | 134 pruebas, todas pasan |
+| Seis mutantes, uno por regla de la 3.0.0: el cliente lee sólo `tenant`, el cliente lee sólo `connector`, la derivación salta `tenant` y no `connector`, `requisitos.json` vuelve a `tenant`, la Skill vuelve a pedir `tenant` y la Skill nombra `upsert_metric` | Las pruebas detectan los seis |
+| `claude plugin validate .` | No se ejecutó: el CLI de Claude no está en esta máquina |
+| Evaluaciones con modelo | No se ejecutaron |
+
+| Qué | Dónde se prueba |
+|---|---|
+| El ámbito de un cambio es su conector, con `connector` y con `tenant` | `el ámbito de un cambio es su conector, nombrado…` (las dos) en `tests/client/consentimiento-y-escrituras.test.js` |
+| Lo que el plugin pide y deriva sigue a R12 | `ElConectorDeR12` en `tests/compat/test_automation.py` |
+| La Skill pide `connector` y no nombra lo que R12 renombra o retira | `LaVersion300` en `tests/docs/test_documentos.py` |
+
+Sin comprobar: el contrato que servirá R12, porque los ocho nombres nuevos todavía no
+están en el código del servidor que se pudo leer, y la conducta de un modelo con la
+Skill nueva frente a R12.
+
 ## Versión 2.0.5
 
 Preparada el 7 de octubre de 2026. La Skill dice que Datalum rechaza el argumento que el
