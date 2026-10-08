@@ -19,12 +19,19 @@ mayor.
   producción de Datalum no tenga R12 también lo leen de `tenant`. Si el servidor cambia a
   mitad de la conversación, el mismo cambio con uno u otro nombre es el mismo cambio: el
   incierto no se repite a ciegas y el confirmado no se repite.
+- Los controles reconocen una escritura por el agente, la operación, el ámbito y el
+  contenido, sin comparar el destino, que cada versión elige con su contrato. Al
+  actualizar desde la 2.0.5 en la misma conversación, un cambio que la 2.0.5 confirmó no
+  se repite y uno incierto sigue esperando a la persona.
+- `client/contract-facts.json` se deriva de la lista de herramientas de R12: nombra las
+  ocho por su nombre nuevo y ya no trae `start_agent_edit` ni `finish_agent_edit`.
 - `compat/requisitos.json` declara `connector` en `brain_index` y `brain_read`, y al
   derivar `client/contract-facts.json` el conector ya no puede ser el destino de una
   herramienta.
 - Las evaluaciones y las pruebas usan lo de R12: el conector simulado declara
-  `connector`, los cerebros de prueba lo nombran así, lo nuevo nace en `propuesto` y las
-  pruebas del cliente escriben con `propose_metric`.
+  `connector`, los cerebros de prueba lo nombran así, lo nuevo nace en `propuesto`, el
+  simulacro de `get_model` dice la versión 8.0.0 de su contrato y las pruebas del cliente
+  escriben con `propose_metric`.
 
 ### Servidor
 
@@ -38,14 +45,12 @@ mayor.
   `propuesto`, `probado`, `activo` y `retirado`. Salen `start_agent_edit`,
   `finish_agent_edit`, los `set_*_status`, los `deprecate_*`, `publish_bundle` y el
   aviso del 2026-11-04, y `run_dataset` y `run_metric` dan la página siguiente sólo en
-  `next_cursor`. La Skill y el código de los controles no nombraban esas herramientas
-  ni esos códigos; `client/contract-facts.json` las nombra porque se deriva del contrato
-  guardado, y cambia cuando se guarde el de R12.
-- Se comprobó sin el contrato que servirá R12, que todavía no existe: con la lista de
-  herramientas que arma el código de R12, ejecutado en local, y con el contrato guardado
-  y el conector renombrado. Contra el contrato guardado de producción, de antes de R12,
-  `check.py` la da por incompatible hasta que se guarde el de R12. El detalle está en
-  `COMPATIBILIDAD.md`.
+  `next_cursor`. La Skill y los controles no nombran las herramientas anteriores, las
+  que salen ni los códigos viejos.
+- Se comprobó con el contrato que arma el código de R12, ejecutado en local (91
+  herramientas), porque el que servirá R12 todavía no existe. Contra el contrato guardado
+  de producción, de antes de R12, `check.py` la da por incompatible hasta que se guarde el
+  de R12. El detalle está en `COMPATIBILIDAD.md`.
 
 ### Cómo recibirla
 
