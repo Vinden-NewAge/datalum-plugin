@@ -29,12 +29,15 @@ armó `scripts/compatlib/contract.py`.
 |---|---|
 | `22a5a022caeb` (v2.243.0) | `11e81846335d`, 94 herramientas: el contrato guardado, huella por huella. Con eso se da por bueno el método |
 | `d0bab810dbfb` (v2.247.0, producción) | 94 herramientas con los mismos argumentos que el guardado. Cambian las instrucciones y 23 definiciones, ninguna de las que declara `compat/requisitos.json` |
-| `c7b74b468`, la rama de los ocho nombres, con el conector, los cuatro códigos y el cursor debajo | `2b45945995be`, 91 herramientas. Ninguna declara `tenant` ni `tenantSlug` y 51 declaran `connector`. Están los ocho nombres nuevos y no está ninguno de los anteriores, ni `start_agent_edit`, `finish_agent_edit` y `publish_bundle`. Las instrucciones ya no traen el aviso del 2026-11-04 |
-| `a82026c12`, la integración de R12 sin la rama de los ocho nombres | Las mismas 91 herramientas, con los mismos argumentos si se cambian los ocho nombres. Lo demás que trae sólo cambia textos |
+| `c7b74b468`, la rama de los ocho nombres, con el conector, los cuatro códigos y el cursor debajo | `2b45945995be`, 91 herramientas. Ninguna declara `tenant` ni `tenantSlug` y 51 declaran `connector`. Están los ocho nombres nuevos y no está ninguno de los anteriores, ni `start_agent_edit`, `finish_agent_edit` ni `publish_bundle`. Las instrucciones ya no traen el aviso del 2026-11-04 |
+| `a82026c12`, la integración de R12 sin la rama de los ocho nombres | Las mismas 91 herramientas, con los mismos argumentos si se cambian los ocho nombres. En la lista, lo demás que trae sólo cambia el texto de algunas descripciones |
 
 `client/contract-facts.json` se derivó de `2b45945995be`. Las huellas pueden cambiar
 antes de publicar R12, porque todavía se corrigen textos; los nombres y los argumentos,
 que es de lo que se deriva ese archivo, son los mismos en las dos ramas.
+
+R12 renombra el argumento y no las respuestas: `get_model` y otras lecturas siguen
+devolviendo un campo `tenant`, y el simulacro de `get_model` de las evaluaciones también.
 
 ### Con ese contrato en una copia
 
