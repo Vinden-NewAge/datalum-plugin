@@ -220,6 +220,7 @@ function operation(state, tool, input, facts) {
   let scope = '';
   let target = '';
   let memory = null;
+  let before = null;
   if (tool === 'remember') {
     kind = 'memory';
     op = 'memoria.escribir';
@@ -253,6 +254,9 @@ function operation(state, tool, input, facts) {
     scope = String(input.connector || input.tenant || '');
     delete args.connector;
     delete args.tenant;
+    // La 2.x dejaba el conector en el contenido, como `tenant`. Con su llave se reconoce
+    // un cambio que confirmó antes de actualizar el plugin en la misma conversación.
+    if (scope) before = Object.assign({}, args, { tenant: scope });
     // El destino lo dice el contrato (client/contract-facts.json); sin él, `name`.
     const field = ((facts && facts.destinos) || {})[tool] || 'name';
     target = input[field] !== undefined ? `${field}=${stable(input[field])}` : '';
@@ -265,6 +269,7 @@ function operation(state, tool, input, facts) {
     scope,
     targetKey,
     key: targetKey + '|' + digest(stable(args)),
+    keyBefore: before ? targetKey + '|' + digest(stable(before)) : null,
     memory,
   };
 }
@@ -555,8 +560,10 @@ function preSelect(state, input, ctx, now) {
 // no se repite. Una incierta sólo se repite cuando una lectura del mismo destino
 // demostró que no se aplicó, o cuando la persona lo aprueba en la aplicación.
 function checkRepeat(state, tool, input, op, ctx, now) {
-  const exact = state.ops[op.key];
-  if (exact && DONE.has(exact.status) && now - exact.at < WRITE_WINDOW_MS) return duplicate(exact);
+  const exact = [op.key, op.keyBefore]
+    .map((key) => key && state.ops[key])
+    .find((rec) => rec && DONE.has(rec.status) && now - rec.at < WRITE_WINDOW_MS);
+  if (exact) return duplicate(exact);
   const legacy = state.legacy.writes[legacyKey(tool, input)];
   const legacyRecent = legacy && now - legacy.at < WRITE_WINDOW_MS;
   const legacyLive = legacyRecent && legacy.agent === op.agent;

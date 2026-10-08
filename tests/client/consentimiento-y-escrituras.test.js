@@ -5,6 +5,8 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('fs');
+const path = require('path');
 const policy = require('../../client/policy');
 
 const FACTS = {
@@ -370,6 +372,26 @@ test('un cambio confirmado no se repite con el otro nombre del conector, y otro 
     // Su gemela: otro contenido en el mismo conector es otro cambio.
     policy.postToolUse(state, 'propose_metric', metric(then, 'sum(m) - sum(c)'), { preview: true }, { now: T0 + 6000 }, FACTS);
     assert.equal(pre(state, 'propose_metric', Object.assign({ confirm: true }, metric(then, 'sum(m) - sum(c)')), {}).decision, 'pass', `${first} y luego ${then}: otro contenido pasa`);
+  }
+});
+
+// El estado que guardó la 2.0.5 tras confirmar un cambio con `tenant`: lo armó el
+// client/policy.js de la etiqueta v2.0.5. La 2.x dejaba el conector en el contenido de
+// la llave; la 3.0.0 lo saca. Actualizar a mitad de la conversación carga ese estado.
+test('un cambio confirmado con la 2.0.5 no se repite tras actualizar en la misma conversación, y otro contenido sí pasa', () => {
+  const saved = fs.readFileSync(path.join(__dirname, 'fixtures', 'estado-2.0.5-cambio-confirmado.json'), 'utf8');
+  const at = Date.parse('2026-10-07T10:00:10Z');
+  const filterSet = (arg, values) => ({ [arg]: 'norte', name: 'region_norte', filters: [{ dimension: 'region', values }] });
+  for (const arg of ['tenant', 'connector']) {
+    for (const [values, expected, why] of [
+      [['Norte'], 'deny', 'el mismo cambio ya se confirmó'],
+      [['Norte', 'Centro'], 'pass', 'otro contenido es otro cambio'],
+    ]) {
+      const state = policy.migrate(JSON.parse(saved), '3.0.0', new Date(at).toISOString());
+      policy.postToolUse(state, 'upsert_filter_set', filterSet(arg, values), { preview: true }, { now: at + 1000 }, FACTS);
+      const verdict = policy.preToolUse(state, 'upsert_filter_set', Object.assign({ confirm: true }, filterSet(arg, values)), FACTS, { now: at + 2000 });
+      assert.equal(verdict.decision, expected, `con \`${arg}\`: ${why}`);
+    }
   }
 });
 
