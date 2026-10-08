@@ -672,6 +672,31 @@ class ElConectorDeR12(unittest.TestCase):
         self.assertNotIn("get_model", destinos, "sólo pide el conector: no tiene destino")
         self.assertEqual(destinos["apply_batch"], "operations")
 
+    def test_los_hechos_del_cliente_nombran_las_herramientas_de_r12(self):
+        """`client/contract-facts.json` se derivó de la lista de herramientas de R12: los
+        ocho nombres nuevos tienen destino, y no queda ninguno de los anteriores ni de las
+        herramientas que R12 retira."""
+        facts = self.load("client/contract-facts.json")
+        named = set(facts["destinos"]) | set(facts["citas_humanas"]) | set(facts["sin_selection_context"])
+        named |= set(facts["en_pausa"]["herramientas"])
+        self.assertEqual(
+            {name: facts["destinos"].get(name) for name in (
+                "propose_metric", "propose_dataset", "propose_dimension", "attach_draft_connector",
+                "detach_draft_connector", "propose_solution_install", "apply_solution_update", "edit_agent_profile",
+            )},
+            {
+                "propose_metric": "name", "propose_dataset": "name", "propose_dimension": "name",
+                "attach_draft_connector": "agentId", "detach_draft_connector": "agentId",
+                "propose_solution_install": "template_id", "apply_solution_update": "solution", "edit_agent_profile": "agentId",
+            },
+        )
+        gone = {
+            "upsert_metric", "upsert_dataset", "upsert_dimension", "port_draft_connector", "unport_draft_connector",
+            "propose_install", "apply_update", "edit_agent_ficha", "start_agent_edit", "finish_agent_edit", "publish_bundle",
+        }
+        self.assertEqual(named & gone, set())
+        self.assertEqual([n for n in named if n.endswith("_status") or n.startswith("deprecate_")], [])
+
     def test_contra_el_contrato_de_antes_de_r12_el_plugin_pide_connector(self):
         reasons = contract.compare(self.before_r12(), self.load("compat/requisitos.json"))["incompatible"]
         self.assertEqual(
