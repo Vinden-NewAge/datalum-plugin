@@ -357,6 +357,22 @@ test('el ámbito de un cambio es su conector, nombrado `tenant` como antes de R1
   assert.equal(pre(state, 'propose_metric', Object.assign({ confirm: true }, after), { mode: 'default' }).decision, 'ask', 'con el nombre de R12 tampoco se repite a ciegas');
 });
 
+test('un cambio confirmado no se repite con el otro nombre del conector, y otro contenido sí pasa', () => {
+  for (const [first, then] of [['tenant', 'connector'], ['connector', 'tenant']]) {
+    const state = listed();
+    select(state, 'Ventas', 'ag_ventas', { human: [answer('Ventas', T0 + 500)] });
+    const metric = (arg, sql) => ({ [arg]: 'norte', name: 'margen', sql });
+    policy.postToolUse(state, 'propose_metric', metric(first, 'sum(m)'), { preview: true }, { now: T0 + 3000 }, FACTS);
+    policy.postToolUse(state, 'propose_metric', Object.assign({ confirm: true }, metric(first, 'sum(m)')), { status: 'propuesto' }, { now: T0 + 4000 }, FACTS);
+    // El servidor cambia a mitad de la conversación: el mismo cambio, con el otro nombre.
+    policy.postToolUse(state, 'propose_metric', metric(then, 'sum(m)'), { preview: true }, { now: T0 + 5000 }, FACTS);
+    assert.equal(pre(state, 'propose_metric', Object.assign({ confirm: true }, metric(then, 'sum(m)')), {}).decision, 'deny', `${first} y luego ${then}: es un duplicado`);
+    // Su gemela: otro contenido en el mismo conector es otro cambio.
+    policy.postToolUse(state, 'propose_metric', metric(then, 'sum(m) - sum(c)'), { preview: true }, { now: T0 + 6000 }, FACTS);
+    assert.equal(pre(state, 'propose_metric', Object.assign({ confirm: true }, metric(then, 'sum(m) - sum(c)')), {}).decision, 'pass', `${first} y luego ${then}: otro contenido pasa`);
+  }
+});
+
 test('una vista previa de un agente no autoriza aplicar con otro', () => {
   const state = listed();
   select(state, 'Ventas', 'ag_ventas', { human: [answer('Ventas', T0 + 500)] });

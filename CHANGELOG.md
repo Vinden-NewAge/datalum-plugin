@@ -16,8 +16,9 @@ mayor.
   2.x lo pedía en `tenant`, y Datalum R12 rechaza esa llamada nombrando `connector`, en
   cada herramienta y en las operaciones de `apply_batch`.
 - Los controles del cliente sacan de `connector` el conector de un cambio. Mientras la
-  producción de Datalum no tenga R12 también lo leen de `tenant`, y un cambio incierto
-  sigue siendo el mismo si el servidor cambia a mitad de la conversación.
+  producción de Datalum no tenga R12 también lo leen de `tenant`. Si el servidor cambia a
+  mitad de la conversación, el mismo cambio con uno u otro nombre es el mismo cambio: el
+  incierto no se repite a ciegas y el confirmado no se repite.
 - `compat/requisitos.json` declara `connector` en `brain_index` y `brain_read`, y al
   derivar `client/contract-facts.json` el conector ya no puede ser el destino de una
   herramienta.
@@ -40,19 +41,20 @@ mayor.
   `next_cursor`. La Skill y el código de los controles no nombraban esas herramientas
   ni esos códigos; `client/contract-facts.json` las nombra porque se deriva del contrato
   guardado, y cambia cuando se guarde el de R12.
-- Se comprobó sin el contrato que servirá R12, que todavía no existe: con el contrato
-  guardado y el conector renombrado, y leyendo el código de R12 que declara `connector`.
-  Contra el contrato guardado de producción, de antes de R12, `check.py` la da por
-  incompatible hasta que se guarde el de R12. El detalle está en `COMPATIBILIDAD.md`.
+- Se comprobó sin el contrato que servirá R12, que todavía no existe: con la lista de
+  herramientas que arma el código de R12, ejecutado en local, y con el contrato guardado
+  y el conector renombrado. Contra el contrato guardado de producción, de antes de R12,
+  `check.py` la da por incompatible hasta que se guarde el de R12. El detalle está en
+  `COMPATIBILIDAD.md`.
 
 ### Cómo recibirla
 
 - Sale con Datalum R12. Los pasos por aplicación están en `ACTUALIZAR.md`. Después de
   actualizar, empieza una conversación nueva: la que se abrió con la 2.x sigue pidiendo
   `tenant`.
-- En ChatGPT el conector guarda la lista de herramientas con sus argumentos. Hasta que
-  su administrador pulse Actualizar en el conector, ChatGPT sigue mandando `tenant` y
-  los nombres anteriores, y Datalum R12 rechaza `tenant`.
+- En ChatGPT, quien administra el conector pulsa Actualizar en él. ChatGPT guarda la
+  lista de herramientas con sus argumentos, y hasta entonces sigue mandando `tenant`, que
+  Datalum R12 rechaza, y los nombres anteriores, que siguen respondiendo.
 
 ## [2.0.5] - 2026-10-07
 

@@ -14,7 +14,7 @@ pide «Cambios incompatibles» en `MANTENER.md`. Por eso el plugin sale con el s
 
 | Plugin | Servidor de Datalum | Contrato | Resultado |
 |---|---|---|---|
-| 3.0.0 | Datalum R12, sin publicar todavía | No hay contrato servido. Se usó el guardado (`11e81846335d`) con `tenant` y `tenantSlug` renombrados a `connector` | Compatible: `ElConectorDeR12` en `tests/compat/test_automation.py`. El código de R12, leído sin ejecutarlo, declara `connector` en `brain_index` y `brain_read` |
+| 3.0.0 | Datalum R12, sin publicar todavía | No hay contrato servido. Se usó la lista de herramientas que arma el código de R12, ejecutado en local, y el guardado (`11e81846335d`) con `tenant` y `tenantSlug` renombrados a `connector` | Compatible: `compat/requisitos.json` contra esa lista no da ningún motivo, y `ElConectorDeR12` en `tests/compat/test_automation.py` pasa |
 | 3.0.0 | Producción, `mcp.datalum.ai`, commit `d0bab810dbfb` (v2.247.0) | El guardado (`11e81846335d`), de antes de R12 | Incompatible para `check.py`: `brain_index` y `brain_read` no aceptan `connector` |
 
 ### Mientras producción no tenga R12
@@ -22,9 +22,11 @@ pide «Cambios incompatibles» en `MANTENER.md`. Por eso el plugin sale con el s
 Lo que la Skill pide es `connector` y los nombres nuevos. La Skill no nombra ninguna de
 las ocho herramientas que cambian de nombre, ni las que R12 retira, ni sus códigos de
 estado. Los controles del cliente leen el conector de `connector` y de `tenant`, para no
-romper mientras el servidor publicado siga en v2.247.0: un cambio incierto sigue siendo
-el mismo aunque el servidor cambie a mitad de la conversación. La lectura de `tenant`
-sólo sirve hasta que producción tenga R12.
+romper mientras el servidor publicado siga en v2.247.0. El conector es el ámbito de un
+cambio y no entra en su contenido, así que, si el servidor cambia a mitad de la
+conversación, el mismo cambio con uno u otro nombre es el mismo cambio: el incierto no
+se repite a ciegas y el confirmado no se repite. La lectura de `tenant` sólo sirve hasta
+que producción tenga R12.
 
 Contra v2.247.0, una llamada con `connector` se rechaza nombrándolo y listando lo que
 acepta, `tenant` entre ellos, y la Skill pide corregir el nombre y volver a llamar. Sin
@@ -46,11 +48,25 @@ revisión de una persona, como cualquier despliegue (`MANTENER.md`). Hasta enton
 `client/contract-facts.json` nombra las herramientas por su nombre anterior y una
 herramienta con nombre nuevo usa el destino por defecto del cliente (`name`).
 
-Medido en una copia: con el contrato guardado en la forma de R12 (el conector renombrado,
-los ocho nombres nuevos, sin las tres retiradas que servía, 91 herramientas) y
-`client/contract-facts.json` derivado de él, `check.py` pasa y ningún destino es el
-conector. Las huellas de las definiciones y de las instrucciones siguen siendo las
-guardadas, así que eso no mide la revisión que pedirá el contrato real.
+Los controles reconocen una operación por el nombre de la herramienta. Un cambio
+confirmado con el nombre anterior y pedido otra vez con el nuevo pasa como otro cambio
+(medido con `upsert_metric` y `propose_metric`). Según el código de R12, el nombre
+anterior sigue respondiendo, así que eso sólo ocurre si la aplicación vuelve a leer la
+lista de herramientas a mitad de la conversación; no se comprobó si alguna lo hace tras
+un despliegue.
+
+Medido con el código de R12, ejecutado en local para armar la lista de herramientas de
+una conexión con sesión, con el esquema servido de cada una: la rama de los ocho nombres
+(`bb6e696f9`, todavía un resguardo sin fundir, que trae debajo la del conector), sola y
+puesta sobre el tren de R12 (`8cfda3e1d`). Las dos dan la misma lista, de 91
+herramientas. Ninguna declara `tenant` ni `tenantSlug` y 51 declaran `connector`. Están
+los ocho nombres nuevos y no está ninguno de los anteriores ni de las trece herramientas
+que R12 retira. `compat/requisitos.json` no da ningún motivo de incompatibilidad, y lo
+que se deriva para `client/contract-facts.json` no tiene ningún destino `connector`: las
+ocho herramientas nuevas tienen el destino de su nombre anterior, y las citas, las
+herramientas que no llevan el contexto de la conversación y las que están en pausa son
+las mismas de hoy. Las huellas de las definiciones y de las instrucciones no son las que
+servirá R12, así que eso no mide la revisión que pedirá el contrato real.
 
 ### Qué se ejecutó
 
@@ -58,20 +74,23 @@ guardadas, así que eso no mide la revisión que pedirá el contrato real.
 |---|---|
 | `python3 scripts/check.py` | Falla con los tres motivos de arriba, todos del contrato guardado |
 | `python3 -m unittest discover -s tests -t .` | 93 pruebas, todas pasan |
-| `node --test tests/client/*.test.js` | 134 pruebas, todas pasan |
+| `node --test tests/client/*.test.js` | 135 pruebas, todas pasan |
+| Las tres cosas de arriba en una copia con el contrato armado del código de R12 y `client/contract-facts.json` derivado de él | `check.py` pasa (91 herramientas), y pasan las 93 y las 135 pruebas |
 | Seis mutantes, uno por regla de la 3.0.0: el cliente lee sólo `tenant`, el cliente lee sólo `connector`, la derivación salta `tenant` y no `connector`, `requisitos.json` vuelve a `tenant`, la Skill vuelve a pedir `tenant` y la Skill nombra `upsert_metric` | Las pruebas detectan los seis |
-| `claude plugin validate .` | No se ejecutó: el CLI de Claude no está en esta máquina |
+| Cuatro mutantes de la huella del contenido: deja `connector`, deja `tenant`, deja los dos, y la llave sin el contenido | La prueba del cambio confirmado detecta los cuatro: los tres primeros por la mitad que niega el duplicado y el último por la que deja pasar otro contenido |
+| `claude plugin validate .`, con el CLI que trae la aplicación de escritorio (2.1.288) | Pasa, con el aviso de que `logo` no es un campo que Claude Code conozca, que ya tenía |
 | Evaluaciones con modelo | No se ejecutaron |
 
 | Qué | Dónde se prueba |
 |---|---|
 | El ámbito de un cambio es su conector, con `connector` y con `tenant` | `el ámbito de un cambio es su conector, nombrado…` (las dos) en `tests/client/consentimiento-y-escrituras.test.js` |
+| Un cambio confirmado no se repite con el otro nombre del conector, y otro contenido pasa | `un cambio confirmado no se repite con el otro nombre del conector…` en el mismo archivo |
 | Lo que el plugin pide y deriva sigue a R12 | `ElConectorDeR12` en `tests/compat/test_automation.py` |
 | La Skill pide `connector` y no nombra lo que R12 renombra o retira | `LaVersion300` en `tests/docs/test_documentos.py` |
 
-Sin comprobar: el contrato que servirá R12, porque los ocho nombres nuevos todavía no
-están en el código del servidor que se pudo leer, y la conducta de un modelo con la
-Skill nueva frente a R12.
+Sin comprobar: el contrato que servirá R12, porque todavía no se despliega y la pieza de
+los ocho nombres no está fundida, y la conducta de un modelo con la Skill nueva frente a
+R12.
 
 ## Versión 2.0.5
 

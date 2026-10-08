@@ -248,8 +248,11 @@ function operation(state, tool, input, facts) {
     // comparten identidad, porque `confirm` no forma parte de ella.
     kind = input.confirm === true || DELETES.has(tool) ? 'catalog' : 'tool';
     // El ámbito es el conector, que Datalum R12 nombra `connector`. Mientras el servidor
-    // publicado no tenga R12 llega como `tenant`: se leen los dos.
+    // publicado no tenga R12 llega como `tenant`: se leen los dos. Sale del contenido,
+    // porque ya está en el ámbito: el mismo cambio es el mismo con cualquiera de los dos.
     scope = String(input.connector || input.tenant || '');
+    delete args.connector;
+    delete args.tenant;
     // El destino lo dice el contrato (client/contract-facts.json); sin él, `name`.
     const field = ((facts && facts.destinos) || {})[tool] || 'name';
     target = input[field] !== undefined ? `${field}=${stable(input[field])}` : '';
