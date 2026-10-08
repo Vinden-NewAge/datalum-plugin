@@ -1,6 +1,6 @@
 {
   "name": "datalum",
-  "version": "2.0.5",
+  "version": "3.0.0",
   "description": "Datalum governed data layer (hosted MCP server + skill + client-side checks). Connect your Datalum account, choose the agent your company granted you and work with it: the skill loads that agent's brain as Datalum serves it and follows its rules for the task and for memory. Sign in with a Datalum account on first connection.",
   "author": {
     "name": "Vinden",

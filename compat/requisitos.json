@@ -47,7 +47,7 @@
         "path",
         "cursor",
         "limit",
-        "tenant",
+        "connector",
         "unit",
         "selection_context"
       ]
@@ -60,7 +60,7 @@
         "concept_id",
         "offset",
         "max_bytes",
-        "tenant",
+        "connector",
         "unit",
         "selection_context"
       ]

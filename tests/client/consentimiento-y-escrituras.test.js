@@ -307,33 +307,64 @@ test('A → B → A: cada agente conserva su propio historial', () => {
 test('ámbitos distintos son operaciones distintas', () => {
   const state = listed();
   select(state, 'Ventas', 'ag_ventas', { human: [answer('Ventas', T0 + 500)] });
-  const metric = (tenant) => ({ tenant, name: 'margen', sql: 'sum(m)' });
-  policy.postToolUse(state, 'upsert_metric', metric('norte'), { preview: true }, { now: T0 + 3000 }, FACTS);
-  policy.postToolUse(state, 'upsert_metric', Object.assign({ confirm: true }, metric('norte')), { status: 'propuesto' }, { now: T0 + 4000 }, FACTS);
-  assert.equal(pre(state, 'upsert_metric', Object.assign({ confirm: true }, metric('norte')), {}).decision, 'deny');
-  policy.postToolUse(state, 'upsert_metric', metric('sur'), { preview: true }, { now: T0 + 5000 }, FACTS);
-  assert.equal(pre(state, 'upsert_metric', Object.assign({ confirm: true }, metric('sur')), {}).decision, 'pass');
+  const metric = (connector) => ({ connector, name: 'margen', sql: 'sum(m)' });
+  policy.postToolUse(state, 'propose_metric', metric('norte'), { preview: true }, { now: T0 + 3000 }, FACTS);
+  policy.postToolUse(state, 'propose_metric', Object.assign({ confirm: true }, metric('norte')), { status: 'propuesto' }, { now: T0 + 4000 }, FACTS);
+  assert.equal(pre(state, 'propose_metric', Object.assign({ confirm: true }, metric('norte')), {}).decision, 'deny');
+  policy.postToolUse(state, 'propose_metric', metric('sur'), { preview: true }, { now: T0 + 5000 }, FACTS);
+  assert.equal(pre(state, 'propose_metric', Object.assign({ confirm: true }, metric('sur')), {}).decision, 'pass');
 });
 
 test('un cambio incierto en un objeto no frena otro objeto de la misma herramienta', () => {
   const state = listed();
   select(state, 'Ventas', 'ag_ventas', { human: [answer('Ventas', T0 + 500)] });
-  const metric = (name) => ({ tenant: 'norte', name, sql: 'sum(m)' });
-  policy.postToolUse(state, 'upsert_metric', metric('margen'), { preview: true }, { now: T0 + 3000 }, FACTS);
-  policy.postToolUseFailure(state, 'upsert_metric', Object.assign({ confirm: true }, metric('margen')), TIMEOUT, { now: T0 + 4000 }, FACTS);
-  policy.postToolUse(state, 'upsert_metric', metric('ventas'), { preview: true }, { now: T0 + 5000 }, FACTS);
-  assert.equal(pre(state, 'upsert_metric', Object.assign({ confirm: true }, metric('ventas')), { mode: 'default' }).decision, 'pass');
-  assert.equal(pre(state, 'upsert_metric', Object.assign({ confirm: true }, metric('margen')), { mode: 'default' }).decision, 'ask');
+  const metric = (name) => ({ connector: 'norte', name, sql: 'sum(m)' });
+  policy.postToolUse(state, 'propose_metric', metric('margen'), { preview: true }, { now: T0 + 3000 }, FACTS);
+  policy.postToolUseFailure(state, 'propose_metric', Object.assign({ confirm: true }, metric('margen')), TIMEOUT, { now: T0 + 4000 }, FACTS);
+  policy.postToolUse(state, 'propose_metric', metric('ventas'), { preview: true }, { now: T0 + 5000 }, FACTS);
+  assert.equal(pre(state, 'propose_metric', Object.assign({ confirm: true }, metric('ventas')), { mode: 'default' }).decision, 'pass');
+  assert.equal(pre(state, 'propose_metric', Object.assign({ confirm: true }, metric('margen')), { mode: 'default' }).decision, 'ask');
+});
+
+// Datalum R12 nombra el conector `connector`; el servidor publicado antes de R12, `tenant`.
+// El cliente lee los dos, y el ámbito de un cambio es su conector con cualquiera de ellos.
+function uncertainOnNorte(arg) {
+  const state = listed();
+  select(state, 'Ventas', 'ag_ventas', { human: [answer('Ventas', T0 + 500)] });
+  const metric = (connector) => ({ [arg]: connector, name: 'margen', sql: 'sum(m)' });
+  policy.postToolUse(state, 'propose_metric', metric('norte'), { preview: true }, { now: T0 + 3000 }, FACTS);
+  policy.postToolUseFailure(state, 'propose_metric', Object.assign({ confirm: true }, metric('norte')), TIMEOUT, { now: T0 + 4000 }, FACTS);
+  return state;
+}
+
+test('el ámbito de un cambio es su conector, nombrado `connector` como en R12', () => {
+  const state = uncertainOnNorte('connector');
+  const metric = (connector) => ({ connector, name: 'margen', sql: 'sum(m)' });
+  policy.postToolUse(state, 'propose_metric', metric('sur'), { preview: true }, { now: T0 + 5000 }, FACTS);
+  assert.equal(pre(state, 'propose_metric', Object.assign({ confirm: true }, metric('sur')), { mode: 'default' }).decision, 'pass', 'otro conector es otro cambio');
+  assert.equal(pre(state, 'propose_metric', Object.assign({ confirm: true }, metric('norte')), { mode: 'default' }).decision, 'ask', 'el mismo conector espera a la persona');
+});
+
+test('el ámbito de un cambio es su conector, nombrado `tenant` como antes de R12, y sigue siéndolo con `connector`', () => {
+  const state = uncertainOnNorte('tenant');
+  const before = (tenant) => ({ tenant, name: 'margen', sql: 'sum(m)' });
+  policy.postToolUse(state, 'propose_metric', before('sur'), { preview: true }, { now: T0 + 5000 }, FACTS);
+  assert.equal(pre(state, 'propose_metric', Object.assign({ confirm: true }, before('sur')), { mode: 'default' }).decision, 'pass', 'otro conector es otro cambio');
+  assert.equal(pre(state, 'propose_metric', Object.assign({ confirm: true }, before('norte')), { mode: 'default' }).decision, 'ask', 'el mismo conector espera a la persona');
+  // El servidor pasa a R12 a mitad de la conversación: el cambio incierto sigue siendo el mismo.
+  const after = { connector: 'norte', name: 'margen', sql: 'sum(m)' };
+  policy.postToolUse(state, 'propose_metric', after, { preview: true }, { now: T0 + 6000 }, FACTS);
+  assert.equal(pre(state, 'propose_metric', Object.assign({ confirm: true }, after), { mode: 'default' }).decision, 'ask', 'con el nombre de R12 tampoco se repite a ciegas');
 });
 
 test('una vista previa de un agente no autoriza aplicar con otro', () => {
   const state = listed();
   select(state, 'Ventas', 'ag_ventas', { human: [answer('Ventas', T0 + 500)] });
-  const metric = { tenant: 'norte', name: 'margen', sql: 'sum(m)' };
-  policy.postToolUse(state, 'upsert_metric', metric, { preview: true }, { now: T0 + 3000 }, FACTS);
+  const metric = { connector: 'norte', name: 'margen', sql: 'sum(m)' };
+  policy.postToolUse(state, 'propose_metric', metric, { preview: true }, { now: T0 + 3000 }, FACTS);
   policy.postToolUse(state, 'release_agent', {}, { released: true }, { now: T0 + 4000 });
   select(state, 'Finanzas', 'ag_finanzas', { human: [answer('Finanzas', T0 + 4500)] });
-  assert.equal(pre(state, 'upsert_metric', Object.assign({ confirm: true }, metric), {}).decision, 'deny');
+  assert.equal(pre(state, 'propose_metric', Object.assign({ confirm: true }, metric), {}).decision, 'deny');
 });
 
 // ── Lo que guarda el estado ─────────────────────────────────────────────────────

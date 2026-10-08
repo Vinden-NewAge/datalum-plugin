@@ -640,6 +640,49 @@ class PausedFamilies(unittest.TestCase):
         self.assertEqual(facts["en_pausa"]["herramientas"], expected)
 
 
+class ElConectorDeR12(unittest.TestCase):
+    """Datalum R12 nombra el conector `connector` en toda herramienta que lo pide y
+    rechaza `tenant`. Lo que el plugin pide y lo que deriva del contrato siguen a R12."""
+
+    ROOT = Path(__file__).resolve().parents[2]
+
+    def load(self, relative: str) -> dict:
+        return json.loads((self.ROOT / relative).read_text(encoding="utf-8"))
+
+    def before_r12(self) -> dict:
+        """El contrato guardado de v2.243.0, de antes de R12."""
+        return self.load("compat/contratos/22a5a022caeb.json")
+
+    def with_connector(self, summary: dict) -> dict:
+        """El mismo contrato con el conector nombrado como en R12: `tenant` y `tenantSlug`
+        pasan a `connector`."""
+        def rename(args):
+            return sorted({"connector" if a in ("tenant", "tenantSlug") else a for a in args})
+
+        body = dict(summary, herramientas=[dict(e, p=rename(e["p"]), r=rename(e["r"])) for e in summary["herramientas"]])
+        body["huella"] = contract.fingerprint(body)
+        return contract.validate(body)
+
+    def test_con_el_conector_de_r12_el_plugin_es_compatible_y_el_conector_no_es_destino(self):
+        summary = self.with_connector(self.before_r12())
+        requirements = self.load("compat/requisitos.json")
+        self.assertEqual(contract.compare(summary, requirements)["incompatible"], [])
+        destinos = contract.derive_facts(summary, requirements)["destinos"]
+        self.assertNotIn("connector", destinos.values())
+        self.assertNotIn("get_model", destinos, "sólo pide el conector: no tiene destino")
+        self.assertEqual(destinos["apply_batch"], "operations")
+
+    def test_contra_el_contrato_de_antes_de_r12_el_plugin_pide_connector(self):
+        reasons = contract.compare(self.before_r12(), self.load("compat/requisitos.json"))["incompatible"]
+        self.assertEqual(
+            reasons,
+            [
+                "`brain_index` ya no acepta ['connector'], que el plugin manda",
+                "`brain_read` ya no acepta ['connector'], que el plugin manda",
+            ],
+        )
+
+
 class Events(unittest.TestCase):
     def test_avisos_mal_formados_se_rechazan(self):
         good = event(SHA_A, summary_of(base_tools()))

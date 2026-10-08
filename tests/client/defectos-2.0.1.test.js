@@ -229,7 +229,7 @@ function updatedAfterSwitch() {
       [key('remember', uncertain)]: { status: 'uncertain', at: T0 + 1000, tool: 'remember', name: 'proyecto_a' },
       [key('remember', confirmed)]: { status: 'confirmed', at: T0 + 1500, tool: 'remember', name: 'moneda' },
     },
-    previews: { [key('upsert_metric', preview)]: T0 + 1800 },
+    previews: { [key('propose_metric', preview)]: T0 + 1800 },
   }, '2.0.1', iso(T0 + 4000));
   // Vuelve a Ventas con una elección nueva de la persona.
   policy.postToolUse(state, 'release_agent', {}, { released: true }, { now: T0 + 5000, at: iso(T0 + 5000) });
@@ -250,7 +250,7 @@ test('tras actualizar y volver al agente, su escritura confirmada no se repite a
 
 test('tras actualizar y volver al agente, una vista previa sin dueño no autoriza aplicar', () => {
   const { state, preview } = updatedAfterSwitch();
-  const verdict = policy.preToolUse(state, 'upsert_metric', Object.assign({ confirm: true }, preview), FACTS, { now: T0 + 7000, mode: 'default' });
+  const verdict = policy.preToolUse(state, 'propose_metric', Object.assign({ confirm: true }, preview), FACTS, { now: T0 + 7000, mode: 'default' });
   assert.equal(verdict.decision, 'deny');
   assert.match(verdict.reason, /preview first/);
 });

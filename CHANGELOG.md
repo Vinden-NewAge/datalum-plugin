@@ -4,6 +4,56 @@ Cada versión del plugin de Datalum dice qué cambia para quien usa la Skill, co
 versión del servidor se comprobó y qué hay que hacer para recibirla. La más reciente va
 primero.
 
+## [3.0.0] - 2026-10-07
+
+Datalum R12 nombra el conector `connector` y rechaza `tenant`. La Skill 2.x pide
+`tenant`, así que con ese servidor sus llamadas se rechazan: por eso sube el número
+mayor.
+
+### Cambiado
+
+- La Skill pide el `slug` del conector en `connector` donde una herramienta lo pide. La
+  2.x lo pedía en `tenant`, y Datalum R12 rechaza esa llamada nombrando `connector`, en
+  cada herramienta y en las operaciones de `apply_batch`.
+- Los controles del cliente sacan de `connector` el conector de un cambio. Mientras la
+  producción de Datalum no tenga R12 también lo leen de `tenant`, y un cambio incierto
+  sigue siendo el mismo si el servidor cambia a mitad de la conversación.
+- `compat/requisitos.json` declara `connector` en `brain_index` y `brain_read`, y al
+  derivar `client/contract-facts.json` el conector ya no puede ser el destino de una
+  herramienta.
+- Las evaluaciones y las pruebas usan lo de R12: el conector simulado declara
+  `connector`, los cerebros de prueba lo nombran así, lo nuevo nace en `propuesto` y las
+  pruebas del cliente escriben con `propose_metric`.
+
+### Servidor
+
+- Datalum R12, sin publicar todavía. Además del conector, ocho herramientas cambian de
+  nombre y el anterior sigue respondiendo fuera de la lista: `upsert_metric` pasa a
+  `propose_metric`, `upsert_dataset` a `propose_dataset`, `upsert_dimension` a
+  `propose_dimension`, `port_draft_connector` a `attach_draft_connector`,
+  `unport_draft_connector` a `detach_draft_connector`, `propose_install` a
+  `propose_solution_install`, `apply_update` a `apply_solution_update` y
+  `edit_agent_ficha` a `edit_agent_profile`. Los códigos de estado quedan en
+  `propuesto`, `probado`, `activo` y `retirado`. Salen `start_agent_edit`,
+  `finish_agent_edit`, los `set_*_status`, los `deprecate_*`, `publish_bundle` y el
+  aviso del 2026-11-04, y `run_dataset` y `run_metric` dan la página siguiente sólo en
+  `next_cursor`. La Skill y el código de los controles no nombraban esas herramientas
+  ni esos códigos; `client/contract-facts.json` las nombra porque se deriva del contrato
+  guardado, y cambia cuando se guarde el de R12.
+- Se comprobó sin el contrato que servirá R12, que todavía no existe: con el contrato
+  guardado y el conector renombrado, y leyendo el código de R12 que declara `connector`.
+  Contra el contrato guardado de producción, de antes de R12, `check.py` la da por
+  incompatible hasta que se guarde el de R12. El detalle está en `COMPATIBILIDAD.md`.
+
+### Cómo recibirla
+
+- Sale con Datalum R12. Los pasos por aplicación están en `ACTUALIZAR.md`. Después de
+  actualizar, empieza una conversación nueva: la que se abrió con la 2.x sigue pidiendo
+  `tenant`.
+- En ChatGPT el conector guarda la lista de herramientas con sus argumentos. Hasta que
+  su administrador pulse Actualizar en el conector, ChatGPT sigue mandando `tenant` y
+  los nombres anteriores, y Datalum R12 rechaza `tenant`.
+
 ## [2.0.5] - 2026-10-07
 
 Datalum rechaza el argumento que el esquema de una herramienta no declara.
