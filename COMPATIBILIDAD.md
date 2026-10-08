@@ -6,16 +6,17 @@ producto se marca «Sin comprobar».
 
 ## Versión 3.0.0
 
-Preparada el 7 de octubre de 2026 para salir con Datalum R12, que todavía no está
-publicado. R12 nombra el conector `connector` en toda herramienta que lo pide y rechaza
-`tenant` desde que se despliega, sin conservar el contrato anterior hasta una fecha como
-pide «Cambios incompatibles» en `MANTENER.md`. Por eso el plugin sale con el servidor, y
-`compat/requisitos.json` declara lo de R12 en vez de lo común a los dos contratos.
+Preparada el 7 de octubre de 2026 y cerrada el 8 con Datalum R12 (v2.249.0, commit
+`fe05777db569`), que ese día ya servía qa y salía a producción. R12 nombra el conector
+`connector` en toda herramienta que lo pide y rechaza `tenant` desde que se despliega,
+sin conservar el contrato anterior hasta una fecha como pide «Cambios incompatibles» en
+`MANTENER.md`. Por eso el plugin sale con el servidor, y `compat/requisitos.json`
+declara lo de R12 en vez de lo común a los dos contratos.
 
 | Plugin | Servidor de Datalum | Contrato | Resultado |
 |---|---|---|---|
-| 3.0.0 | Datalum R12, sin publicar todavía | No hay contrato servido. Se armó del código de R12, ejecutado en local: `2b45945995be`, 91 herramientas | Compatible: `compat/requisitos.json` no da ningún motivo de incompatibilidad. Como cualquier despliegue, pide que una persona lea las instrucciones y cuatro definiciones que cambiaron |
-| 3.0.0 | Producción, `mcp.datalum.ai`, commit `d0bab810dbfb` (v2.247.0) | El guardado (`11e81846335d`), de antes de R12 | Incompatible para `check.py`: `brain_index` y `brain_read` no aceptan `connector` |
+| 3.0.0 | Datalum R12, v2.249.0, commit `fe05777db569`. Lo servía qa (`mcp.datahub.vinden.cc`) el 8 de octubre a las 16:01 UTC | `625b37c7b57b`, 91 herramientas, armado del código de ese commit. Sus instrucciones (`aa0054a7b8e4`) y su protocolo son los que qa contesta sin sesión | Compatible: `check.py` pasa con ese contrato como el de producción, con las huellas nuevas de las instrucciones y de cuatro definiciones añadidas a `compat/requisitos.json` tras leer su texto |
+| 3.0.0 | Producción, `mcp.datalum.ai`, commit `cffc64b13cb3` (v2.248.0, el paso 1 de R12), lo que servía a la misma hora | `482a3d1baa72`, 91 herramientas, armado del código de ese commit. Sus instrucciones (`35ef64cf9dfc`) son las que producción contesta sin sesión. No se guarda en `compat/contratos/` | Incompatible: `brain_index` y `brain_read` declaran `tenant` y no aceptan `connector`, como en v2.247.0. La 3.0.0 sale en la misma ventana en que producción pasa a v2.249.0 |
 
 ### Cómo se armó el contrato de R12
 
@@ -23,49 +24,54 @@ Con lo mismo que usa el servidor para contestar `tools/list` a una conexión con
 `buildToolsList` de `supabase/functions/mcp/interfaces/tools.ts`, con un cliente
 autenticado de prueba, y el `initialize` de `mcp-protocol.ts` para las instrucciones. El
 código se sacó con `git archive`, sin tocar el repositorio del servidor, y el resumen lo
-armó `scripts/compatlib/contract.py`.
+armó `python3 scripts/compat.py resumir`, que usa `scripts/compatlib/contract.py`. La
+sonda no vive en este repositorio porque importa código del servidor.
 
 | Código del servidor | Resultado |
 |---|---|
-| `22a5a022caeb` (v2.243.0) | `11e81846335d`, 94 herramientas: el contrato guardado, huella por huella. Con eso se da por bueno el método |
-| `d0bab810dbfb` (v2.247.0, producción) | 94 herramientas con los mismos argumentos que el guardado. Cambian las instrucciones y 23 definiciones, ninguna de las que declara `compat/requisitos.json` |
-| `c7b74b468`, la rama de los ocho nombres, con el conector, los cuatro códigos y el cursor debajo | `2b45945995be`, 91 herramientas. Ninguna declara `tenant` ni `tenantSlug` y 51 declaran `connector`. Están los ocho nombres nuevos y no está ninguno de los anteriores, ni `start_agent_edit`, `finish_agent_edit` ni `publish_bundle`. Las instrucciones ya no traen el aviso del 2026-11-04 |
+| `22a5a022caeb` (v2.243.0) | `11e81846335d`, 94 herramientas: el contrato guardado, huella por huella. Con eso se da por bueno el método. Se midió el 7 de octubre y otra vez el 8, con la sonda de esta medición |
+| `d0bab810dbfb` (v2.247.0) | `94135ad03996`, 94 herramientas con los mismos argumentos que el guardado. Cambian las instrucciones y 23 definiciones, ninguna de las que declara `compat/requisitos.json` |
+| `cffc64b13cb3` (v2.248.0, el paso 1 de R12) | `482a3d1baa72`, 91 herramientas. Salen `start_agent_edit`, `finish_agent_edit` y `publish_bundle`, y el aviso del 2026-11-04 de las instrucciones. El conector sigue en `tenant` (49 herramientas) y siguen los ocho nombres anteriores |
+| `c7b74b468`, la rama de los ocho nombres, con el conector, los cuatro códigos y el cursor debajo | `2b45945995be`, 91 herramientas. Con él se preparó la 3.0.0 el 7 de octubre |
 | `a82026c12`, la integración de R12 sin la rama de los ocho nombres | Las mismas 91 herramientas, con los mismos argumentos si se cambian los ocho nombres. En la lista, lo demás que trae sólo cambia el texto de algunas descripciones |
+| `fe05777db569` (v2.249.0), R12 fundido en `main` del servidor | `625b37c7b57b`, 91 herramientas, con los mismos nombres, argumentos e instrucciones (`aa0054a7b8e4`) que `2b45945995be`. Ninguna declara `tenant` ni `tenantSlug` y 51 declaran `connector`. Están los ocho nombres nuevos y no está ninguno de los anteriores, ni `start_agent_edit`, `finish_agent_edit` ni `publish_bundle`. Contra `2b45945995be` cambia el texto de 13 definiciones, ninguna de las que declara `compat/requisitos.json`. Es el contrato guardado como `compat/contrato-produccion.json` y `compat/contratos/fe05777db569.json` |
 
-`client/contract-facts.json` se derivó de `2b45945995be`. Las huellas pueden cambiar
-antes de publicar R12, porque todavía se corrigen textos; los nombres y los argumentos,
-que es de lo que se deriva ese archivo, son los mismos en las dos ramas.
+De esas 13 definiciones, el cliente lee las respuestas de una, `brain_write`: cambia la
+frase que dice por dónde se escribe el modelo semántico, y su esquema sigue igual.
+`client/contract-facts.json`, derivado otra vez de `625b37c7b57b`, sale igual byte por
+byte al que se derivó de `2b45945995be`.
 
 R12 renombra el argumento y no las respuestas: `get_model` y otras lecturas siguen
 devolviendo un campo `tenant`, y el simulacro de `get_model` de las evaluaciones también.
 
-### Con ese contrato en una copia
+### La lectura de lo que cambió
 
-En una copia del plugin con ese contrato como `compat/contrato-produccion.json` y sus
-instrucciones en `compat/instrucciones/aa0054a7b8e4.txt`, `check.py` falla con cinco
-motivos de revisión, los que `MANTENER.md` deja a una persona (`revision_requerida`):
+Contra lo revisado para la 2.x, el contrato de R12 da en `check.py` cinco motivos de
+revisión, los que `MANTENER.md` deja a una persona (`revision_requerida`). El 8 de
+octubre el agente que preparó esta versión leyó con `diff` el texto de las instrucciones
+y de las cuatro definiciones de `fe05777db569` contra el de `22a5a022caeb`; la revisión
+del PR es la de una persona:
 
-| Qué cambió | Cómo |
-|---|---|
-| Las instrucciones | Sale el aviso del 2026-11-04 y entra un párrafo con los cuatro códigos de estado. El argumento no declarado «se rechaza nombrándolo», y ya no dicen qué hacer ante `partial_write` |
-| `brain_index` y `brain_read` | Sale el aviso del 2026-11-04 y el argumento `tenant` pasa a llamarse `connector`, con la misma definición |
-| `list_agents` | Sale el aviso, y lo que no sale en la lista se describe con los códigos nuevos |
-| `use_agent` | Sale el aviso, y dice que el `slug` del conector se le pasa a `brain_index` en `connector` |
+| Qué cambió | Cómo | Huella nueva |
+|---|---|---|
+| Las instrucciones | Sale el aviso del 2026-11-04 y entra un párrafo con los cuatro códigos de estado; recuperar algo retirado es `propose_*` o `upsert_*` sobre su nombre. El argumento no declarado «se rechaza nombrándolo», y ya no dicen qué hacer ante `partial_write` | `aa0054a7b8e4` |
+| `brain_index` y `brain_read` | Sale el aviso del 2026-11-04 y el argumento `tenant` pasa a llamarse `connector`, con la misma definición | `3b9862da88fb` y `d4e046a7f0f3` |
+| `list_agents` | Sale el aviso, y lo que no sale en la lista se describe con los códigos nuevos | `bb30a4a9a839` |
+| `use_agent` | Sale el aviso, y dice que el `slug` de cada conector de `connectors` se le pasa a `brain_index` en `connector` | `4e431ad77725` |
 
-Con la Skill de la 3.0.0 nada de eso pide otro cambio. Con sus huellas añadidas en la
-copia a `instrucciones_revisadas` (`aa0054a7b8e4`) y a `definiciones_revisadas`
-(`brain_index` `3b9862da88fb`, `brain_read` `d4e046a7f0f3`, `list_agents`
-`bb30a4a9a839`, `use_agent` `4e431ad77725`), como lo haría esa persona, `check.py` pasa
-(91 herramientas) y pasan las 94 pruebas de Python y las 137 del cliente. En el
-repositorio no se añadieron: la revisión se hace con el contrato que sirva R12.
+Con la Skill de la 3.0.0 nada de eso pide otro cambio: pide el `slug` del conector en
+`connector`, ya dice que un argumento no declarado se rechaza y no nombra códigos de
+estado, el aviso ni las herramientas que salen. Las cinco huellas están en
+`instrucciones_revisadas` y `definiciones_revisadas` de `compat/requisitos.json`, junto
+a las de la 2.x. Son las que dio el contrato de `c7b74b468` el 7 de octubre.
 
 ### Mientras producción no tenga R12
 
 Lo que la Skill pide es `connector` y los nombres nuevos. La Skill no nombra ninguna de
 las ocho herramientas que cambian de nombre, ni las que R12 retira, ni sus códigos de
 estado. Los controles del cliente leen el conector de `connector` y de `tenant`, para no
-romper mientras el servidor publicado siga en v2.247.0. La lectura de `tenant` sólo
-sirve hasta que producción tenga R12.
+romper mientras producción sirva un servidor sin R12 entero (v2.247.0 o v2.248.0). La
+lectura de `tenant` sólo sirve hasta que producción tenga R12.
 
 Los controles reconocen una escritura por el agente, la operación, el ámbito y el
 contenido. El conector es el ámbito y no entra en el contenido, así que, si el servidor
@@ -76,18 +82,19 @@ el contenido, como `tenant`, y la 3.0.0 también busca esa forma. El destino de 
 herramienta no entra en esa comparación: sale del contenido, y cada versión lo elige con
 su contrato.
 
-`client/contract-facts.json` nombra las herramientas de R12. Contra v2.247.0, las que
-tienen el nombre anterior usan el destino por defecto, `name`. `apply_update` y
+`client/contract-facts.json` nombra las herramientas de R12. Contra v2.247.0 y v2.248.0,
+las que tienen el nombre anterior usan el destino por defecto, `name`. `apply_update` y
 `propose_install` no lo llevan: con un cambio incierto en una de ellas, el cliente le
 pregunta a la persona antes de otro cambio con esa misma herramienta, aunque sea sobre
 otro objeto (en el mismo conector, si lo lleva). El cambio confirmado no frena a otro.
 
-Contra v2.247.0, una llamada con `connector` se rechaza nombrándolo y listando lo que
-acepta, `tenant` entre ellos, y la Skill pide corregir el nombre y volver a llamar. Sin
-comprobar con un modelo.
+Contra v2.247.0 y v2.248.0, una llamada con `connector` se rechaza nombrándolo y
+listando lo que acepta, `tenant` entre ellos, y la Skill pide corregir el nombre y volver
+a llamar. Sin comprobar con un modelo.
 
-La Skill y los controles siguen atendiendo `partial_write`. R12 deja de darlo, porque
-sólo lo daban las escrituras de estado que retira; sale con la lectura de `tenant`.
+La Skill y los controles siguen atendiendo `partial_write`. El código de v2.247.0 lo
+daba; en el de `cffc64b13cb3` (v2.248.0) y en el de `fe05777db569` ya no aparece fuera de
+las pruebas. Sale con la lectura de `tenant`.
 
 Los controles reconocen una operación por el nombre de la herramienta. Un cambio
 confirmado con el nombre anterior y pedido otra vez con el nuevo pasa como otro cambio
@@ -96,32 +103,30 @@ anterior sigue respondiendo, así que eso sólo ocurre si la aplicación vuelve 
 lista de herramientas a mitad de la conversación; no se comprobó si alguna lo hace tras
 un despliegue.
 
-`check.py` compara con el contrato de producción guardado, que es el de antes de R12, y
-falla con tres motivos:
-
-| Motivo | Por qué |
-|---|---|
-| `brain_index` ya no acepta `connector` | El contrato guardado lo llama `tenant` |
-| `brain_read` ya no acepta `connector` | Lo mismo |
-| `client/contract-facts.json` no es el que se deriva del contrato de producción | Se derivó de la lista de R12 |
-
-El contrato se deja como está. Al publicar R12 se guarda el suyo, y
-`client/contract-facts.json` sale igual al derivarlo mientras R12 no cambie nombres ni
-argumentos. Las instrucciones y las cuatro definiciones piden la revisión de una persona.
-
 ### Qué se ejecutó
+
+El 8 de octubre, con el contrato de v2.249.0:
 
 | Qué | Resultado |
 |---|---|
-| `python3 scripts/check.py` | Falla con los tres motivos de arriba, todos del contrato guardado |
+| La sonda sobre `22a5a022caeb` | `11e81846335d`, 94 herramientas, igual al guardado |
+| La sonda sobre `fe05777db569`, `c7b74b468`, `cffc64b13cb3` y `d0bab810dbfb` | Las huellas de «Cómo se armó el contrato de R12» |
+| `/health`, `initialize` y `tools/list` sin sesión de qa y de producción, a las 16:01 UTC, cotejados con `production.cross_check` | qa sirve `fe05777db569` (v2.249.0) y no tiene diferencias con `625b37c7b57b`: instrucciones, protocolo y las tres herramientas que se anuncian sin sesión. Producción sirve `cffc64b13cb3` (v2.248.0): sus instrucciones no son las de `625b37c7b57b` y son, texto por texto, las de `482a3d1baa72` |
+| `client/contract-facts.json` derivado de `625b37c7b57b` con `contract.derive_facts` | Igual al que había |
+| `python3 scripts/compat.py evaluar` con un aviso manual de qa por `fe05777db569`, en una copia del árbol fuera del repositorio | `candidata_lista`, clase `sin_cambios`: toma el contrato de `compat/contratos/`, lo coteja con lo que qa contesta sin sesión (verificación parcial) y no pide revisión |
+| `python3 scripts/check.py` | Pasa (91 herramientas) |
 | `python3 -m unittest discover -s tests -t .` | 94 pruebas, todas pasan |
 | `node --test tests/client/*.test.js` | 137 pruebas, todas pasan |
-| Las tres en la copia con el contrato de R12 y las cinco huellas revisadas | `check.py` pasa (91 herramientas), y pasan las 94 y las 137 |
+| `claude plugin validate .`, con el CLI que trae la aplicación de escritorio (2.1.288) | Pasa, con el aviso de que `logo` no es un campo que Claude Code conozca, que ya tenía |
+| Evaluaciones con modelo | No se ejecutaron |
+
+El 7 de octubre, al preparar la versión. El 8 no cambió la Skill ni el cliente:
+
+| Qué | Resultado |
+|---|---|
 | Con el `client/policy.js` y el `client/contract-facts.json` de la etiqueta v2.0.5, un cambio confirmado de `upsert_filter_set` con `tenant`; después, el mismo con la 3.0.0 | Lo niega con `tenant` y con `connector`, y deja pasar otro contenido. Antes del arreglo lo dejaba pasar |
 | Lo mismo con un cambio confirmado o incierto de `apply_update` y de `propose_install`, que en la 3.0.0 no tienen destino | Lo niega si estaba confirmado y pregunta si estaba incierto, como la 2.0.5. Antes del arreglo lo dejaba pasar |
 | Dieciocho mutantes: el cliente lee sólo `tenant` o sólo `connector`; deja `connector`, `tenant` o los dos en el contenido; la llave sin el contenido; la derivación salta `tenant` y no `connector`; `requisitos.json` vuelve a `tenant`; la Skill vuelve a pedir `tenant` o nombra `upsert_metric`; y ocho de la regla de la misma escritura, uno por cada parte | Las pruebas detectan los dieciocho |
-| `claude plugin validate .`, con el CLI que trae la aplicación de escritorio (2.1.288) | Pasa, con el aviso de que `logo` no es un campo que Claude Code conozca, que ya tenía |
-| Evaluaciones con modelo | No se ejecutaron |
 
 | Qué | Dónde se prueba |
 |---|---|
@@ -132,9 +137,12 @@ argumentos. Las instrucciones y las cuatro definiciones piden la revisión de un
 | Lo que el plugin pide y deriva sigue a R12, y los hechos del cliente nombran las herramientas de R12 | `ElConectorDeR12` en `tests/compat/test_automation.py` |
 | La Skill pide `connector` y no nombra lo que R12 renombra o retira | `LaVersion300` en `tests/docs/test_documentos.py` |
 
-Sin comprobar: el contrato que servirá R12, porque todavía no se despliega y la rama de
-los ocho nombres no está fundida, y la conducta de un modelo con la Skill nueva frente a
-R12.
+Sin comprobar: el catálogo completo que sirven qa y producción a una conexión con
+sesión, porque no hay credencial de lectura. El contrato sale del código del commit que
+sirve qa, y del servidor sólo se cotejaron las instrucciones, el protocolo y las
+herramientas que se anuncian sin sesión. Tampoco se comprobó producción con v2.249.0,
+porque a la hora de la medición servía v2.248.0, ni la conducta de un modelo con la
+Skill nueva frente a R12.
 
 ## Versión 2.0.5
 

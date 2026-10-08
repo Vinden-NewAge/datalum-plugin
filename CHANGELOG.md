@@ -4,7 +4,7 @@ Cada versión del plugin de Datalum dice qué cambia para quien usa la Skill, co
 versión del servidor se comprobó y qué hay que hacer para recibirla. La más reciente va
 primero.
 
-## [3.0.0] - 2026-10-07
+## [3.0.0] - 2026-10-08
 
 Datalum R12 nombra el conector `connector` y rechaza `tenant`. La Skill 2.x pide
 `tenant`, así que con ese servidor sus llamadas se rechazan: por eso sube el número
@@ -35,7 +35,7 @@ mayor.
 
 ### Servidor
 
-- Datalum R12, sin publicar todavía. Además del conector, ocho herramientas cambian de
+- Datalum R12 (v2.249.0). Además del conector, ocho herramientas cambian de
   nombre y el anterior sigue respondiendo fuera de la lista: `upsert_metric` pasa a
   `propose_metric`, `upsert_dataset` a `propose_dataset`, `upsert_dimension` a
   `propose_dimension`, `port_draft_connector` a `attach_draft_connector`,
@@ -47,10 +47,14 @@ mayor.
   aviso del 2026-11-04, y `run_dataset` y `run_metric` dan la página siguiente sólo en
   `next_cursor`. La Skill y los controles no nombran las herramientas anteriores, las
   que salen ni los códigos viejos.
-- Se comprobó con el contrato que arma el código de R12, ejecutado en local (91
-  herramientas), porque el que servirá R12 todavía no existe. Contra el contrato guardado
-  de producción, de antes de R12, `check.py` la da por incompatible hasta que se guarde el
-  de R12. El detalle está en `COMPATIBILIDAD.md`.
+- Se comprobó con el contrato del código que sirve R12, commit `fe05777db569`
+  (`625b37c7b57b`, 91 herramientas), que pasa a ser el contrato de producción guardado.
+  qa sirve ese commit y sus instrucciones son las del contrato. Las instrucciones y las
+  definiciones de `brain_index`, `brain_read`, `list_agents` y `use_agent` cambiaron; se
+  leyeron contra la Skill, que no necesitó otro cambio, y sus huellas quedan como
+  revisadas en `compat/requisitos.json`. Derivado de ese contrato,
+  `client/contract-facts.json` sale igual al que ya traía la versión. El detalle está en
+  `COMPATIBILIDAD.md`.
 
 ### Cómo recibirla
 
