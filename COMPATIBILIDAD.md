@@ -90,6 +90,7 @@ El 10 de octubre:
 | `node --test tests/client/*.test.js` | 137 pruebas, todas pasan |
 | `python3 scripts/package.py` | Arma `dist/datalum-skill.zip` |
 | `claude plugin validate .`, con el CLI de la aplicación de escritorio (2.1.295) | Pasa, con el aviso de `logo` que ya tenía |
+| Ocho mutantes: `compat/requisitos.json` pide `model` o pierde la huella nueva de `use_agent`; el contrato de producción vuelve al de R12; la Skill pierde cada una de sus tres frases nuevas o manda el modelo sin mirar el esquema; `check.py` no reconoce `aviso_del_modelo` | Las pruebas nuevas o `check.py` detectan los ocho |
 | Evaluaciones con modelo | No se ejecutaron |
 
 | Qué | Dónde se prueba |
