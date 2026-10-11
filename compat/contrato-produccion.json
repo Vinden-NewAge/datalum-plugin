@@ -216,7 +216,7 @@
       ]
     },
     {
-      "h": "aea1beb9ae9df84dd06eeb6195e4868460cff941a3dae86551523986c7059875",
+      "h": "cc290a4576f2de888ede6b43f0c2f800e11bf91834d76bc77ab09cb709bd9528",
       "n": "curate_table",
       "p": [
         "compact",
@@ -324,7 +324,7 @@
       ]
     },
     {
-      "h": "30628185265f25254a899f2ce9eb1d83d5e4146453ac15d4739b92748fb846c5",
+      "h": "ed892a934a69abb71e7f426b6ebac8bc9337f49e55e10bc68a83cb032434cffb",
       "n": "edit_agent_profile",
       "p": [
         "agentId",
@@ -332,6 +332,7 @@
         "icon",
         "name",
         "proposalsEnabled",
+        "recommendedModel",
         "selection_context",
         "tagline"
       ],
@@ -340,7 +341,7 @@
       ]
     },
     {
-      "h": "4962eccf806e4e9d18f4c2a3a859f7de77f50c0d15383cadcd81c965b96b58f4",
+      "h": "f5c0a2269a4179b20d02a441af77694aa3b697cc7d053cf203ba103a68ff1fca",
       "n": "edit_draft_agent",
       "p": [
         "agentId",
@@ -391,7 +392,7 @@
       ]
     },
     {
-      "h": "650aa001afd624f286b81844bf1882eea3be0e42589840121a9a55846a7423e1",
+      "h": "9842027ff4b4b4312ded0dae4016a6476ca8d1e211d6eb606a84e80ce67f83bf",
       "n": "forget",
       "p": [
         "memory",
@@ -441,7 +442,7 @@
       ]
     },
     {
-      "h": "773f01f3e1b685c3695150013a8410c4b428acd47fd12f0b395b354d53e1651b",
+      "h": "efc3676560dfa966eb0c52a20f59a3720a6dcb8b39c236530bcd9a0b7bd94f57",
       "n": "get_execution_sql",
       "p": [
         "connector",
@@ -504,7 +505,7 @@
       ]
     },
     {
-      "h": "bb30a4a9a839fe18b862e3603af241a3fdc948a055d2c6f158907fac063dd0d4",
+      "h": "519667e0e949b67005e77445198d6bb59d435a0862f41174eef5a9eac998f8e1",
       "n": "list_agents",
       "p": [],
       "r": []
@@ -548,7 +549,7 @@
       "r": []
     },
     {
-      "h": "f7d1ba04372c439da41c7c220546128d5d2c75102d6f52176de5320f510c4204",
+      "h": "3480e972703208cc99819289ddd72cb9c78cde876aaad7df9d27f631e8deed0b",
       "n": "list_my_attempts",
       "p": [
         "limit",
@@ -558,7 +559,7 @@
       "r": []
     },
     {
-      "h": "17c7f56f1241e028d2e3173a92291918eed5b34ab223f1a60ce862cde9022e0c",
+      "h": "d9d0f7717afb8252571c22a4463e56f560f71dfa3fa33571615e466f6f7dc2a7",
       "n": "list_my_curations",
       "p": [
         "selection_context"
@@ -566,7 +567,7 @@
       "r": []
     },
     {
-      "h": "7445a43a9b0fea03c416c592b1e5f57682698f260c912cea0d1fc2c60b1f3165",
+      "h": "41e7f52c20f93e2ed5f5314224afee0f3ecd2c32fe3a76aa8e9ab1fa9424019c",
       "n": "list_my_proposals",
       "p": [
         "selection_context"
@@ -630,7 +631,7 @@
       ]
     },
     {
-      "h": "f641b941b40f5d696a6369895d199d0ad34db4484663d6c4c314cd492d14e6fe",
+      "h": "a1ec73d001aa48860424f97ef00c3ef6547985ebf26c44b0d0e3b7937db1dd01",
       "n": "propose_agent",
       "p": [
         "connectors",
@@ -769,7 +770,7 @@
       "r": []
     },
     {
-      "h": "5b076eb5e6161454d63ed795fae84c0e1411467754a942c5222c8039ce9c31c2",
+      "h": "8e37155ae5c5af6b36a63124fa5d42ad64b5ac118dff7321365c3b752128fd54",
       "n": "remember",
       "p": [
         "body_md",
@@ -1008,13 +1009,18 @@
       ]
     },
     {
-      "h": "66e30eddd84c2c969d293c8d2ad9139f41752ea8404608924eeb305395f90286",
+      "h": "fdbfdbf95ca5e8af917e9de523273c9580e693ac13c72ba8ba825a27fa28eda7",
       "n": "submit_proposal",
       "p": [
         "body",
         "context",
+        "how_to_verify",
+        "kind",
         "selection_context",
-        "title"
+        "title",
+        "what_happens",
+        "what_is_asked",
+        "where"
       ],
       "r": [
         "title"
@@ -1212,10 +1218,12 @@
       ]
     },
     {
-      "h": "4e431ad77725295fbdc0f22ee89e9df1cf5103a654167435f7d8cff96b436d23",
+      "h": "c636f7da0755737660daa04e0da7c2771c9541d45025a2faefce3e6b21e8f405",
       "n": "use_agent",
       "p": [
         "agent",
+        "model",
+        "provider",
         "selection_context",
         "user_choice_quote"
       ],
@@ -1324,7 +1332,7 @@
       ]
     }
   ],
-  "huella": "625b37c7b57bc650cb19981806fbc73f33a54dbec94f060e0995869009909144",
-  "instrucciones_sha256": "aa0054a7b8e474561f19cc29b8968275581d57484bd1b32bc92531853047a978",
+  "huella": "713e328dfbc72471aeeeddb8bb7de977a6ce15515d502f346082b324b236ca8e",
+  "instrucciones_sha256": "9af5105b3ad303bf708566496b6cdf2b201bce7ac05226cf9e956d0b9c2e5027",
   "protocolo": "2025-06-18"
 }

@@ -49,6 +49,7 @@ FRONTMATTER_KEYS = {"name", "description", "license", "compatibility", "metadata
 RESPONSE_NAMES = {
     "agent_context_conflict",
     "agent_not_selected",
+    "aviso_del_modelo",
     "next_cursor",
     "next_offset",
     "operating_as",

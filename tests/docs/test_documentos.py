@@ -60,8 +60,10 @@ class LaSkill(unittest.TestCase):
             "Which tool for which request",
         ):
             self.assertNotIn(gone, SKILL, f"la Skill vuelve a nombrar {gone}")
-        # La 1.1.0 tenía 316 líneas, la mitad de ellas tablas de herramientas.
-        self.assertLess(len(SKILL.splitlines()), 260, "la Skill dejó de ser corta")
+        # La 1.1.0 tenía 316 líneas, la mitad de ellas tablas de herramientas. La 3.0.0
+        # tenía 259 y la 3.1.0, con el modelo que se declara y el que recomienda el
+        # agente, 261.
+        self.assertLess(len(SKILL.splitlines()), 265, "la Skill dejó de ser corta")
 
     def test_los_entregables_siguen_al_cerebro_del_agente(self):
         self.assertIn(flat("Deliverables follow the brain too"), flat(SKILL))
@@ -200,6 +202,33 @@ class LaVersion300(unittest.TestCase):
         section = flat(text.split("## Versión 3.0.0", 1)[1].split("\n## Versión 2.0.5", 1)[0])
         self.assertIn(flat("Los controles del cliente leen el conector de `connector` y de `tenant`"), section)
         self.assertIn(flat("Lo que la Skill pide es `connector` y los nombres nuevos"), section)
+
+
+class LaVersion310(unittest.TestCase):
+    """Datalum R22: `use_agent` acepta el modelo con el que trabaja el asistente, y la
+    lista de agentes y la selección dicen el modelo que recomienda cada agente."""
+
+    def test_la_skill_declara_el_modelo_solo_si_el_esquema_lo_trae_y_lo_sabe(self):
+        self.assertIn(
+            flat("If the schema declares `model` and `provider` and you know for certain\nwhich model you run on, send them too"),
+            flat(SKILL),
+        )
+        self.assertIn(flat("if you are not sure, leave them out"), flat(SKILL))
+
+    def test_la_skill_dice_el_modelo_que_recomienda_cada_agente(self):
+        self.assertIn(flat("with one\noption per agent, what each is for and the model it recommends"), flat(SKILL))
+        self.assertIn(
+            flat("If the response carries `aviso_del_modelo`, the agent recommends a more\n"
+                 "capable kind of model: if yours has less capacity, tell the person before you start"),
+            flat(SKILL),
+        )
+
+    def test_compatibilidad_dice_que_los_requisitos_valen_con_r12_y_con_r22(self):
+        text = read("COMPATIBILIDAD.md")
+        self.assertIn("## Versión 3.1.0", text)
+        section = flat(text.split("## Versión 3.1.0", 1)[1].split("\n## Versión 3.0.0", 1)[0])
+        self.assertIn(flat("`compat/requisitos.json` no declara `model` ni `provider`"), section)
+        self.assertIn("Sin comprobar", section)
 
 
 class LasGuias(unittest.TestCase):
