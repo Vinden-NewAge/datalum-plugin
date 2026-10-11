@@ -7,13 +7,13 @@ producto se marca «Sin comprobar».
 ## Versión 3.1.0
 
 Preparada el 10 de octubre de 2026 con Datalum R22 (v2.251.0, commit `7d298c8bef6f`),
-que sale a producción el 11 de octubre. R22 añade a `use_agent` dos argumentos
+que producción sirve desde el 11 de octubre. R22 añade a `use_agent` dos argumentos
 opcionales y no retira ni vuelve obligatorio nada de lo que el plugin usa: la versión
 sube el número menor.
 
 | Plugin | Servidor de Datalum | Contrato | Resultado |
 |---|---|---|---|
-| 3.1.0 | Datalum R22, v2.251.0, commit `7d298c8bef6f` | `713e328dfbc7`, 91 herramientas, armado del código de ese commit, con sus instrucciones (`9af5105b3ad3`) | Compatible: `check.py` pasa con ese contrato como el de producción, con las huellas nuevas de las instrucciones y de cuatro definiciones añadidas a `compat/requisitos.json` tras leer su texto |
+| 3.1.0 | Datalum R22, v2.251.0, commit `7d298c8bef6f`. Lo servía producción (`mcp.datalum.ai`) el 11 de octubre a las 00:47 UTC | `713e328dfbc7`, 91 herramientas, armado del código de ese commit. Sus instrucciones (`9af5105b3ad3`) y su protocolo son los que producción contesta sin sesión | Compatible: `check.py` pasa con ese contrato como el de producción, con las huellas nuevas de las instrucciones y de cuatro definiciones añadidas a `compat/requisitos.json` tras leer su texto |
 | 3.1.0 | Datalum R12, v2.249.0, commit `fe05777db569` | `625b37c7b57b`, el guardado | Compatible: `compat/requisitos.json` no pide nada que R12 no traiga |
 
 ### Cómo se armó el contrato de R22
@@ -85,6 +85,7 @@ El 10 de octubre:
 | `contract.compare` del contrato de R22 con `compat/requisitos.json` de la 3.0.0 | Clase `revision`: los cinco motivos de la tabla anterior, ninguno de incompatibilidad, y lo derivado no cambia |
 | `client/contract-facts.json` derivado de `713e328dfbc7` con `contract.derive_facts` | Igual byte por byte al que había |
 | La comprobación de cada hora, simulada en una copia del árbol con un servidor de mentira que sirve `7d298c8bef6f` y sus instrucciones | `compatible_sin_cambios`: toma el contrato de `compat/contratos/`, lo coteja (verificación parcial) y no publica versión. Con `fe05777db569`, nada: ya estaba procesado |
+| El ensayo de `compat.yml` en el PR de esta versión, que corre GitHub contra producción el 11 de octubre a las 00:47 UTC | Producción sirve `7d298c8bef6f` (v2.251.0). Sus instrucciones, su protocolo y las herramientas que anuncia sin sesión coinciden con `713e328dfbc7` (verificación parcial): `compatible_sin_cambios` |
 | `python3 scripts/check.py` | Pasa (91 herramientas) |
 | `python3 -m unittest discover -s tests -t .` | 100 pruebas, todas pasan |
 | `node --test tests/client/*.test.js` | 137 pruebas, todas pasan |
@@ -100,8 +101,9 @@ El 10 de octubre:
 | El contrato de producción es el de R22 y sus textos están revisados | El mismo |
 | La Skill declara el modelo sólo si el esquema lo trae y lo sabe, y dice el modelo que recomienda cada agente | `LaVersion310` en `tests/docs/test_documentos.py` |
 
-Sin comprobar: lo que sirven qa y producción, porque esta versión no se midió contra
-ningún servidor desplegado; el contrato sale del código del commit. Tampoco la conducta
+Sin comprobar: el catálogo completo que sirve producción a una conexión con sesión,
+porque no hay credencial de lectura; el contrato sale del código del commit y del
+servidor sólo se cotejó lo que contesta sin sesión. Tampoco se midió qa. Ni la conducta
 de un modelo con la Skill nueva, si declara su modelo cuando lo sabe y lo calla cuando
 no, ni lo que hace ChatGPT con la lista guardada antes de R22.
 
