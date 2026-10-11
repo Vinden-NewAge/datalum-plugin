@@ -708,6 +708,37 @@ class ElConectorDeR12(unittest.TestCase):
         )
 
 
+class ElModeloDeR22(unittest.TestCase):
+    """Datalum R22 añade a `use_agent` el modelo y el proveedor del asistente, opcionales.
+    La Skill los manda sólo si el esquema los declara, así que lo que el plugin pide vale
+    con R12 y con R22, como pide la transición de MANTENER.md."""
+
+    ROOT = Path(__file__).resolve().parents[2]
+
+    def load(self, relative: str) -> dict:
+        return json.loads((self.ROOT / relative).read_text(encoding="utf-8"))
+
+    def test_lo_que_el_plugin_pide_vale_con_r12_y_con_r22(self):
+        requirements = self.load("compat/requisitos.json")
+        for stored in ("compat/contratos/fe05777db569.json", "compat/contratos/7d298c8bef6f.json"):
+            summary = contract.validate(self.load(stored))
+            self.assertEqual(contract.compare(summary, requirements)["incompatible"], [], stored)
+
+    def test_el_modelo_es_opcional_en_r22_y_no_existe_en_r12(self):
+        r12 = contract.by_name(self.load("compat/contratos/fe05777db569.json"))["use_agent"]
+        r22 = contract.by_name(self.load("compat/contratos/7d298c8bef6f.json"))["use_agent"]
+        self.assertTrue({"model", "provider"} <= set(r22["p"]))
+        self.assertEqual(r22["r"], r12["r"])
+        self.assertFalse({"model", "provider"} & set(r12["p"]))
+
+    def test_el_contrato_de_produccion_es_el_de_r22_y_sus_textos_estan_revisados(self):
+        summary = self.load("compat/contrato-produccion.json")
+        self.assertEqual(summary, self.load("compat/contratos/7d298c8bef6f.json"))
+        comparison = contract.compare(summary, self.load("compat/requisitos.json"), current_facts=self.load("client/contract-facts.json"))
+        self.assertEqual(comparison["revision"], [])
+        self.assertFalse(comparison["derivados_cambian"])
+
+
 class Events(unittest.TestCase):
     def test_avisos_mal_formados_se_rechazan(self):
         good = event(SHA_A, summary_of(base_tools()))
