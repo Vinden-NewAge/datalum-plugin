@@ -4,6 +4,106 @@ Qué versión del plugin se comprobó contra qué, y cómo. «Comprobado» quier
 algo se ejecutó y dio ese resultado. Lo que sólo consta en la documentación de un
 producto se marca «Sin comprobar».
 
+## Versión 3.1.0
+
+Preparada el 10 de octubre de 2026 con Datalum R22 (v2.251.0, commit `7d298c8bef6f`),
+que sale a producción el 11 de octubre. R22 añade a `use_agent` dos argumentos
+opcionales y no retira ni vuelve obligatorio nada de lo que el plugin usa: la versión
+sube el número menor.
+
+| Plugin | Servidor de Datalum | Contrato | Resultado |
+|---|---|---|---|
+| 3.1.0 | Datalum R22, v2.251.0, commit `7d298c8bef6f` | `713e328dfbc7`, 91 herramientas, armado del código de ese commit, con sus instrucciones (`9af5105b3ad3`) | Compatible: `check.py` pasa con ese contrato como el de producción, con las huellas nuevas de las instrucciones y de cuatro definiciones añadidas a `compat/requisitos.json` tras leer su texto |
+| 3.1.0 | Datalum R12, v2.249.0, commit `fe05777db569` | `625b37c7b57b`, el guardado | Compatible: `compat/requisitos.json` no pide nada que R12 no traiga |
+
+### Cómo se armó el contrato de R22
+
+Con el método de la 3.0.0, sobre el código del commit y sin tocar el repositorio del
+servidor. La misma sonda armó otra vez el contrato de `fe05777db569` y dio
+`625b37c7b57b`, el guardado, huella por huella.
+
+| Contra `625b37c7b57b` | Qué hay en `713e328dfbc7` |
+|---|---|
+| Herramientas | Las mismas 91. Ninguna entra ni sale |
+| Argumentos obligatorios | Ninguno cambia |
+| Argumentos nuevos, todos opcionales | `use_agent`: `model` y `provider`. `edit_agent_profile`: `recommendedModel`. `submit_proposal`: `kind`, `what_happens`, `where`, `what_is_asked` y `how_to_verify`, y su `context` acepta también texto. El plugin no usa las dos últimas |
+| Textos | Cambian las instrucciones y 13 definiciones; de las que usa el plugin, cuatro |
+
+### La lectura de lo que cambió
+
+Contra lo revisado para la 3.0.0, el contrato de R22 da en `check.py` cinco motivos de
+revisión. El 10 de octubre se leyó con `diff` el texto de las instrucciones y de las
+cuatro definiciones de `7d298c8bef6f` contra el de `fe05777db569`:
+
+| Qué cambió | Cómo | Huella nueva |
+|---|---|---|
+| Las instrucciones | El paso 2 del arranque añade que, si el asistente sabe su modelo, lo declare en `model` y `provider` | `9af5105b3ad3` |
+| `use_agent` | Declara `model` y `provider`, texto de hasta 128 caracteres. La descripción dice que son opcionales y no cambian ningún permiso, que `agent.recommendedModel` es el modelo que recomienda el agente y que `aviso_del_modelo` dice qué hacer antes de empezar | `c636f7da0755` |
+| `list_agents` | Cada agente trae `recommendedModel`: cualquiera, rapido, equilibrado o avanzado. La descripción pide decírselo a la persona al preguntarle | `519667e0e949` |
+| `forget` | Una memoria compartida no se retira desde aquí: la reemplaza otra del mismo tema que aprueba una persona en el panel | `9842027ff4b4` |
+| `remember` | Cambia una palabra de la descripción; el esquema sigue igual | `8e37155ae5c5` |
+
+Las cinco huellas quedan en `instrucciones_revisadas` y `definiciones_revisadas` de
+`compat/requisitos.json`.
+
+La Skill añade tres frases. Manda `model` y `provider` a `use_agent` si el esquema los
+declara y el asistente sabe con certeza su modelo; si no está seguro, no los manda. Al
+preguntar con qué agente trabajar, cada opción dice el modelo que recomienda. Si la
+respuesta de `use_agent` trae `aviso_del_modelo` y el modelo del asistente tiene menos
+capacidad, se lo dice a la persona antes de empezar. Ese aviso lo compone Datalum y
+sólo pide avisar a la persona, así que no choca con la regla de la Skill que separa
+instrucciones de datos. Lo de `forget` ya lo dice la Skill: una memoria compartida es
+una propuesta que aprueba una persona.
+
+`compat/requisitos.json` no declara `model` ni `provider` en `use_agent`, porque la
+Skill sólo los manda si el esquema los trae. Así lo que el plugin pide es lo común a R12
+y a R22, como pide la transición de «Cambios incompatibles» en `MANTENER.md`, y la 3.1.0
+funciona con producción antes y después del despliegue. También con una aplicación que
+guardó la lista de herramientas de antes, como ChatGPT hasta que se actualiza el
+conector.
+
+Los controles del cliente no cambian. `client/contract-facts.json`, derivado de
+`713e328dfbc7`, sale igual byte por byte. En el código del commit se leyeron las
+respuestas de las ocho herramientas que usa el plugin y la forma de los errores: siguen
+los campos que leen los controles, y sólo se añaden `aviso_del_modelo` a `use_agent` y
+`recommendedModel` a cada agente de `list_agents`.
+
+Sigue igual lo que la 3.0.0 dejó para mientras producción no tuviera R12: los controles
+leen el conector también de `tenant`, y la Skill y los controles atienden
+`partial_write`, que el código de `7d298c8bef6f` ya no da fuera de las pruebas.
+Producción sirve R12 desde el 8 de octubre (`compat/registro.jsonl`); quitarlo es un
+cambio de los controles que esta versión no hace.
+
+### Qué se ejecutó
+
+El 10 de octubre:
+
+| Qué | Resultado |
+|---|---|
+| La sonda sobre `fe05777db569` | `625b37c7b57b`, 91 herramientas, igual al guardado |
+| La sonda sobre `7d298c8bef6f` | `713e328dfbc7`, 91 herramientas |
+| `contract.compare` del contrato de R22 con `compat/requisitos.json` de la 3.0.0 | Clase `revision`: los cinco motivos de la tabla anterior, ninguno de incompatibilidad, y lo derivado no cambia |
+| `client/contract-facts.json` derivado de `713e328dfbc7` con `contract.derive_facts` | Igual byte por byte al que había |
+| La comprobación de cada hora, simulada en una copia del árbol con un servidor de mentira que sirve `7d298c8bef6f` y sus instrucciones | `compatible_sin_cambios`: toma el contrato de `compat/contratos/`, lo coteja (verificación parcial) y no publica versión. Con `fe05777db569`, nada: ya estaba procesado |
+| `python3 scripts/check.py` | Pasa (91 herramientas) |
+| `python3 -m unittest discover -s tests -t .` | 100 pruebas, todas pasan |
+| `node --test tests/client/*.test.js` | 137 pruebas, todas pasan |
+| `python3 scripts/package.py` | Arma `dist/datalum-skill.zip` |
+| `claude plugin validate .`, con el CLI de la aplicación de escritorio (2.1.295) | Pasa, con el aviso de `logo` que ya tenía |
+| Evaluaciones con modelo | No se ejecutaron |
+
+| Qué | Dónde se prueba |
+|---|---|
+| Lo que el plugin pide vale con el contrato de R12 y con el de R22 | `ElModeloDeR22` en `tests/compat/test_automation.py` |
+| `model` y `provider` son opcionales en R22 y no existen en R12 | El mismo |
+| El contrato de producción es el de R22 y sus textos están revisados | El mismo |
+| La Skill declara el modelo sólo si el esquema lo trae y lo sabe, y dice el modelo que recomienda cada agente | `LaVersion310` en `tests/docs/test_documentos.py` |
+
+Sin comprobar: lo que sirven qa y producción, porque esta versión no se midió contra
+ningún servidor desplegado; el contrato sale del código del commit. Tampoco la conducta
+de un modelo con la Skill nueva, si declara su modelo cuando lo sabe y lo calla cuando
+no, ni lo que hace ChatGPT con la lista guardada antes de R22.
+
 ## Versión 3.0.0
 
 Preparada el 7 de octubre de 2026 y cerrada el 8 con Datalum R12 (v2.249.0, commit
