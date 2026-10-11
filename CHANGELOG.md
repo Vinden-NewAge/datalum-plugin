@@ -4,6 +4,43 @@ Cada versión del plugin de Datalum dice qué cambia para quien usa la Skill, co
 versión del servidor se comprobó y qué hay que hacer para recibirla. La más reciente va
 primero.
 
+## [3.1.0] - 2026-10-10
+
+Datalum R22 deja que el asistente diga con qué modelo trabaja y que cada agente diga qué
+modelo recomienda. La Skill usa las dos cosas. Lo demás que el plugin usa no cambia.
+
+### Añadido
+
+- Al elegir el agente, la Skill manda a `use_agent` el modelo con el que trabaja el
+  asistente, en `model`, y quién lo ofrece, en `provider`, si el esquema los declara y
+  el asistente lo sabe con certeza. Si no está seguro, no los manda. Son opcionales y no
+  cambian ningún permiso.
+- Cuando hay que preguntar con qué agente trabajar, cada opción dice también el modelo
+  que ese agente recomienda.
+- Si `use_agent` trae `aviso_del_modelo` y el modelo del asistente tiene menos
+  capacidad que el recomendado, el asistente se lo dice a la persona antes de empezar.
+
+### Servidor
+
+- Datalum R22 (v2.251.0). Siguen las mismas 91 herramientas y ningún argumento pasa a
+  ser obligatorio. `use_agent` acepta `model` y `provider`; `list_agents` y `use_agent`
+  dicen el modelo que recomienda cada agente. Cambia el texto de 13 definiciones y el de
+  las instrucciones; de las que usa el plugin, el de `forget`, `list_agents`, `remember`
+  y `use_agent`. Se leyeron contra la Skill y sus huellas quedan como revisadas en
+  `compat/requisitos.json`.
+- Se comprobó con el contrato del código de v2.251.0, commit `7d298c8bef6f`
+  (`713e328dfbc7`), que pasa a ser el contrato de producción guardado.
+  `client/contract-facts.json` sale igual. `compat/requisitos.json` no pide `model` ni
+  `provider`, así que la 3.1.0 también vale con R12 (v2.249.0). El detalle está en
+  `COMPATIBILIDAD.md`.
+
+### Cómo recibirla
+
+- Los pasos por aplicación están en `ACTUALIZAR.md`. Una conversación abierta con la
+  3.0.0 sigue funcionando con R22.
+- En ChatGPT, quien administra el conector pulsa Actualizar en él. Hasta entonces la
+  lista guardada no trae `model` ni `provider`, y la Skill no los manda.
+
 ## [3.0.0] - 2026-10-08
 
 Datalum R12 nombra el conector `connector` y rechaza `tenant`. La Skill 2.x pide
