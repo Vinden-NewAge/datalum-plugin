@@ -314,6 +314,41 @@ class ElRepositorio(unittest.TestCase):
                 if re.match(r"(- )?run:\s*[|>]", stripped):
                     inside, indent = True, depth
 
+    def test_el_resumen_no_tumba_una_corrida_real_ni_un_ensayo(self):
+        """GitHub corre cada `run` con `bash -e`: si la última orden de un resumen sale
+        con error, el paso queda en rojo aunque todo lo anterior saliera bien. Se corre
+        cada paso «Resumen» como lo corre GitHub, con y sin ensayo."""
+        import os
+        import tempfile
+
+        steps = []
+        for workflow in (ROOT / ".github" / "workflows").glob("*.yml"):
+            lines = workflow.read_text(encoding="utf-8").splitlines()
+            name, body, indent = "", None, 0
+            for line in lines + ["fin"]:
+                stripped = line.lstrip()
+                depth = len(line) - len(stripped)
+                if body is not None:
+                    if stripped and depth <= indent:
+                        if name == "Resumen":
+                            steps.append((workflow.name, "\n".join(body)))
+                        body = None
+                    else:
+                        body.append(line)
+                        continue
+                found = re.match(r"- name:\s*(.+)", stripped)
+                if found:
+                    name = found.group(1).strip()
+                if re.match(r"(- )?run:\s*[|>]", stripped):
+                    body, indent = [], depth
+        self.assertGreaterEqual(len(steps), 2)
+        for workflow, script in steps:
+            for simular in ("", "--simular"):
+                with tempfile.NamedTemporaryFile() as summary:
+                    env = dict(os.environ, SIMULAR=simular, GITHUB_STEP_SUMMARY=summary.name)
+                    done = subprocess.run(["bash", "-e", "-c", script], env=env, capture_output=True)
+                    self.assertEqual(done.returncode, 0, f"{workflow}: el resumen sale con {done.returncode} con SIMULAR={simular!r}")
+
     def test_los_permisos_de_escritura_estan_solo_donde_se_publica(self):
         text = (ROOT / ".github/workflows/compat.yml").read_text(encoding="utf-8")
         head, _, jobs = text.partition("\njobs:")
