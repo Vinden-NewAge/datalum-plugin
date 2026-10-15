@@ -250,5 +250,5 @@ jobs:
             echo "### Cierre"
             echo "- Resultado: \`${RESULTADO:-sin cierre}\`"
             echo "- ${DETALLE:-sin detalle}"
-            [ -n "$SIMULAR" ] && echo "- Ensayo: no se publicó ni se escribió nada."
+            if [ -n "$SIMULAR" ]; then echo "- Ensayo: no se publicó ni se escribió nada."; fi
           } >> "$GITHUB_STEP_SUMMARY"
