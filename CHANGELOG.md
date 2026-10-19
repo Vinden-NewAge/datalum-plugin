@@ -19,7 +19,7 @@ los tableros.
   ese cambio o lo aceptó, tal como las escribió, igual que la cita con que elige el
   agente. Las palabras con que pidió un encargo cubren sus pasos, y una vista previa no
   las necesita. Si ningún mensaje suyo pide el cambio, el asistente pregunta antes de
-  escribir. Datalum guarda la cita con el cambio: es un registro, no la aprobación.
+  escribir. Datalum guarda la cita con el cambio, y la cita no cuenta como aprobación.
 - Soltar el agente también lleva las palabras con que la persona pidió cambiar de agente
   o terminar.
 - Si Datalum contesta `user_request_quote_required` y el esquema que ve el asistente no

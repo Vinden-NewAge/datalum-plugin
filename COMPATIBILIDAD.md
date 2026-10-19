@@ -68,8 +68,8 @@ registra en esas tres y en `workspace_purge`, que cambia `frase` por ella.
 
 La Skill cambia el párrafo de las palabras de la persona por uno sobre la orden: dónde
 va, que la cubren las palabras con que se pidió el encargo, que la vista previa no la
-necesita, que sin un mensaje que pida el cambio se pregunta antes de escribir y que es
-un registro y no la aprobación. Soltar el agente lleva las palabras con que se pidió.
+necesita, que sin un mensaje que pida el cambio se pregunta antes de escribir y que la
+cita no cuenta como aprobación. Soltar el agente lleva las palabras con que se pidió.
 Si Datalum contesta `user_request_quote_required` y el esquema que ve el asistente no
 declara el argumento, la aplicación tiene una lista vieja, y la Skill pide decir que se
 actualice el conector.
@@ -113,8 +113,8 @@ El 19 de octubre:
 | `node --test tests/client/*.test.js` | 143 pruebas, todas pasan |
 | `python3 scripts/package.py` | Arma `dist/datalum-skill.zip` |
 | `claude plugin validate .`, con el CLI de la aplicación de escritorio (2.1.299) | Pasa, con el aviso de `logo` que ya tenía |
-| Mutantes | MUTANTES_PENDIENTE |
-| El ensayo de `compat.yml` en el PR de esta versión | ENSAYO_PENDIENTE |
+| Quince mutantes: `compat/requisitos.json` pone la orden en `usa`, la quita de los obligatorios de `forget`, pierde la huella de `use_agent` de v2.256.0 o la de v2.254.0, o vuelve a poner la pausa, con los hechos del cliente regenerados o sin regenerar; `workspace_purge` vuelve a `frase`; la Skill recupera el párrafo de la pausa, pierde que la vista previa no necesita la orden, la manda sin mirar el esquema, suelta el agente sin las palabras de la persona o pierde el aviso de la lista vieja; el cliente mete la orden en la identidad de la operación, deja incierta una escritura rechazada por falta de orden o no retira la elección al soltar el agente | `check.py` o las pruebas detectan los quince |
+| La comprobación de cada hora, simulada a las 06:13 UTC en una copia del árbol de esta versión, contra producción | Producción sigue en `cbdf86b096d1`, que el registro tiene pendiente. Toma el contrato de `compat/contratos/`, lo coteja con lo que producción contesta sin sesión (verificación parcial) y da `compatible_sin_cambios`: fundir esta versión no publica otra sola |
 | Evaluaciones con modelo | No se ejecutaron |
 
 | Qué | Dónde se prueba |
