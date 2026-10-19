@@ -4,6 +4,80 @@ Cada versión del plugin de Datalum dice qué cambia para quien usa la Skill, co
 versión del servidor se comprobó y qué hay que hacer para recibirla. La más reciente va
 primero.
 
+## [4.0.0] - 2026-10-19
+
+Datalum v2.256.0 exige en toda escritura la orden de la persona, con sus palabras, y
+rechaza la que llega sin ella. La Skill 3.1.0 no pide mandarla al guardar memoria ni al
+soltar el agente, y el flujo de compatibilidad marcó ese despliegue como incompatible con
+ella: por eso sube el número mayor. La versión también saca de la pausa las gráficas y
+los tableros.
+
+### Cambiado
+
+- Toda escritura lleva la orden de la persona. Donde el esquema declara
+  `user_request_quote`, la Skill pide copiar ahí las palabras con que la persona pidió
+  ese cambio o lo aceptó, tal como las escribió, igual que la cita con que elige el
+  agente. Las palabras con que pidió un encargo cubren sus pasos, y una vista previa no
+  las necesita. Si ningún mensaje suyo pide el cambio, el asistente pregunta antes de
+  escribir. Datalum guarda la cita con el cambio: es un registro, no la aprobación.
+- Soltar el agente también lleva las palabras con que la persona pidió cambiar de agente
+  o terminar.
+- Si Datalum contesta `user_request_quote_required` y el esquema que ve el asistente no
+  declara ese argumento, la aplicación tiene guardada una lista vieja de herramientas. La
+  Skill pide decirle a la persona que quien administra el conector la actualice.
+- Las gráficas y los tableros de Datalum salen de la pausa que puso la 2.0.4. La Skill
+  deja de pedir que no se usen, `compat/requisitos.json` ya no declara `en_pausa` y los
+  controles del cliente dejan de negar esas 14 herramientas. Los entregables siguen al
+  cerebro del agente: si su procedimiento entrega un tablero como archivo HTML, el
+  asistente arma ese archivo.
+- El código de los controles del cliente no cambia: la orden de la persona ya quedaba
+  fuera de la identidad de una operación y del estado guardado.
+  `client/contract-facts.json` la registra como cita en `remember`, `forget`,
+  `release_agent` y `workspace_purge`.
+
+### Servidor
+
+- Datalum v2.256.0, commit `cbdf86b096d1`, que producción servía el 19 de octubre. La
+  lista sigue con 92 herramientas. 52 declaran `user_request_quote`: 27 la exigen siempre
+  y 25, las que previsualizan, al mandar `confirm: true`. Sin ella Datalum rechaza la
+  llamada con `user_request_quote_required` antes de correr nada. `workspace_purge`
+  cambia `frase` por `user_request_quote`.
+- Cada herramienta trae sus anotaciones de MCP (`readOnlyHint`, `destructiveHint`,
+  `idempotentHint` y `openWorldHint`); 39 se declaran de sólo lectura. Son pistas para el
+  panel de la aplicación, y Datalum sigue validando cada llamada.
+- Argumentos nuevos: `run_metric` acepta `params`, los parámetros que declara el
+  indicador, y el `params` de `test_metric` acepta también esos parámetros. Cada relación
+  de `set_relations` acepta `condition`, `confidence`, `description`, `fanout_risk`,
+  `nature` y `predicate`. El `spec` de `upsert_dashboard` declara todo lo que guarda,
+  `filter_set_refs` incluido, y `upsert_custom_dashboard` deja de aceptar
+  `filter_set_refs`.
+- Entre la 3.1.0 y esta versión producción sirvió v2.253.0, v2.254.0 y v2.255.0.
+  `apply_batch` importa un modelo en OSI con `format` y `document` y ya sólo exige el
+  conector. Entra `open_agent_card`, que abre la tarjeta donde una persona guarda la
+  versión de un agente. `use_agent` y `open_agent_card` declaran una vista para las
+  aplicaciones que la pintan. Una gráfica nombra indicadores (sale `dataset_source`),
+  compara por modo (`query_opts.compare`) y junta varias cifras con su eje
+  (`options.measure_axes`); editar una gráfica o un tablero activos no cambia lo que se
+  sirve hasta que una persona activa la versión nueva.
+- Se comprobó con el contrato del código de v2.256.0 (`c6f03b5854d9`), el mismo que
+  entregó el aviso de ese despliegue al flujo de compatibilidad, que pasa a ser el
+  contrato de producción guardado. Cambiaron las instrucciones y las ocho definiciones
+  que usa el plugin; se leyeron contra la Skill y sus huellas quedan como revisadas.
+  `compat/requisitos.json` declara la orden obligatoria en `remember`, `forget` y
+  `release_agent` sin ponerla entre lo que el plugin manda siempre, así que lo que la
+  4.0.0 pide vale también con los contratos de antes. El detalle está en
+  `COMPATIBILIDAD.md`.
+
+### Cómo recibirla
+
+- Los pasos por aplicación están en `ACTUALIZAR.md`. Después de actualizar, empieza una
+  conversación nueva: la que se abrió con la 3.1.0 no pide la orden de la persona al
+  guardar memoria ni al soltar el agente.
+- En ChatGPT, quien administra el conector pulsa Actualizar (Refresh) en Workspace
+  settings > Apps; en Business hay que recrear la app. Hasta entonces la lista guardada
+  no declara `user_request_quote`, Datalum rechaza toda escritura, también la memoria, y
+  las anotaciones no llegan.
+
 ## [3.1.0] - 2026-10-10
 
 Datalum R22 deja que el asistente diga con qué modelo trabaja y que cada agente diga qué

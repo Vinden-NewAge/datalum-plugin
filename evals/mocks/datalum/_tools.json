@@ -7,6 +7,12 @@
     "type": "object",
     "properties": {},
     "additionalProperties": false
+   },
+   "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
    }
   },
   {
@@ -23,6 +29,16 @@
       "type": "string",
       "description": "Las palabras textuales con las que la persona eligió el agente."
      },
+     "model": {
+      "type": "string",
+      "maxLength": 128,
+      "description": "El modelo con el que trabaja el asistente, si lo sabe con certeza. Opcional."
+     },
+     "provider": {
+      "type": "string",
+      "maxLength": 128,
+      "description": "Quién ofrece ese modelo. Opcional."
+     },
      "selection_context": {
       "type": "string",
       "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
@@ -33,20 +49,39 @@
      "user_choice_quote"
     ],
     "additionalProperties": false
+   },
+   "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": true,
+    "idempotentHint": true,
+    "openWorldHint": false
    }
   },
   {
    "name": "release_agent",
-   "description": "Deja a esta conversación sin agente, para cambiar de agente o para terminar.",
+   "description": "Deja a esta conversación sin agente, para cambiar de agente o para terminar. Lleva la orden textual de la persona en `user_request_quote`.",
    "inputSchema": {
     "type": "object",
     "properties": {
      "selection_context": {
       "type": "string",
       "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
+     },
+     "user_request_quote": {
+      "type": "string",
+      "description": "La orden de la persona para este cambio, con sus palabras textuales copiadas de la conversación."
      }
     },
-    "additionalProperties": false
+    "additionalProperties": false,
+    "required": [
+     "user_request_quote"
+    ]
+   },
+   "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": true,
+    "idempotentHint": true,
+    "openWorldHint": false
    }
   },
   {
@@ -100,6 +135,12 @@
     },
     "required": [],
     "additionalProperties": false
+   },
+   "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
    }
   },
   {
@@ -156,6 +197,12 @@
      "concept_id"
     ],
     "additionalProperties": false
+   },
+   "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
    }
   },
   {
@@ -187,11 +234,17 @@
      }
     },
     "additionalProperties": false
+   },
+   "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
    }
   },
   {
    "name": "remember",
-   "description": "Guarda una memoria personal sobre el agente activo. `kind` es preferencia, hecho, avance o episodio. Un avance lleva su lista de pasos bajo '# Pasos'. Escribir con el `slug` de una memoria existente la reemplaza. Con `scope: compartida` no se guarda: queda como propuesta para que una persona la apruebe.",
+   "description": "Guarda una memoria personal sobre el agente activo. `kind` es preferencia, hecho, avance o episodio. Un avance lleva su lista de pasos bajo '# Pasos'. Escribir con el `slug` de una memoria existente la reemplaza. Con `scope: compartida` no se guarda: queda como propuesta para que una persona la apruebe. Lleva la orden textual de la persona en `user_request_quote`.",
    "inputSchema": {
     "type": "object",
     "properties": {
@@ -225,19 +278,30 @@
      "selection_context": {
       "type": "string",
       "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
+     },
+     "user_request_quote": {
+      "type": "string",
+      "description": "La orden de la persona para este cambio, con sus palabras textuales copiadas de la conversación."
      }
     },
     "required": [
      "kind",
      "title",
-     "body_md"
+     "body_md",
+     "user_request_quote"
     ],
     "additionalProperties": false
+   },
+   "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": true,
+    "idempotentHint": false,
+    "openWorldHint": false
    }
   },
   {
    "name": "forget",
-   "description": "Retira una memoria de esta persona. Su archivo se conserva marcado como retirado.",
+   "description": "Retira una memoria de esta persona. Su archivo se conserva marcado como retirado. Lleva la orden textual de la persona en `user_request_quote`.",
    "inputSchema": {
     "type": "object",
     "properties": {
@@ -248,12 +312,23 @@
      "selection_context": {
       "type": "string",
       "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
+     },
+     "user_request_quote": {
+      "type": "string",
+      "description": "La orden de la persona para este cambio, con sus palabras textuales copiadas de la conversación."
      }
     },
     "required": [
-     "memory"
+     "memory",
+     "user_request_quote"
     ],
     "additionalProperties": false
+   },
+   "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": true,
+    "idempotentHint": true,
+    "openWorldHint": false
    }
   },
   {
@@ -280,11 +355,17 @@
      "user_request_quote"
     ],
     "additionalProperties": false
+   },
+   "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": true,
+    "idempotentHint": true,
+    "openWorldHint": false
    }
   },
   {
    "name": "brain_write",
-   "description": "Crea una memoria por su ruta en el cerebro del agente, o un agente nuevo en propuesto.",
+   "description": "Crea una memoria por su ruta en el cerebro del agente, o un agente nuevo en propuesto. Lleva la orden textual de la persona en `user_request_quote`.",
    "inputSchema": {
     "type": "object",
     "properties": {
@@ -352,13 +433,24 @@
      "selection_context": {
       "type": "string",
       "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
+     },
+     "user_request_quote": {
+      "type": "string",
+      "description": "La orden de la persona para este cambio, con sus palabras textuales copiadas de la conversación."
      }
     },
     "required": [
      "concept_id",
-     "title"
+     "title",
+     "user_request_quote"
     ],
     "additionalProperties": false
+   },
+   "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": true,
+    "idempotentHint": false,
+    "openWorldHint": false
    }
   },
   {
@@ -393,6 +485,12 @@
      "connector"
     ],
     "additionalProperties": false
+   },
+   "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
    }
   },
   {
@@ -452,6 +550,10 @@
        }
       },
       "additionalProperties": false
+     },
+     "params": {
+      "type": "object",
+      "description": "Los parámetros que declara el indicador, { nombre: valor }. Opcional."
      },
      "time_grain": {
       "type": "string",
@@ -519,6 +621,12 @@
      "connector"
     ],
     "additionalProperties": false
+   },
+   "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
    }
   },
   {
@@ -535,7 +643,8 @@
       "type": "string"
      },
      "params": {
-      "type": "object"
+      "type": "object",
+      "description": "Los parámetros que declara el indicador, { nombre: valor }. Opcional."
      },
      "cursor": {
       "type": "string",
@@ -558,6 +667,12 @@
      "dataset"
     ],
     "additionalProperties": false
+   },
+   "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
    }
   },
   {
@@ -608,6 +723,12 @@
      "sql"
     ],
     "additionalProperties": false
+   },
+   "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
    }
   },
   {
@@ -627,7 +748,8 @@
       "type": "string"
      },
      "params": {
-      "type": "object"
+      "type": "object",
+      "description": "Los parámetros que declara el indicador, { nombre: valor }. Opcional."
      },
      "width": {
       "type": "number"
@@ -672,6 +794,12 @@
      "chart"
     ],
     "additionalProperties": false
+   },
+   "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
    }
   },
   {
@@ -688,7 +816,8 @@
       "type": "string"
      },
      "params": {
-      "type": "object"
+      "type": "object",
+      "description": "Los parámetros que declara el indicador, { nombre: valor }. Opcional."
      },
      "selection_context": {
       "type": "string",
@@ -700,11 +829,17 @@
      "dashboard"
     ],
     "additionalProperties": false
+   },
+   "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
    }
   },
   {
    "name": "upsert_chart",
-   "description": "[Escribe] Crea o edita una gráfica en el catálogo de Datalum. Nace en propuesto y la activa una persona. Sin `confirm: true` sólo previsualiza.",
+   "description": "[Escribe] Crea o edita una gráfica en el catálogo de Datalum. Nace en propuesto y la activa una persona. Sin `confirm: true` sólo previsualiza. Lleva la orden textual de la persona en `user_request_quote`.",
    "inputSchema": {
     "type": "object",
     "properties": {
@@ -726,6 +861,7 @@
       "properties": {
        "measures": {
         "type": "array",
+        "maxItems": 16,
         "items": {
          "type": "object",
          "properties": {
@@ -762,6 +898,12 @@
          "properties": {
           "ref_id": {
            "type": "string"
+          },
+          "version_pin": {
+           "type": [
+            "string",
+            "null"
+           ]
           },
           "role": {
            "type": "string"
@@ -813,8 +955,7 @@
             "is_null",
             "is_not_null",
             "contains",
-            "temporal_range",
-            "custom_sql"
+            "temporal_range"
            ]
           },
           "value": {}
@@ -849,33 +990,35 @@
           },
           "additionalProperties": false
          },
-         "series_limit": {
-          "type": [
-           "integer",
-           "null"
-          ]
-         },
-         "null_policy": {
+         "compare": {
           "type": "string",
           "enum": [
-           "show",
-           "omit",
-           "zero"
-          ]
-         },
-         "contribution_mode": {
-          "type": "string",
-          "enum": [
-           "none",
-           "column",
-           "row"
+           "previous_period",
+           "same_period_previous_year"
           ]
          },
          "compare_previous_period": {
           "type": "boolean"
          },
+         "series_limit": {
+          "enum": [
+           null
+          ]
+         },
+         "null_policy": {
+          "enum": [
+           "show"
+          ]
+         },
+         "contribution_mode": {
+          "enum": [
+           "none"
+          ]
+         },
          "detail_mode": {
-          "type": "boolean"
+          "enum": [
+           false
+          ]
          }
         },
         "additionalProperties": false
@@ -937,6 +1080,9 @@
               ]
              },
              "rotate": {
+              "type": "number"
+             },
+             "label_rotate": {
               "type": "number"
              },
              "time_format": {
@@ -1001,6 +1147,12 @@
              }
             },
             "additionalProperties": false
+           },
+           "label_rotate": {
+            "type": "number"
+           },
+           "label_size": {
+            "type": "number"
            }
           },
           "additionalProperties": false
@@ -1111,6 +1263,9 @@
            "label_min_radius": {
             "type": "number"
            },
+           "label_size": {
+            "type": "number"
+           },
            "orient": {
             "type": "string",
             "enum": [
@@ -1206,6 +1361,49 @@
              "number",
              "null"
             ]
+           },
+           "scale": {
+            "type": "string",
+            "enum": [
+             "shared",
+             "row"
+            ]
+           },
+           "tone": {
+            "type": "boolean"
+           },
+           "show_values": {
+            "type": "boolean"
+           },
+           "show_target": {
+            "type": "boolean"
+           },
+           "show_attainment": {
+            "type": "boolean"
+           },
+           "show_value_axis": {
+            "type": "boolean"
+           },
+           "bar_width": {
+            "type": "number"
+           },
+           "track_width": {
+            "type": "number"
+           },
+           "increase_color": {
+            "type": "string"
+           },
+           "decrease_color": {
+            "type": "string"
+           },
+           "total_color": {
+            "type": "string"
+           },
+           "connectors": {
+            "type": "boolean"
+           },
+           "show_total": {
+            "type": "boolean"
            }
           },
           "additionalProperties": false
@@ -1298,6 +1496,22 @@
           },
           "additionalProperties": false
          },
+         "category_colors": {
+          "type": "object",
+          "additionalProperties": {
+           "type": "string"
+          }
+         },
+         "measure_axes": {
+          "type": "object",
+          "additionalProperties": {
+           "type": "string",
+           "enum": [
+            "left",
+            "right"
+           ]
+          }
+         },
          "link": {
           "type": "object",
           "properties": {
@@ -1313,6 +1527,9 @@
             "type": "number"
            },
            "curveness": {
+            "type": "number"
+           },
+           "width": {
             "type": "number"
            }
           },
@@ -1423,6 +1640,7 @@
           "properties": {
            "rules": {
             "type": "array",
+            "maxItems": 20,
             "items": {
              "type": "object",
              "properties": {
@@ -1455,6 +1673,10 @@
                 "danger",
                 "neutral"
                ]
+              },
+              "column": {
+               "type": "string",
+               "maxLength": 200
               }
              },
              "required": [
@@ -1470,6 +1692,7 @@
          },
          "annotations": {
           "type": "array",
+          "maxItems": 20,
           "items": {
            "type": "object",
            "properties": {
@@ -1482,7 +1705,8 @@
             },
             "value": {},
             "label": {
-             "type": "string"
+             "type": "string",
+             "maxLength": 80
             },
             "color": {
              "type": "string"
@@ -1534,170 +1758,187 @@
          "null"
         ]
        },
-       "dataset_source": {
+       "chart_type": {
+        "type": "string"
+       },
+       "encoding": {
+        "type": "object",
+        "additionalProperties": {
+         "type": "string"
+        }
+       },
+       "matrixify": {
+        "type": "null"
+       },
+       "map_spec": {
         "type": [
          "object",
          "null"
         ],
         "properties": {
-         "dataset_id": {
-          "type": "string"
+         "basemap_style": {
+          "type": "string",
+          "enum": [
+           "dark",
+           "light",
+           "streets",
+           "satellite",
+           "outdoors"
+          ]
          },
-         "measures": {
+         "layers": {
           "type": "array",
           "items": {
            "type": "object",
            "properties": {
-            "column": {
+            "id": {
              "type": "string"
             },
-            "agg": {
+            "type": {
              "type": "string",
              "enum": [
-              "sum",
-              "count",
-              "count_distinct",
-              "avg",
-              "min",
-              "max",
-              "ratio"
+              "point",
+              "arc",
+              "hexagon",
+              "heatmap",
+              "grid",
+              "path",
+              "polygon",
+              "geojson"
              ]
             },
-            "numerator": {
-             "type": "object",
-             "properties": {
-              "agg": {
-               "type": "string",
-               "enum": [
-                "sum",
-                "count",
-                "count_distinct",
-                "avg",
-                "min",
-                "max"
-               ]
-              },
-              "column": {
-               "type": [
-                "string",
-                "null"
-               ]
-              }
-             },
-             "required": [
-              "agg"
-             ],
-             "additionalProperties": false
-            },
-            "denominator": {
-             "type": "object",
-             "properties": {
-              "agg": {
-               "type": "string",
-               "enum": [
-                "sum",
-                "count",
-                "count_distinct",
-                "avg",
-                "min",
-                "max"
-               ]
-              },
-              "column": {
-               "type": [
-                "string",
-                "null"
-               ]
-              }
-             },
-             "required": [
-              "agg"
-             ],
-             "additionalProperties": false
-            }
-           },
-           "required": [
-            "agg"
-           ],
-           "additionalProperties": false
-          }
-         },
-         "dimensions": {
-          "type": "array",
-          "items": {
-           "type": "object",
-           "properties": {
-            "column": {
+            "dataset_ref": {
              "type": "string"
             },
-            "role": {
+            "geo_roles": {
+             "type": "object",
+             "properties": {
+              "lat": {
+               "type": "string"
+              },
+              "lng": {
+               "type": "string"
+              },
+              "geojson": {
+               "type": "string"
+              },
+              "arc": {
+               "type": "object",
+               "properties": {
+                "from": {
+                 "type": "string"
+                },
+                "to": {
+                 "type": "string"
+                }
+               },
+               "additionalProperties": false
+              }
+             },
+             "additionalProperties": false
+            },
+            "color_by": {
              "type": "string"
             },
-            "granularity": {
+            "size_by": {
+             "type": "string"
+            },
+            "elevation_by": {
+             "type": "string"
+            },
+            "filter": {
              "type": [
-              "string",
+              "object",
               "null"
              ],
-             "enum": [
-              "minute",
-              "hour",
-              "day",
-              "week",
-              "month",
-              "quarter",
-              "semester",
-              "year",
-              "hour_of_day",
-              "dow",
-              "month_of_year",
-              null
-             ]
+             "properties": {
+              "column": {
+               "type": "string"
+              },
+              "operator": {
+               "type": "string",
+               "enum": [
+                "in",
+                "=",
+                "!=",
+                ">",
+                ">=",
+                "<",
+                "<=",
+                "between",
+                "is_null",
+                "is_not_null"
+               ]
+              },
+              "value": {
+               "type": [
+                "string",
+                "number",
+                "boolean",
+                "null"
+               ]
+              }
+             },
+             "additionalProperties": false
             }
            },
            "required": [
-            "column"
+            "type",
+            "dataset_ref",
+            "geo_roles"
            ],
            "additionalProperties": false
           }
          },
-         "filters": {
-          "type": "array",
-          "items": {
-           "type": "object",
-           "properties": {
-            "column": {
-             "type": "string"
-            },
-            "operator": {
-             "type": "string",
-             "enum": [
-              "in",
-              "not_in",
-              "=",
-              "!=",
-              ">",
-              ">=",
-              "<",
-              "<=",
-              "between",
-              "is_null",
-              "is_not_null",
-              "contains",
-              "temporal_range",
-              "custom_sql"
-             ]
-            },
-            "value": {}
+         "viewport": {
+          "type": [
+           "object",
+           "null"
+          ],
+          "properties": {
+           "center": {
+            "type": "array",
+            "items": {
+             "type": "number"
+            }
            },
-           "required": [
-            "operator"
-           ],
-           "additionalProperties": false
-          }
+           "zoom": {
+            "type": "number"
+           },
+           "pitch": {
+            "type": "number"
+           },
+           "bearing": {
+            "type": "number"
+           }
+          },
+          "additionalProperties": false
+         },
+         "legend": {
+          "type": [
+           "object",
+           "null"
+          ],
+          "properties": {
+           "show": {
+            "type": "boolean"
+           },
+           "position": {
+            "type": "string",
+            "enum": [
+             "top-left",
+             "top-right",
+             "bottom-left",
+             "bottom-right"
+            ]
+           }
+          },
+          "additionalProperties": false
          }
         },
         "required": [
-         "dataset_id"
+         "basemap_style",
+         "layers"
         ],
         "additionalProperties": false
        }
@@ -1714,6 +1955,10 @@
      "selection_context": {
       "type": "string",
       "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
+     },
+     "user_request_quote": {
+      "type": "string",
+      "description": "La orden de la persona para este cambio, con sus palabras textuales copiadas de la conversación."
      }
     },
     "required": [
@@ -1723,11 +1968,17 @@
      "spec"
     ],
     "additionalProperties": false
+   },
+   "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": true,
+    "idempotentHint": false,
+    "openWorldHint": false
    }
   },
   {
    "name": "upsert_dashboard",
-   "description": "[Escribe] Crea o edita un tablero en el catálogo de Datalum. Nace en propuesto y lo activa una persona. Sin `confirm: true` sólo previsualiza.",
+   "description": "[Escribe] Crea o edita un tablero en el catálogo de Datalum. Nace en propuesto y lo activa una persona. Sin `confirm: true` sólo previsualiza. Lleva la orden textual de la persona en `user_request_quote`.",
    "inputSchema": {
     "type": "object",
     "properties": {
@@ -1742,7 +1993,338 @@
       "type": "string"
      },
      "spec": {
-      "type": "object"
+      "type": "object",
+      "properties": {
+       "layout": {
+        "type": "object",
+        "properties": {
+         "columns": {
+          "type": "number"
+         },
+         "tiles": {
+          "type": "array",
+          "items": {
+           "type": "object",
+           "properties": {
+            "chart_ref_id": {
+             "type": "string"
+            },
+            "version_pin": {
+             "type": [
+              "string",
+              "null"
+             ]
+            },
+            "x": {
+             "type": "number"
+            },
+            "y": {
+             "type": "number"
+            },
+            "w": {
+             "type": "number"
+            },
+            "h": {
+             "type": "number"
+            },
+            "tab_id": {
+             "type": [
+              "string",
+              "null"
+             ]
+            },
+            "element": {
+             "type": "object",
+             "properties": {
+              "kind": {
+               "type": "string",
+               "enum": [
+                "heading",
+                "text",
+                "divider"
+               ]
+              },
+              "text": {
+               "type": "string"
+              }
+             },
+             "additionalProperties": false
+            },
+            "title": {
+             "type": [
+              "string",
+              "null"
+             ]
+            },
+            "title_style": {
+             "type": [
+              "object",
+              "null"
+             ],
+             "properties": {
+              "font_size": {
+               "type": "number"
+              },
+              "color": {
+               "type": "string"
+              }
+             },
+             "additionalProperties": false
+            }
+           },
+           "additionalProperties": false
+          }
+         },
+         "tabs": {
+          "type": "array",
+          "items": {
+           "type": "object",
+           "properties": {
+            "id": {
+             "type": "string"
+            },
+            "label": {
+             "type": "string"
+            }
+           },
+           "additionalProperties": false
+          }
+         }
+        },
+        "additionalProperties": false
+       },
+       "tiles": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "chart_ref_id": {
+           "type": "string"
+          },
+          "version_pin": {
+           "type": [
+            "string",
+            "null"
+           ]
+          },
+          "x": {
+           "type": "number"
+          },
+          "y": {
+           "type": "number"
+          },
+          "w": {
+           "type": "number"
+          },
+          "h": {
+           "type": "number"
+          },
+          "tab_id": {
+           "type": [
+            "string",
+            "null"
+           ]
+          },
+          "element": {
+           "type": "object",
+           "properties": {
+            "kind": {
+             "type": "string",
+             "enum": [
+              "heading",
+              "text",
+              "divider"
+             ]
+            },
+            "text": {
+             "type": "string"
+            }
+           },
+           "additionalProperties": false
+          },
+          "title": {
+           "type": [
+            "string",
+            "null"
+           ]
+          },
+          "title_style": {
+           "type": [
+            "object",
+            "null"
+           ],
+           "properties": {
+            "font_size": {
+             "type": "number"
+            },
+            "color": {
+             "type": "string"
+            }
+           },
+           "additionalProperties": false
+          }
+         },
+         "additionalProperties": false
+        }
+       },
+       "tabs": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "id": {
+           "type": "string"
+          },
+          "label": {
+           "type": "string"
+          }
+         },
+         "additionalProperties": false
+        }
+       },
+       "global_filters": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "id": {
+           "type": "string"
+          },
+          "label": {
+           "type": "string"
+          },
+          "kind": {
+           "type": "string",
+           "enum": [
+            "date_range",
+            "dimension"
+           ]
+          },
+          "dimension_ref_id": {
+           "type": [
+            "string",
+            "null"
+           ]
+          },
+          "multi": {
+           "type": "boolean"
+          },
+          "default": {},
+          "applies_to": {},
+          "targets": {
+           "type": [
+            "array",
+            "null"
+           ]
+          },
+          "dataset_id": {},
+          "column": {}
+         },
+         "required": [
+          "id",
+          "kind"
+         ],
+         "additionalProperties": false
+        }
+       },
+       "filter_set_refs": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "theme": {
+        "type": [
+         "object",
+         "null"
+        ],
+        "properties": {
+         "preset": {
+          "type": "string"
+         },
+         "entrance": {
+          "type": "string",
+          "enum": [
+           "none",
+           "fade",
+           "rise"
+          ]
+         }
+        },
+        "additionalProperties": false
+       },
+       "shared_color_scales": {
+        "type": "object"
+       },
+       "cross_filter": {
+        "type": "object",
+        "properties": {
+         "enabled": {
+          "type": "boolean"
+         },
+         "mode": {
+          "type": "string",
+          "enum": [
+           "toggle",
+           "exclusive"
+          ]
+         },
+         "exclude_charts": {
+          "type": "array",
+          "items": {
+           "type": "string"
+          }
+         }
+        },
+        "additionalProperties": false
+       },
+       "param_controls": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "param": {
+           "type": "string"
+          },
+          "label": {
+           "type": [
+            "string",
+            "null"
+           ]
+          },
+          "kind": {
+           "type": "string",
+           "enum": [
+            "datetime",
+            "date",
+            "time"
+           ]
+          },
+          "default": {
+           "type": [
+            "string",
+            "null"
+           ]
+          },
+          "applies_to": {}
+         },
+         "additionalProperties": false
+        }
+       },
+       "title": {
+        "type": [
+         "string",
+         "null"
+        ]
+       },
+       "subtitle": {
+        "type": [
+         "string",
+         "null"
+        ]
+       }
+      },
+      "additionalProperties": false
      },
      "if_match": {
       "type": "string"
@@ -1754,6 +2336,10 @@
      "selection_context": {
       "type": "string",
       "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
+     },
+     "user_request_quote": {
+      "type": "string",
+      "description": "La orden de la persona para este cambio, con sus palabras textuales copiadas de la conversación."
      }
     },
     "required": [
@@ -1762,11 +2348,17 @@
      "spec"
     ],
     "additionalProperties": false
+   },
+   "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": true,
+    "idempotentHint": false,
+    "openWorldHint": false
    }
   },
   {
    "name": "upsert_custom_dashboard",
-   "description": "[Escribe] Crea o edita un tablero en código (HTML) dentro del catálogo de Datalum. Nace en propuesto y lo activa una persona. Sin `confirm: true` sólo previsualiza.",
+   "description": "[Escribe] Crea o edita un tablero en código (HTML) dentro del catálogo de Datalum. Nace en propuesto y lo activa una persona. Sin `confirm: true` sólo previsualiza. Lleva la orden textual de la persona en `user_request_quote`.",
    "inputSchema": {
     "type": "object",
     "properties": {
@@ -1781,9 +2373,6 @@
       "type": "string"
      },
      "datasets_refs": {
-      "type": "array"
-     },
-     "filter_set_refs": {
       "type": "array"
      },
      "projection": {
@@ -1805,6 +2394,10 @@
      "selection_context": {
       "type": "string",
       "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
+     },
+     "user_request_quote": {
+      "type": "string",
+      "description": "La orden de la persona para este cambio, con sus palabras textuales copiadas de la conversación."
      }
     },
     "required": [
@@ -1813,6 +2406,12 @@
      "template"
     ],
     "additionalProperties": false
+   },
+   "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": true,
+    "idempotentHint": false,
+    "openWorldHint": false
    }
   }
  ]

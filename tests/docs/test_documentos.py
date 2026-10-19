@@ -171,12 +171,6 @@ class LaVersion202(unittest.TestCase):
         self.assertIn(flat("La actualización tras el despliegue final de producción todavía no es automática de punta a punta"), flat(section))
 
 
-class LaVersion204(unittest.TestCase):
-    def test_la_skill_dice_que_las_graficas_y_tableros_estan_en_pausa(self):
-        self.assertIn(flat("Datalum's chart and dashboard tools are paused in this plugin"), flat(SKILL))
-
-    def test_controles_dice_quien_sostiene_la_pausa(self):
-        self.assertIn("| Gráficas y tableros de Datalum en pausa |", read("CONTROLES.md"))
 
 
 class LaVersion300(unittest.TestCase):
@@ -229,6 +223,58 @@ class LaVersion310(unittest.TestCase):
         self.assertIn("## Versión 3.1.0", text)
         section = flat(text.split("## Versión 3.1.0", 1)[1].split("\n## Versión 3.0.0", 1)[0])
         self.assertIn(flat("`compat/requisitos.json` no declara `model` ni `provider`"), section)
+        self.assertIn("Sin comprobar", section)
+
+
+class LaVersion400(unittest.TestCase):
+    """Datalum v2.256.0: toda escritura lleva la orden de la persona en
+    `user_request_quote`, y la 4.0.0 saca de la pausa las gráficas y los tableros que la
+    2.0.4 había parado."""
+
+    def test_la_skill_manda_la_orden_de_la_persona_donde_el_esquema_la_declara(self):
+        for phrase in (
+            "Every change carries the person's order",
+            "Where the schema declares `user_request_quote`",
+            "the person's own words that asked for that change or agreed to it, copied as\nthey wrote them, the same way as the agent choice",
+            "a preview does not need them",
+            "If no message from the person asks for the\nchange, ask before writing",
+        ):
+            self.assertIn(flat(phrase), flat(SKILL))
+
+    def test_la_skill_suelta_el_agente_con_las_palabras_de_la_persona(self):
+        self.assertIn(flat("call\n`release_agent` with the words where they asked for it"), flat(SKILL))
+
+    def test_la_skill_dice_que_hacer_con_una_lista_vieja_de_herramientas(self):
+        self.assertIn(flat("If Datalum answers\n`user_request_quote_required` while the schema you see lacks it"), flat(SKILL))
+        self.assertIn(flat("whoever manages the connector has to\nrefresh it"), flat(SKILL))
+
+    def test_la_skill_ya_no_pone_en_pausa_las_graficas_y_tableros(self):
+        self.assertNotIn("paused", SKILL)
+        self.assertNotIn("not available here for now", SKILL)
+
+    def test_controles_dice_quien_sostiene_la_orden_y_ya_no_tiene_la_pausa(self):
+        text = read("CONTROLES.md")
+        self.assertIn("| Toda escritura lleva la orden de la persona |", text)
+        self.assertNotIn("| Gráficas y tableros de Datalum en pausa |", text)
+        self.assertIn(flat("Desde v2.256.0 cada herramienta de Datalum trae sus anotaciones de MCP"), flat(text))
+
+    def test_mantener_dice_que_no_hay_familias_en_pausa(self):
+        text = flat(read("MANTENER.md"))
+        self.assertIn(flat("Hoy no declara ninguna"), text)
+        self.assertIn(flat("Datalum v2.256.0 tampoco"), text)
+
+    def test_el_changelog_dice_que_chatgpt_tiene_que_actualizar_el_conector(self):
+        text = read("CHANGELOG.md")
+        section = flat(text.split("## [4.0.0]", 1)[1].split("\n## [3.1.0]", 1)[0])
+        self.assertIn("ChatGPT", section)
+        self.assertIn(flat("Hasta entonces la lista guardada\n  no declara `user_request_quote`"), section)
+
+    def test_compatibilidad_dice_como_se_armo_y_lo_que_queda_sin_comprobar(self):
+        text = read("COMPATIBILIDAD.md")
+        self.assertIn("## Versión 4.0.0", text)
+        section = flat(text.split("## Versión 4.0.0", 1)[1].split("\n## Versión 3.1.0", 1)[0])
+        self.assertIn(flat("`compat/requisitos.json` declara `user_request_quote` en `obligatorios` y no en `usa`"), section)
+        self.assertIn("`c6f03b5854d9`", section)
         self.assertIn("Sin comprobar", section)
 
 

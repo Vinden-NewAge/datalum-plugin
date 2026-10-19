@@ -25,12 +25,12 @@ como hook. «Datalum» es lo que el servidor hace hoy, leído de su contrato en 
 | No se pasa a una versión nueva del agente sin pedirlo | Avisa y sigue con la elegida | Volver a elegir el agente con una versión nueva a la vista se lo pregunta la aplicación a la persona | Volver a elegir toma la última versión |
 | No se mezclan lecturas de dos versiones | Vuelve a abrir lo que necesita | Olvida lo leído cuando cambia la versión y lo dice | Sirve siempre la versión elegida |
 | Herramienta retirada para el agente | No la llama | Niega la llamada | Contesta que no existe |
-| Gráficas y tableros de Datalum en pausa | No llama a sus herramientas, aunque el cerebro las nombre, y lo dice | Niega toda herramienta de esas familias que traiga el contrato, también las nuevas. La lista se deriva en `client/contract-facts.json` | Las sigue sirviendo |
 | Una lectura con continuación no está completa | Sigue los cursores | Avisa al modelo de cada lectura o listado parcial | Marca el corte y da la continuación |
 | Vista previa antes de aplicar | La pide y la muestra | Niega `confirm: true` sin una vista previa de esos mismos argumentos de los últimos 30 minutos | Sin `confirm` sólo previsualiza. No exige la vista previa |
 | Una escritura confirmada no se repite | Lee de nuevo en vez de reescribir | Niega la misma operación durante 30 minutos. La operación es del agente que la hizo: otro agente con los mismos argumentos hace la suya | No tiene clave de idempotencia en memoria |
 | Un resultado incierto se comprueba leyendo | Lee el mismo destino antes de repetir | Ver «Resultados de una escritura» | No define recuperación para memoria |
 | La memoria compartida no se usa por defecto | Sólo si la persona lo pide | Pregunta a la persona cada vez | La convierte en propuesta que aprueba una persona |
+| Toda escritura lleva la orden de la persona | Copia sus palabras en `user_request_quote` donde el esquema lo declara; si ningún mensaje suyo pide el cambio, pregunta antes | No la toma por consentimiento: no forma parte de la identidad de una operación ni se guarda | Desde v2.256.0 rechaza la escritura sin cita con `user_request_quote_required` y guarda la cita con el cambio. No mira su contenido |
 | Borrar para siempre lo aprueba la persona | Copia sus palabras | La aplicación le pregunta a la persona cada vez. Si aprobó y la llamada falló, puede reintentarse esa misma operación durante 15 minutos | Exige `confirm` y una cita no vacía |
 | Reintentos con límite | Se detiene al tercero | Niega el cuarto intento seguido durante 10 minutos | Devuelve `retry_after` real |
 | Tras una compactación se retoma el mismo agente | Recupera agente y cerebro | Devuelve al modelo el estado guardado | El sello sigue vivo en el servidor |
@@ -191,6 +191,14 @@ Si la aplicación pregunta en cada llamada de lectura, el arreglo está en su pa
 permitir las lecturas de Datalum. Las confirmaciones que pide el asistente en la
 conversación son otra cosa y la Skill las acota a una por encargo.
 
+Desde v2.256.0 cada herramienta de Datalum trae sus anotaciones de MCP: `readOnlyHint`
+si sólo lee, `destructiveHint` si su cambio puede borrar o reemplazar algo,
+`idempotentHint` si repetirla con los mismos argumentos deja lo mismo, y
+`openWorldHint` en falso, porque no sale de Datalum. Son pistas para el panel de la
+aplicación: la especificación de MCP no las da por garantía de lo que hace una
+herramienta, y Datalum sigue validando cada llamada. Cómo las usa el panel de cada
+aplicación no se comprobó.
+
 ## Lo que todavía pide un cambio de plataforma
 
 Son propuestas para quien administra el servidor. Hoy el plugin cubre cada hueco desde
@@ -200,10 +208,10 @@ el cliente, donde puede, o lo deja escrito como límite.
 |---|---|---|
 | Sólo `use_agent` dice bajo qué agente corrió una llamada | Si una llamada corre con el agente de otra conversación, la respuesta no lo delata | Que cada respuesta nombre el agente y la versión con que se sirvió |
 | El texto de `agent_context_conflict` manda quitar el contexto y repetir | Seguirlo puede correr la llamada con el agente de otra conversación | Que el rechazo mande volver a elegir |
-| La cita de la elección se exige y no se usa | Una cita auténtica no prueba consentimiento, y el servidor no puede saber si la persona aprobó | Que la elección y los borrados se confirmen en el panel o con un mecanismo del cliente que el servidor pueda verificar |
+| La cita de la elección y la orden de cada escritura se exigen y no prueban nada | Desde v2.256.0 Datalum guarda la orden con el cambio y la enseña en Observabilidad, pero una cita auténtica no prueba consentimiento, y el servidor no puede saber si la persona aprobó | Que la elección y los borrados se confirmen en el panel o con un mecanismo del cliente que el servidor pueda verificar |
 | Volver a elegir tras una caducidad toma la última versión | Recuperar una sesión puede cambiar de versión sin que nadie lo pida | Permitir volver a elegir conservando la versión |
 | La memoria no tiene clave de idempotencia ni recuperación definida ante un tiempo agotado | Repetir una escritura deja una versión invalidada de más | Una clave de idempotencia en `remember` |
-| El catálogo no marca qué herramientas leen y cuáles escriben | El cliente sólo reconoce como escritura la memoria y las llamadas con `confirm: true` | Publicar `readOnlyHint` en las anotaciones de cada herramienta |
+| El resumen del contrato no trae las anotaciones | Desde v2.256.0 Datalum marca cada herramienta con `readOnlyHint` y `destructiveHint`, pero el resumen que recibe el plugin sólo lleva nombres, argumentos y huellas. El cliente sigue reconociendo como escritura la memoria y las llamadas con `confirm: true` | Que el resumen del contrato lleve las anotaciones de cada herramienta |
 | No hay un contrato público por despliegue | El plugin depende de un aviso con el resumen | Ver `integracion-servidor/README.md` |
 
 ## Lo que nada de esto garantiza
