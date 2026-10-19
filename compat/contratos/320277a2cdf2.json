@@ -1,0 +1,1340 @@
+{
+  "esquema": 1,
+  "herramientas": [
+    {
+      "h": "d9f2b24bbf7e44d339c5d88638561b17d81fd115967ad2f3d9fcd26790c81959",
+      "n": "add_agent_document",
+      "p": [
+        "agentId",
+        "body",
+        "description",
+        "kind",
+        "selection_context",
+        "title"
+      ],
+      "r": [
+        "agentId",
+        "body",
+        "description",
+        "kind",
+        "title"
+      ]
+    },
+    {
+      "h": "1322b28c2be5710fa781c3e0858e0a3fea2b637b8d37a5e471686df88a7af315",
+      "n": "apply_batch",
+      "p": [
+        "confirm",
+        "connector",
+        "cursor",
+        "document",
+        "format",
+        "operations",
+        "selection_context"
+      ],
+      "r": [
+        "connector"
+      ]
+    },
+    {
+      "h": "40e3245d88b51c4b85664bfd943371f1ee098ef5e0904861cee2142fa3612820",
+      "n": "apply_solution_update",
+      "p": [
+        "confirm",
+        "selection_context",
+        "solution"
+      ],
+      "r": [
+        "solution"
+      ]
+    },
+    {
+      "h": "2aba0626164b717f07387caa0ef1738a0ba1d560c8f83a15bcb6538ab58317e4",
+      "n": "attach_agent_document",
+      "p": [
+        "agentId",
+        "documentId",
+        "selection_context",
+        "sort"
+      ],
+      "r": [
+        "agentId",
+        "documentId"
+      ]
+    },
+    {
+      "h": "5f732e42976175e423f4518f7e99b4ae11c090bf627e339f82b5656591aa9505",
+      "n": "attach_draft_connector",
+      "p": [
+        "agentId",
+        "connector",
+        "selection_context"
+      ],
+      "r": [
+        "agentId",
+        "connector"
+      ]
+    },
+    {
+      "h": "cdef2c80f2eb4801d69804a18bf55e94f946f4e3374ea1962f86b15c0cfca4e2",
+      "n": "attach_draft_document",
+      "p": [
+        "agentId",
+        "documentId",
+        "segment",
+        "selection_context",
+        "sort"
+      ],
+      "r": [
+        "agentId",
+        "documentId",
+        "segment"
+      ]
+    },
+    {
+      "h": "315eb2c1d9ff0ab555cb12820809b97b1672317d1d8f57aeb7c0bb7a1dceef54",
+      "n": "brain_import",
+      "p": [
+        "files"
+      ],
+      "r": [
+        "files"
+      ]
+    },
+    {
+      "h": "3b9862da88fbe5441e4d60409ddd7e3073742a73a594705e2c86e5cf4fa38a12",
+      "n": "brain_index",
+      "p": [
+        "connector",
+        "cursor",
+        "include_drafts",
+        "limit",
+        "locale",
+        "mode",
+        "path",
+        "selection_context",
+        "unit",
+        "version"
+      ],
+      "r": []
+    },
+    {
+      "h": "86111c0cca2f707d17977121e74888f1ee66f16747e44dbabf1f8a528642c147",
+      "n": "brain_manifest",
+      "p": [
+        "connector",
+        "include_drafts",
+        "locale",
+        "mode",
+        "selection_context",
+        "unit",
+        "version"
+      ],
+      "r": [
+        "connector"
+      ]
+    },
+    {
+      "h": "d4e046a7f0f3c644e9d09eb37df3d960a2614dbe608a5bd329b67330897db091",
+      "n": "brain_read",
+      "p": [
+        "concept_id",
+        "connector",
+        "include_drafts",
+        "locale",
+        "max_bytes",
+        "mode",
+        "offset",
+        "selection_context",
+        "unit",
+        "version"
+      ],
+      "r": [
+        "concept_id"
+      ]
+    },
+    {
+      "h": "3608290cb7ccfe578372b91486ed043ab264d434f1dc98b141134c9cb705e94b",
+      "n": "brain_search",
+      "p": [
+        "connector",
+        "include_drafts",
+        "limit",
+        "locale",
+        "mode",
+        "q",
+        "selection_context",
+        "tag",
+        "type",
+        "unit",
+        "version"
+      ],
+      "r": [
+        "connector"
+      ]
+    },
+    {
+      "h": "20095963910d71bc25882ce8386eae615e554dc9687430cc8d9facdc1e5466db",
+      "n": "brain_write",
+      "p": [
+        "body_md",
+        "concept_id",
+        "documents",
+        "kind",
+        "scope",
+        "selection_context",
+        "tagline",
+        "title"
+      ],
+      "r": [
+        "concept_id",
+        "title"
+      ]
+    },
+    {
+      "h": "e03e3da1bf2d3cf4b0ca15d18b24329685ece76fb2474979c33668f978bd319c",
+      "n": "clone_agent",
+      "p": [
+        "name",
+        "selection_context",
+        "templateAgentId"
+      ],
+      "r": [
+        "templateAgentId"
+      ]
+    },
+    {
+      "h": "33392656f864a0cee5172ef9fdf9afff4f8f3f6413a5bd8ad5bb8a4f48f13dfc",
+      "n": "compare_template",
+      "p": [
+        "connector",
+        "selection_context",
+        "template_id",
+        "version"
+      ],
+      "r": [
+        "connector",
+        "template_id"
+      ]
+    },
+    {
+      "h": "cc290a4576f2de888ede6b43f0c2f800e11bf91834d76bc77ab09cb709bd9528",
+      "n": "curate_table",
+      "p": [
+        "compact",
+        "confirm",
+        "connector",
+        "selection_context",
+        "tables"
+      ],
+      "r": [
+        "connector",
+        "tables"
+      ]
+    },
+    {
+      "h": "89d7d9f0201439be24622363aab8c8b42a80844acfc183ba2f8c94ef449b38c8",
+      "n": "delete_my_memories",
+      "p": [
+        "confirm",
+        "selection_context",
+        "user_request_quote"
+      ],
+      "r": [
+        "confirm",
+        "user_request_quote"
+      ]
+    },
+    {
+      "h": "090d5183566ec44cdf4bc01983c4452eafbda5c1d0d2f7bb54bda543f71343fe",
+      "n": "describe_connector",
+      "p": [
+        "confirm",
+        "connector",
+        "description",
+        "selection_context"
+      ],
+      "r": [
+        "connector",
+        "description"
+      ]
+    },
+    {
+      "h": "93d76c1d7bed53a3ab3009901ac84d636bbb57cc6d0af4eec7cc3f66df667f0b",
+      "n": "describe_dataset_fields",
+      "p": [
+        "confirm",
+        "connector",
+        "dataset",
+        "selection_context"
+      ],
+      "r": [
+        "connector",
+        "dataset"
+      ]
+    },
+    {
+      "h": "b9cc0f0404da1792e15ec61dd9babae03b5867a55a83f946dd8ae1473abb4978",
+      "n": "describe_table",
+      "p": [
+        "connector",
+        "selection_context",
+        "table"
+      ],
+      "r": [
+        "connector",
+        "table"
+      ]
+    },
+    {
+      "h": "8abc80da90703ca9e7d022fa52c1c0c48b872c2f90aed6c77a68a4171f65df4c",
+      "n": "detach_agent_document",
+      "p": [
+        "agentId",
+        "documentId",
+        "selection_context"
+      ],
+      "r": [
+        "agentId",
+        "documentId"
+      ]
+    },
+    {
+      "h": "2d923a6c938247e17f5a8b0342448e744845a743c712c2364fa7dc5a666e63cc",
+      "n": "detach_draft_connector",
+      "p": [
+        "agentId",
+        "connector",
+        "selection_context"
+      ],
+      "r": [
+        "agentId",
+        "connector"
+      ]
+    },
+    {
+      "h": "c580711c2517425022c652468700d8d5e243885e44cda7752a82c849dc124ef5",
+      "n": "detach_draft_document",
+      "p": [
+        "agentId",
+        "documentId",
+        "selection_context"
+      ],
+      "r": [
+        "agentId",
+        "documentId"
+      ]
+    },
+    {
+      "h": "ed892a934a69abb71e7f426b6ebac8bc9337f49e55e10bc68a83cb032434cffb",
+      "n": "edit_agent_profile",
+      "p": [
+        "agentId",
+        "herramientasRetiradas",
+        "icon",
+        "name",
+        "proposalsEnabled",
+        "recommendedModel",
+        "selection_context",
+        "tagline"
+      ],
+      "r": [
+        "agentId"
+      ]
+    },
+    {
+      "h": "f5c0a2269a4179b20d02a441af77694aa3b697cc7d053cf203ba103a68ff1fca",
+      "n": "edit_draft_agent",
+      "p": [
+        "agentId",
+        "icon",
+        "name",
+        "proposalsEnabled",
+        "selection_context",
+        "tagline"
+      ],
+      "r": [
+        "agentId"
+      ]
+    },
+    {
+      "h": "75ca12087e2ab165ec1c46b707915412dfe39c3e532641fd380b86c1f2a1c5ae",
+      "n": "export_brain",
+      "p": [
+        "connector",
+        "connectors",
+        "format",
+        "include_drafts",
+        "locale",
+        "mode",
+        "scope",
+        "selection_context",
+        "version"
+      ],
+      "r": [
+        "connector"
+      ]
+    },
+    {
+      "h": "dbde15d91df7000328d0ebe3f825f23ca891e987bdefae0757f3eee90e7d2e71",
+      "n": "export_chart_csv",
+      "p": [
+        "chart",
+        "connector",
+        "drill",
+        "filters",
+        "params",
+        "selection_context",
+        "time_grain",
+        "version_id"
+      ],
+      "r": [
+        "chart",
+        "connector"
+      ]
+    },
+    {
+      "h": "9842027ff4b4b4312ded0dae4016a6476ca8d1e211d6eb606a84e80ce67f83bf",
+      "n": "forget",
+      "p": [
+        "memory",
+        "selection_context"
+      ],
+      "r": [
+        "memory"
+      ]
+    },
+    {
+      "h": "d07911ec79c123ec0f78513301e9cc6e9cb7d6658893c6d574fe6e29ec77bb75",
+      "n": "get_catalog_state",
+      "p": [
+        "connector",
+        "selection_context"
+      ],
+      "r": []
+    },
+    {
+      "h": "40b5549d4413af565220cbac90835f1275303ee9aa81579f79172492b0c0b18e",
+      "n": "get_chart",
+      "p": [
+        "chart",
+        "connector",
+        "mode",
+        "selection_context",
+        "version"
+      ],
+      "r": [
+        "chart",
+        "connector"
+      ]
+    },
+    {
+      "h": "27bfaecb0aedf7d73fae4155d0f7878815edc8725bce1448552e681d4089212b",
+      "n": "get_dashboard",
+      "p": [
+        "connector",
+        "dashboard",
+        "mode",
+        "selection_context",
+        "version"
+      ],
+      "r": [
+        "connector",
+        "dashboard"
+      ]
+    },
+    {
+      "h": "efc3676560dfa966eb0c52a20f59a3720a6dcb8b39c236530bcd9a0b7bd94f57",
+      "n": "get_execution_sql",
+      "p": [
+        "connector",
+        "execution_ref",
+        "selection_context"
+      ],
+      "r": [
+        "connector",
+        "execution_ref"
+      ]
+    },
+    {
+      "h": "f7c9a5acd497d64cb8d0a5075b54aa5ec652d9e17a24fdbb16a09cdb6bcf66fe",
+      "n": "get_filter_set",
+      "p": [
+        "connector",
+        "filter_set",
+        "selection_context"
+      ],
+      "r": [
+        "connector",
+        "filter_set"
+      ]
+    },
+    {
+      "h": "7169b528e8bd16e2b1ad58d129ce740e60a7964cec7efab1175db16ef3ddf954",
+      "n": "get_model",
+      "p": [
+        "connector",
+        "include_drafts",
+        "locale",
+        "selection_context",
+        "version"
+      ],
+      "r": [
+        "connector"
+      ]
+    },
+    {
+      "h": "ad0bb4b2a2b744a88d0025990bb934f0b659a7573639a69db33181cfc5775a29",
+      "n": "install_solution",
+      "p": [
+        "acuerdoRef",
+        "selection_context",
+        "solutionVersionId"
+      ],
+      "r": [
+        "solutionVersionId"
+      ]
+    },
+    {
+      "h": "9f03363e024cd7b3b447693c0cc8d6b496faeeff610830337fad1c717b6a36d6",
+      "n": "list_agent_documents",
+      "p": [
+        "agentId",
+        "selection_context"
+      ],
+      "r": [
+        "agentId"
+      ]
+    },
+    {
+      "h": "519667e0e949b67005e77445198d6bb59d435a0862f41174eef5a9eac998f8e1",
+      "n": "list_agents",
+      "p": [],
+      "r": []
+    },
+    {
+      "h": "3eed1a94dd15fe3b5139b348d00371a938e420087b38ebec025297ce99fa4c9a",
+      "n": "list_dimension_values",
+      "p": [
+        "cap",
+        "connector",
+        "cursor",
+        "dimension",
+        "search",
+        "selection_context"
+      ],
+      "r": [
+        "connector",
+        "dimension"
+      ]
+    },
+    {
+      "h": "987dad0b8950b512a062248ef4fabbf21ab7d3248cb6a04fba9354bffcb10a53",
+      "n": "list_filter_sets",
+      "p": [
+        "connector",
+        "selection_context"
+      ],
+      "r": [
+        "connector"
+      ]
+    },
+    {
+      "h": "1f3c4aaa79c06b3b8f660187de2eabbfbb77416499edcdcf3b6f78889372aa00",
+      "n": "list_memories",
+      "p": [
+        "cursor",
+        "kind",
+        "memory",
+        "selection_context"
+      ],
+      "r": []
+    },
+    {
+      "h": "3480e972703208cc99819289ddd72cb9c78cde876aaad7df9d27f631e8deed0b",
+      "n": "list_my_attempts",
+      "p": [
+        "limit",
+        "only_failed",
+        "selection_context"
+      ],
+      "r": []
+    },
+    {
+      "h": "d9d0f7717afb8252571c22a4463e56f560f71dfa3fa33571615e466f6f7dc2a7",
+      "n": "list_my_curations",
+      "p": [
+        "selection_context"
+      ],
+      "r": []
+    },
+    {
+      "h": "41e7f52c20f93e2ed5f5314224afee0f3ecd2c32fe3a76aa8e9ab1fa9424019c",
+      "n": "list_my_proposals",
+      "p": [
+        "selection_context"
+      ],
+      "r": []
+    },
+    {
+      "h": "5546e967d0211dda1c8bfd74c4f47596997ed2f0066ee5672e5c4bab62799d6c",
+      "n": "list_organization_agents",
+      "p": [
+        "selection_context"
+      ],
+      "r": []
+    },
+    {
+      "h": "a9b8138385725feb114692630d154c4c095c14ac0f9118bb295b88c5c1d4b8c6",
+      "n": "list_solutions",
+      "p": [
+        "selection_context"
+      ],
+      "r": []
+    },
+    {
+      "h": "0d98feaab93b62697478341d866ee3b78a22c76f3ee5db63a45b0e4abe2420d4",
+      "n": "list_tables",
+      "p": [
+        "compact",
+        "connector",
+        "cursor",
+        "page_size",
+        "prefix",
+        "selection_context"
+      ],
+      "r": [
+        "connector"
+      ]
+    },
+    {
+      "h": "559d3f6391c3e763c641a245e4704b5b0e572bc438c61d79cfeca33d7e8404ca",
+      "n": "list_templates",
+      "p": [
+        "connector",
+        "selection_context"
+      ],
+      "r": [
+        "connector"
+      ]
+    },
+    {
+      "h": "b087ecc41d1405e7b2affb2efe86e4b7a609a975f57b87bbb00bbf461cce2909",
+      "n": "profile_table",
+      "p": [
+        "connector",
+        "refresh",
+        "selection_context",
+        "table"
+      ],
+      "r": [
+        "connector",
+        "table"
+      ]
+    },
+    {
+      "h": "a1ec73d001aa48860424f97ef00c3ef6547985ebf26c44b0d0e3b7937db1dd01",
+      "n": "propose_agent",
+      "p": [
+        "connectors",
+        "documents",
+        "family",
+        "herramientas_retiradas",
+        "name",
+        "proposals_enabled",
+        "selection_context",
+        "tagline"
+      ],
+      "r": [
+        "name"
+      ]
+    },
+    {
+      "h": "deaedfa2e44b83b2afc489e6ddd93df8e20b972c8a315dd01d3a88b8f256178a",
+      "n": "propose_dataset",
+      "p": [
+        "business_definition",
+        "confirm",
+        "connector",
+        "default_params",
+        "if_match",
+        "name",
+        "selection_context",
+        "sql"
+      ],
+      "r": [
+        "connector",
+        "name",
+        "sql"
+      ]
+    },
+    {
+      "h": "5d75c398ed4d335ae0c9f593326ad42d9a1e0aa28e7c5a62b95b861a1845e3bb",
+      "n": "propose_dimension",
+      "p": [
+        "aliases",
+        "business_definition",
+        "closed_list",
+        "confirm",
+        "connector",
+        "definition",
+        "dimension_class",
+        "expr",
+        "filter_only",
+        "if_match",
+        "name",
+        "rolls_up_to",
+        "selection_context",
+        "source_column",
+        "source_table",
+        "time_grain"
+      ],
+      "r": [
+        "connector",
+        "expr",
+        "name"
+      ]
+    },
+    {
+      "h": "da7adb6a080e583542b912e037896efa0681fff4cf90ab0b92525057c0996e72",
+      "n": "propose_metric",
+      "p": [
+        "aggregation",
+        "aliases",
+        "business_definition",
+        "confirm",
+        "connector",
+        "conversion_calculation",
+        "conversion_entity",
+        "conversion_window",
+        "cumulative_window",
+        "currency",
+        "definition",
+        "derived_formula",
+        "from_dimension",
+        "if_match",
+        "metric_class",
+        "metric_refs",
+        "name",
+        "non_additive_collapse",
+        "non_additive_dimension",
+        "non_additive_elements",
+        "percentile_value",
+        "period_date_column",
+        "period_sum",
+        "selection_context",
+        "source_table",
+        "unit",
+        "valid_dimensions",
+        "value_format"
+      ],
+      "r": [
+        "connector",
+        "name"
+      ]
+    },
+    {
+      "h": "d9239c0e8f1a0e051e12fe205b87b6003a8d6d8d5b4fd4aa9c19c2fb2f2ae340",
+      "n": "propose_solution_install",
+      "p": [
+        "column_mappings",
+        "confirm",
+        "connector",
+        "selection_context",
+        "suggest_by_type",
+        "template_id",
+        "version"
+      ],
+      "r": [
+        "connector",
+        "template_id"
+      ]
+    },
+    {
+      "h": "7b8605ee4494d13a04cb7763bffbc1ab873aeeb3c56bc14ae3a54c56f6b16e11",
+      "n": "read_library_document",
+      "p": [
+        "documentId",
+        "max_bytes",
+        "offset",
+        "selection_context"
+      ],
+      "r": [
+        "documentId"
+      ]
+    },
+    {
+      "h": "cfa64031dde39437baf7b1e32d7a09e26517a62e2b7e889d5f88da783f20806f",
+      "n": "release_agent",
+      "p": [
+        "selection_context"
+      ],
+      "r": []
+    },
+    {
+      "h": "8e37155ae5c5af6b36a63124fa5d42ad64b5ac118dff7321365c3b752128fd54",
+      "n": "remember",
+      "p": [
+        "body_md",
+        "kind",
+        "scope",
+        "selection_context",
+        "slug",
+        "title"
+      ],
+      "r": [
+        "body_md",
+        "kind",
+        "title"
+      ]
+    },
+    {
+      "h": "e12e330de45c8bc2a64032bd938dbe6d641dab88ec0648db4527f7e97601d7bc",
+      "n": "render_chart",
+      "p": [
+        "chart",
+        "connector",
+        "drill",
+        "filters",
+        "height",
+        "params",
+        "pixel_ratio",
+        "selection_context",
+        "time_grain",
+        "version_id",
+        "width"
+      ],
+      "r": [
+        "chart",
+        "connector"
+      ]
+    },
+    {
+      "h": "778160d5830a62bc94e06764bb3759a609056b6e93b182945c19c8eaf0293f21",
+      "n": "reorder_agent_documents",
+      "p": [
+        "agentId",
+        "order",
+        "selection_context"
+      ],
+      "r": [
+        "agentId",
+        "order"
+      ]
+    },
+    {
+      "h": "96932f515edf2aa54822da61dd4e166f0e8cb9d35699ea4719cc61bfb92e150d",
+      "n": "reorder_draft_documents",
+      "p": [
+        "agentId",
+        "order",
+        "segment",
+        "selection_context"
+      ],
+      "r": [
+        "agentId",
+        "order",
+        "segment"
+      ]
+    },
+    {
+      "h": "d2076ef40851151108a3dd28d7e7734ac38f9a40ba3ea3003e5c8617e936a743",
+      "n": "request_dataset_activation",
+      "p": [
+        "confirm",
+        "connector",
+        "dataset",
+        "selection_context"
+      ],
+      "r": [
+        "connector",
+        "dataset"
+      ]
+    },
+    {
+      "h": "b8e7a9cfd2f70a6dc2b4cc6be086610a80845e32fd9c48f9428059e1852b044a",
+      "n": "run_dashboard",
+      "p": [
+        "connector",
+        "dashboard",
+        "params",
+        "selection_context"
+      ],
+      "r": [
+        "connector",
+        "dashboard"
+      ]
+    },
+    {
+      "h": "a750b2b83097de7819a721cb92c60815a58d761602ade14c1acbc8d479371c82",
+      "n": "run_dataset",
+      "p": [
+        "connector",
+        "cursor",
+        "dataset",
+        "params",
+        "selection_context",
+        "version"
+      ],
+      "r": [
+        "connector",
+        "dataset"
+      ]
+    },
+    {
+      "h": "013aca342bc270f3d26df18c3f73d8dd99c5072d129e4c81480d6c53939c1104",
+      "n": "run_metric",
+      "p": [
+        "calendar_axis",
+        "compare",
+        "connector",
+        "cursor",
+        "filters",
+        "group_by",
+        "limit",
+        "metric",
+        "metrics",
+        "order_by",
+        "selection_context",
+        "share_of_total",
+        "time_grain",
+        "window"
+      ],
+      "r": [
+        "connector"
+      ]
+    },
+    {
+      "h": "c1014a53b38bd15ded04c5238e42240abb6f48158dbee3f4c0a53fd377af8acc",
+      "n": "run_query",
+      "p": [
+        "connector",
+        "cursor",
+        "limit",
+        "page_size",
+        "projection",
+        "sample",
+        "selection_context",
+        "sql"
+      ],
+      "r": [
+        "connector",
+        "sql"
+      ]
+    },
+    {
+      "h": "faf25fcde2d595aca453f503e853e4755000e43d84161d8ec44691e851bbd0dc",
+      "n": "save_chart_edit",
+      "p": [
+        "change_summary",
+        "chart",
+        "confirm",
+        "connector",
+        "selection_context"
+      ],
+      "r": [
+        "chart",
+        "connector"
+      ]
+    },
+    {
+      "h": "c0da75c1948bb0211b2ec203fb829cf24865439c6ce642494a12365c6e61d0c5",
+      "n": "save_dashboard_edit",
+      "p": [
+        "change_summary",
+        "confirm",
+        "connector",
+        "dashboard",
+        "selection_context"
+      ],
+      "r": [
+        "connector",
+        "dashboard"
+      ]
+    },
+    {
+      "h": "fa9edaf0fa03a2e0706555d1128bfb61812c78ee4be3b991ff74492a2e2cbc89",
+      "n": "search_model",
+      "p": [
+        "connector",
+        "limit",
+        "query",
+        "selection_context"
+      ],
+      "r": [
+        "connector",
+        "query"
+      ]
+    },
+    {
+      "h": "c2225da790afc1c5ce86ca8a791cabf3f38a91e17014e9ebdb71148c04e76143",
+      "n": "set_chart_options",
+      "p": [
+        "chart",
+        "chart_type",
+        "confirm",
+        "connector",
+        "options",
+        "selection_context"
+      ],
+      "r": [
+        "chart",
+        "connector"
+      ]
+    },
+    {
+      "h": "b0b183b0afb2584f1fc38bd659bdf13970df7b8c7df3a9a9f7c7a23230fb7f61",
+      "n": "set_connector_links",
+      "p": [
+        "confirm",
+        "connector",
+        "links",
+        "selection_context"
+      ],
+      "r": [
+        "connector",
+        "links"
+      ]
+    },
+    {
+      "h": "29b4bfb2f24b8a70cb17e783763b10e0a19547b17ae08f2167ee4e9e316cef8f",
+      "n": "set_relations",
+      "p": [
+        "confirm",
+        "connector",
+        "relations",
+        "selection_context"
+      ],
+      "r": [
+        "connector",
+        "relations"
+      ]
+    },
+    {
+      "h": "fdbfdbf95ca5e8af917e9de523273c9580e693ac13c72ba8ba825a27fa28eda7",
+      "n": "submit_proposal",
+      "p": [
+        "body",
+        "context",
+        "how_to_verify",
+        "kind",
+        "selection_context",
+        "title",
+        "what_happens",
+        "what_is_asked",
+        "where"
+      ],
+      "r": [
+        "title"
+      ]
+    },
+    {
+      "h": "1c21421d91e2ca838b8a40d14f8b433ebddf62b1b1bd9b2c7973587fed2803b1",
+      "n": "test_chart",
+      "p": [
+        "chart",
+        "confirm",
+        "connector",
+        "if_match",
+        "params",
+        "selection_context",
+        "version_id"
+      ],
+      "r": [
+        "chart",
+        "connector"
+      ]
+    },
+    {
+      "h": "3e53e0ecf7874ef19bc96159b770913f32a2ce0831985dd7925d72bae0326690",
+      "n": "test_custom_dashboard",
+      "p": [
+        "confirm",
+        "connector",
+        "custom_dashboard",
+        "if_match",
+        "selection_context",
+        "version_id"
+      ],
+      "r": [
+        "connector",
+        "custom_dashboard"
+      ]
+    },
+    {
+      "h": "cb19d0e3dc211643e98f9fcf0bef3624a8512438e9a8b7d474506a260d04e8e9",
+      "n": "test_dashboard",
+      "p": [
+        "confirm",
+        "connector",
+        "dashboard",
+        "if_match",
+        "selection_context",
+        "version_id"
+      ],
+      "r": [
+        "connector",
+        "dashboard"
+      ]
+    },
+    {
+      "h": "ea9767a88bc8aba1389da7bc30b350d7b4bdcee2fe69c412fb64e675bf76e892",
+      "n": "test_dimension",
+      "p": [
+        "confirm",
+        "connector",
+        "dimension",
+        "if_match",
+        "params",
+        "selection_context"
+      ],
+      "r": [
+        "connector",
+        "dimension"
+      ]
+    },
+    {
+      "h": "ac196b393020ed64b19c1287a7b14603d2563f4dde94fd0286b33887a66564ea",
+      "n": "test_filter_set",
+      "p": [
+        "confirm",
+        "connector",
+        "filter_set",
+        "selection_context"
+      ],
+      "r": [
+        "connector",
+        "filter_set"
+      ]
+    },
+    {
+      "h": "b882b97c227d115208ca2183446e91432a31eb87d66509cc7ff1105ddbf49c02",
+      "n": "test_metric",
+      "p": [
+        "confirm",
+        "connector",
+        "filters",
+        "group_by",
+        "if_match",
+        "metric",
+        "params",
+        "selection_context",
+        "share_of_total",
+        "time_grain"
+      ],
+      "r": [
+        "connector",
+        "metric"
+      ]
+    },
+    {
+      "h": "ee7d2d9fe9de5c731eb23eb72d6d8338aafcd943986c2ed22dae51e1b19fdc87",
+      "n": "toggle_agent_document",
+      "p": [
+        "agentId",
+        "documentId",
+        "enabled",
+        "selection_context"
+      ],
+      "r": [
+        "agentId",
+        "documentId",
+        "enabled"
+      ]
+    },
+    {
+      "h": "99d7748ad9452743bb8cefded16073d1dd683e3f84fa7b2bd86008d19f900454",
+      "n": "upsert_chart",
+      "p": [
+        "business_definition",
+        "chart_type",
+        "confirm",
+        "connector",
+        "if_match",
+        "name",
+        "selection_context",
+        "spec"
+      ],
+      "r": [
+        "chart_type",
+        "connector",
+        "name",
+        "spec"
+      ]
+    },
+    {
+      "h": "83e678ff66d94ba1dcf04fadb664bf024f89dde7a39abc5bb98c3326ae45d0bd",
+      "n": "upsert_custom_dashboard",
+      "p": [
+        "confirm",
+        "connector",
+        "contract_version",
+        "datasets_refs",
+        "filter_set_refs",
+        "if_match",
+        "name",
+        "projection",
+        "queries",
+        "selection_context",
+        "template"
+      ],
+      "r": [
+        "connector",
+        "name",
+        "template"
+      ]
+    },
+    {
+      "h": "7a15e1b702a924cb64fca02adf94fe9bb35635ba2026eec1cd18bdc605e12656",
+      "n": "upsert_dashboard",
+      "p": [
+        "business_definition",
+        "confirm",
+        "connector",
+        "if_match",
+        "name",
+        "selection_context",
+        "spec"
+      ],
+      "r": [
+        "connector",
+        "name",
+        "spec"
+      ]
+    },
+    {
+      "h": "9089a6c46a50b13f7956473d15f0c411c8dcd3d096e0ee84c3ad457e74d8a5f8",
+      "n": "upsert_filter_set",
+      "p": [
+        "confirm",
+        "connector",
+        "filters",
+        "if_match",
+        "name",
+        "selection_context"
+      ],
+      "r": [
+        "connector",
+        "filters",
+        "name"
+      ]
+    },
+    {
+      "h": "c636f7da0755737660daa04e0da7c2771c9541d45025a2faefce3e6b21e8f405",
+      "n": "use_agent",
+      "p": [
+        "agent",
+        "model",
+        "provider",
+        "selection_context",
+        "user_choice_quote"
+      ],
+      "r": [
+        "agent",
+        "user_choice_quote"
+      ]
+    },
+    {
+      "h": "6eced62133602a7a3166303f4dba180ed1a58c3158992e2a6fd093889cef8bac",
+      "n": "workspace_migrate",
+      "p": [
+        "nombre",
+        "selection_context",
+        "sql"
+      ],
+      "r": [
+        "nombre",
+        "sql"
+      ]
+    },
+    {
+      "h": "0446ab3e3c1d3e6e8c3da82bedcf41efb1c8217b70e7c8400c7ab7fafadffcff",
+      "n": "workspace_purge",
+      "p": [
+        "frase",
+        "selection_context"
+      ],
+      "r": [
+        "frase"
+      ]
+    },
+    {
+      "h": "016dd77845a8a70ae6b6e885dce3b48a2daea7d3e77cf25c709b9bd4b7a3abb3",
+      "n": "workspace_query",
+      "p": [
+        "selection_context",
+        "sql"
+      ],
+      "r": [
+        "sql"
+      ]
+    },
+    {
+      "h": "473e991aa4b6563c8eded42dd2cf6bb46ac37486da5bc1370c2546886ef8b78d",
+      "n": "workspace_restore",
+      "p": [
+        "checkpoint",
+        "selection_context"
+      ],
+      "r": [
+        "checkpoint"
+      ]
+    },
+    {
+      "h": "957e72c7eea39ebba0225155891bb3f7bd875078da8400c5b5796270d9ca18fc",
+      "n": "workspace_schema",
+      "p": [
+        "selection_context"
+      ],
+      "r": []
+    },
+    {
+      "h": "78619a544083ad6a6c2b7e4bccde87b070f3b331d5bf39920ef3323d914fe7b8",
+      "n": "workspace_undelete",
+      "p": [
+        "ids",
+        "selection_context"
+      ],
+      "r": [
+        "ids"
+      ]
+    },
+    {
+      "h": "b91066f89635e9a1242e8cdcb5eaf7fbd300a12bb5a1bea08b0cd584bb15d7f8",
+      "n": "workspace_undo",
+      "p": [
+        "selection_context",
+        "tabla"
+      ],
+      "r": []
+    },
+    {
+      "h": "525b0cb257d85e232f869f9b0f5ecb7b0f17186234757f54222728ef3081a630",
+      "n": "workspace_write",
+      "p": [
+        "selection_context",
+        "sql"
+      ],
+      "r": [
+        "sql"
+      ]
+    },
+    {
+      "h": "bb07cd3b9dfdfa75d00038b378033aaa0162153adbfba4c79b78b770b00d057f",
+      "n": "write_agent_document",
+      "p": [
+        "body",
+        "description",
+        "documentId",
+        "name",
+        "selection_context"
+      ],
+      "r": [
+        "documentId"
+      ]
+    }
+  ],
+  "huella": "78abab9f785edb74cf30d00bd1de8db8965811d0ac48fef5f0a4e0dcca22f1a9",
+  "instrucciones_sha256": "9af5105b3ad303bf708566496b6cdf2b201bce7ac05226cf9e956d0b9c2e5027",
+  "protocolo": "2025-06-18"
+}

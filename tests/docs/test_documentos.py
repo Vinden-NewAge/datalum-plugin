@@ -62,8 +62,9 @@ class LaSkill(unittest.TestCase):
             self.assertNotIn(gone, SKILL, f"la Skill vuelve a nombrar {gone}")
         # La 1.1.0 tenía 316 líneas, la mitad de ellas tablas de herramientas. La 3.0.0
         # tenía 259 y la 3.1.0, con el modelo que se declara y el que recomienda el
-        # agente, 261.
-        self.assertLess(len(SKILL.splitlines()), 265, "la Skill dejó de ser corta")
+        # agente, 261. La 4.0.0 quita el párrafo de la pausa de gráficas y tableros y
+        # añade el de la orden de la persona en cada escritura: 266.
+        self.assertLess(len(SKILL.splitlines()), 270, "la Skill dejó de ser corta")
 
     def test_los_entregables_siguen_al_cerebro_del_agente(self):
         self.assertIn(flat("Deliverables follow the brain too"), flat(SKILL))

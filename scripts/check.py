@@ -57,6 +57,7 @@ RESPONSE_NAMES = {
     "rate_limited",
     "retry_after",
     "sello_posterior",
+    "user_request_quote_required",
 }
 # La Skill arranca la sesión y carga el cerebro; el oficio lo trae el agente. Si nombra
 # más herramientas que éstas, volvió a ser un catálogo.

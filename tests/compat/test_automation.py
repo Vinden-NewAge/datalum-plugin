@@ -631,13 +631,18 @@ class PausedFamilies(unittest.TestCase):
         summary = summary_of([tool("render_chart", ["name"], ["name"])])
         self.assertNotIn("en_pausa", contract.derive_facts(summary, {}))
 
-    def test_el_plugin_tiene_en_pausa_las_graficas_y_tableros_del_contrato_vigente(self):
+    def test_el_plugin_ya_no_tiene_en_pausa_las_graficas_ni_los_tableros(self):
+        """La 4.0.0 levanta la pausa de la 2.0.4: el contrato vigente sigue sirviendo las
+        14 herramientas de esas familias y ni los requisitos ni los hechos del cliente
+        las niegan."""
         root = Path(__file__).resolve().parents[2]
         facts = json.loads((root / "client/contract-facts.json").read_text(encoding="utf-8"))
+        requirements = json.loads((root / "compat/requisitos.json").read_text(encoding="utf-8"))
         names = [t["n"] for t in json.loads((root / "compat/contrato-produccion.json").read_text(encoding="utf-8"))["herramientas"]]
-        expected = sorted(n for n in names if "chart" in n.split("_") or "dashboard" in n.split("_"))
-        self.assertEqual(len(expected), 14)
-        self.assertEqual(facts["en_pausa"]["herramientas"], expected)
+        served = sorted(n for n in names if "chart" in n.split("_") or "dashboard" in n.split("_"))
+        self.assertEqual(len(served), 14)
+        self.assertNotIn("en_pausa", requirements)
+        self.assertNotIn("en_pausa", facts)
 
 
 class ElConectorDeR12(unittest.TestCase):
@@ -678,7 +683,7 @@ class ElConectorDeR12(unittest.TestCase):
         herramientas que R12 retira."""
         facts = self.load("client/contract-facts.json")
         named = set(facts["destinos"]) | set(facts["citas_humanas"]) | set(facts["sin_selection_context"])
-        named |= set(facts["en_pausa"]["herramientas"])
+        named |= set(facts.get("en_pausa", {}).get("herramientas", []))
         self.assertEqual(
             {name: facts["destinos"].get(name) for name in (
                 "propose_metric", "propose_dataset", "propose_dimension", "attach_draft_connector",
@@ -731,12 +736,74 @@ class ElModeloDeR22(unittest.TestCase):
         self.assertEqual(r22["r"], r12["r"])
         self.assertFalse({"model", "provider"} & set(r12["p"]))
 
-    def test_el_contrato_de_produccion_es_el_de_r22_y_sus_textos_estan_revisados(self):
+    def test_los_textos_de_r22_siguen_revisados(self):
+        comparison = contract.compare(self.load("compat/contratos/7d298c8bef6f.json"), self.load("compat/requisitos.json"))
+        self.assertEqual(comparison["revision"], [])
+
+
+class LaOrdenDeLaPersona(unittest.TestCase):
+    """Datalum v2.256.0 exige en toda escritura la orden de la persona, con sus palabras,
+    en `user_request_quote`: también en `remember`, `forget` y `release_agent`, que el
+    plugin usa. La Skill la manda donde el esquema la declara, así que lo que el plugin
+    pide vale con v2.256.0 y con los contratos de antes, como pide la transición de
+    MANTENER.md."""
+
+    ROOT = Path(__file__).resolve().parents[2]
+    V2_256_0 = "compat/contratos/cbdf86b096d1.json"
+    ANTERIORES = (
+        "compat/contratos/fe05777db569.json",  # v2.249.0, R12
+        "compat/contratos/7d298c8bef6f.json",  # v2.251.0, R22
+        "compat/contratos/a9f83f73ebda.json",  # v2.252.0
+        "compat/contratos/320277a2cdf2.json",  # v2.253.0
+        "compat/contratos/62a22ceb71be.json",  # v2.254.0
+        "compat/contratos/32e4904ed6c4.json",  # v2.255.0
+    )
+    ESCRITURAS = ("forget", "release_agent", "remember")
+
+    def load(self, relative: str) -> dict:
+        return json.loads((self.ROOT / relative).read_text(encoding="utf-8"))
+
+    def test_lo_que_el_plugin_pide_vale_con_v2_256_0_y_con_los_contratos_de_antes(self):
+        requirements = self.load("compat/requisitos.json")
+        for stored in self.ANTERIORES + (self.V2_256_0,):
+            summary = contract.validate(self.load(stored))
+            self.assertEqual(contract.compare(summary, requirements)["incompatible"], [], stored)
+
+    def test_la_orden_es_obligatoria_en_v2_256_0_y_no_existe_en_v2_255_0(self):
+        nuevo = contract.by_name(self.load(self.V2_256_0))
+        anterior = contract.by_name(self.load("compat/contratos/32e4904ed6c4.json"))
+        for name in self.ESCRITURAS:
+            self.assertIn("user_request_quote", nuevo[name]["r"], name)
+            self.assertNotIn("user_request_quote", anterior[name]["p"], name)
+
+    def test_el_plugin_la_declara_obligatoria_y_no_la_manda_si_el_esquema_no_la_trae(self):
+        need = self.load("compat/requisitos.json")["herramientas"]
+        for name in self.ESCRITURAS:
+            self.assertIn("user_request_quote", need[name]["obligatorios"], name)
+            self.assertNotIn("user_request_quote", need[name]["usa"], name)
+
+    def test_el_contrato_de_produccion_es_el_de_v2_256_0_y_sus_textos_estan_revisados(self):
         summary = self.load("compat/contrato-produccion.json")
-        self.assertEqual(summary, self.load("compat/contratos/7d298c8bef6f.json"))
+        self.assertEqual(summary, self.load(self.V2_256_0))
         comparison = contract.compare(summary, self.load("compat/requisitos.json"), current_facts=self.load("client/contract-facts.json"))
+        self.assertEqual(comparison["incompatible"], [])
         self.assertEqual(comparison["revision"], [])
         self.assertFalse(comparison["derivados_cambian"])
+
+    def test_un_rollback_a_v2_253_0_v2_254_0_o_v2_255_0_no_pide_revision(self):
+        requirements = self.load("compat/requisitos.json")
+        for stored in self.ANTERIORES[3:]:
+            comparison = contract.compare(contract.validate(self.load(stored)), requirements)
+            self.assertEqual(comparison["incompatible"] + comparison["revision"], [], stored)
+
+    def test_la_orden_es_una_cita_y_nunca_el_destino_de_una_escritura(self):
+        facts = self.load("client/contract-facts.json")
+        for name in self.ESCRITURAS + ("workspace_purge", "delete_my_memories"):
+            self.assertEqual(facts["citas_humanas"].get(name), "user_request_quote", name)
+        self.assertNotIn("user_request_quote", facts["destinos"].values())
+        self.assertNotIn("release_agent", facts["destinos"], "soltar el agente no tiene destino")
+        self.assertEqual(facts["destinos"]["remember"], "body_md")
+        self.assertEqual(facts["destinos"]["forget"], "memory")
 
 
 class Events(unittest.TestCase):
