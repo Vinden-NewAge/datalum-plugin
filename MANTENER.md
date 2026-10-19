@@ -161,7 +161,7 @@ Datalum R12 no siguió este orden: rechaza `tenant` desde que se despliega. La 3
 con él; lo que hace mientras producción no lo tiene está en `COMPATIBILIDAD.md`.
 
 Datalum v2.256.0 tampoco: exige la orden de la persona en `user_request_quote` en toda
-escritura desde que se despliega, y la 3.1.0 no la manda. La 4.0.0 sale después. Lo que
+escritura desde que se despliega, y la 3.1.0 no pide mandarla. La 4.0.0 sale después. Lo que
 pide vale con los dos contratos porque la Skill manda la orden sólo donde el esquema la
 declara: `compat/requisitos.json` la pone en `obligatorios` y no en `usa`.
 
