@@ -4,6 +4,135 @@ Qué versión del plugin se comprobó contra qué, y cómo. «Comprobado» quier
 algo se ejecutó y dio ese resultado. Lo que sólo consta en la documentación de un
 producto se marca «Sin comprobar».
 
+## Versión 4.0.0
+
+Preparada el 19 de octubre de 2026 con Datalum v2.256.0 (commit `cbdf86b096d1`), que
+producción servía ese día a las 05:47 UTC. v2.256.0 exige la orden de la persona en
+`user_request_quote` en toda escritura, también en `remember`, `forget` y
+`release_agent`, que el plugin usa, y rechaza la llamada que no la trae. El servidor no
+anunció el cambio con fecha ni conservó el contrato anterior, como pide «Cambios
+incompatibles» en `MANTENER.md`, así que la 3.1.0 quedó incompatible con producción
+desde el despliegue. La versión sube el número mayor, como la 3.0.0 con R12.
+
+| Plugin | Servidor de Datalum | Contrato | Resultado |
+|---|---|---|---|
+| 4.0.0 | Datalum v2.256.0, commit `cbdf86b096d1`. Lo servía producción (`mcp.datalum.ai`) el 19 de octubre a las 05:47 UTC | `c6f03b5854d9`, 92 herramientas, armado del código de ese commit; es el que llevó el aviso del despliegue y el que guardó el flujo de compatibilidad. Sus instrucciones (`8b62c3c709f3`), su protocolo y las tres herramientas que anuncia sin sesión son los que producción contesta | Compatible: `check.py` pasa con ese contrato como el de producción, con las huellas nuevas de las instrucciones y de las ocho definiciones añadidas a `compat/requisitos.json` tras leer su texto |
+| 4.0.0 | v2.249.0 (R12), v2.251.0 (R22), v2.252.0, v2.253.0, v2.254.0 y v2.255.0 | Los guardados en `compat/contratos/` | Compatible: lo que pide `compat/requisitos.json` está en todos. Contra v2.253.0, v2.254.0 y v2.255.0 tampoco queda texto sin leer, así que un rollback a ellos no pide revisión |
+| 3.1.0 | Datalum v2.256.0 | `c6f03b5854d9` | Incompatible: `remember`, `forget` y `release_agent` exigen `user_request_quote`. Lo anotó en `compat/registro.jsonl` el aviso de ese despliegue, el 19 de octubre a las 05:52 UTC, y abrió el aviso para una persona |
+
+### Cómo se armó el contrato
+
+Con el método de la 3.0.0, sobre una copia de sólo lectura del servidor en cada commit:
+el `tools/list` que su protocolo sirve al cliente autenticado de sus propias pruebas, el
+que tiene todas las herramientas genéricas, y el `initialize` del mismo protocolo, sin
+base, sin red y sin la extensión de vistas, como lo pide esta comprobación. El resumen
+lo armó `python3 scripts/compat.py resumir`. La sonda no vive aquí porque importa código
+del servidor.
+
+| Código del servidor | Resultado |
+|---|---|
+| `a9f83f73ebda` (v2.252.0) | `713e328dfbc7`, 91 herramientas: el contrato guardado, huella por huella. Con eso se da por bueno el método |
+| `320277a2cdf2` (v2.253.0) | `78abab9f785e`, 91 herramientas, con las instrucciones de v2.252.0 (`9af5105b3ad3`). Cambian 12 definiciones, ninguna de las que usa el plugin. `apply_batch` añade `format`, `document` y `cursor` y deja de exigir `operations` |
+| `62a22ceb71be` (v2.254.0) | `ed9e6ca346cb`, 92 herramientas. Entra `open_agent_card`. Cambian las instrucciones (`af1763a21d15`) y 30 definiciones; de las que usa el plugin, sólo `use_agent`, que declara la vista de la tarjeta del agente |
+| `32e4904ed6c4` (v2.255.0) | `ed9e6ca346cb`, el mismo contrato que v2.254.0 |
+| `cbdf86b096d1` (v2.256.0) | `c6f03b5854d9`, 92 herramientas. Cambian las instrucciones (`8b62c3c709f3`) y 89 definiciones: las 92 traen anotaciones de MCP y 52 declaran `user_request_quote` |
+
+El catálogo del servidor tiene 109 herramientas, todas con anotaciones. La lista que se
+sirve tiene 92: las demás se llaman sin anunciarse y no entran en el contrato. Una
+conversación que negoció la extensión de vistas recibe además `save_agent_version`, que
+sólo llama la vista y tampoco entra.
+
+### La lectura de lo que cambió
+
+Contra lo revisado para la 3.1.0, el contrato de v2.256.0 da tres motivos de
+incompatibilidad y nueve de revisión. El 19 de octubre se leyeron con `diff` las
+instrucciones y las ocho definiciones contra las de v2.252.0:
+
+| Qué cambió | Cómo | Huella nueva |
+|---|---|---|
+| Las instrucciones | En v2.254.0, guardar la versión de un agente también se hace en su tarjeta (`open_agent_card`). En v2.256.0, una regla nueva: escribir sólo con la orden de la persona, con sus palabras en `user_request_quote` | `af1763a21d15` y `8b62c3c709f3` |
+| `remember` y `forget` | Declaran `user_request_quote`, obligatoria, y la descripción termina con que llevan la orden textual de la persona | `77a5ec35f227` y `71a1ce280057` |
+| `release_agent` | Declara `user_request_quote`, obligatoria. La descripción deja de decir que no lleva cita | `b8c5319c5134` |
+| `use_agent` | En v2.254.0 declara en `_meta` la vista de la tarjeta del agente, para las aplicaciones que la pintan. El texto y los argumentos no cambian | `c04bcecdade5` y `57067dfe7261` |
+| `brain_index`, `brain_read`, `list_agents` y `list_memories` | Sólo las anotaciones: de sólo lectura, idempotentes y sin salir de Datalum | `b801f8d5b774`, `d9ce649c5d02`, `e6e1bf07e458` y `e0789681dd67` |
+
+Las huellas quedan en `instrucciones_revisadas` y `definiciones_revisadas` de
+`compat/requisitos.json`, también las de v2.254.0 y v2.255.0.
+
+`compat/requisitos.json` declara `user_request_quote` en `obligatorios` y no en `usa`
+de `remember`, `forget` y `release_agent`. La Skill la manda donde el esquema la declara,
+así que contra v2.256.0 la manda siempre y contra un servidor de antes no la manda, que
+la rechazaría por no declarada. Lo que el plugin pide es lo común a los contratos, como
+pide la transición de «Cambios incompatibles» en `MANTENER.md`. `citas_humanas` la
+registra en esas tres y en `workspace_purge`, que cambia `frase` por ella.
+
+La Skill cambia el párrafo de las palabras de la persona por uno sobre la orden: dónde
+va, que la cubren las palabras con que se pidió el encargo, que la vista previa no la
+necesita, que sin un mensaje que pida el cambio se pregunta antes de escribir y que es
+un registro y no la aprobación. Soltar el agente lleva las palabras con que se pidió.
+Si Datalum contesta `user_request_quote_required` y el esquema que ve el asistente no
+declara el argumento, la aplicación tiene una lista vieja, y la Skill pide decir que se
+actualice el conector.
+
+El código de los controles del cliente no cambia. La orden ya quedaba fuera de la
+identidad de una operación y del estado guardado, y el rechazo por falta de orden llega
+como rechazo de ejecución, con su código, y no deja la escritura incierta. Derivado de
+`c6f03b5854d9`, `client/contract-facts.json` suma `open_agent_card` con destino `agent`,
+deja `apply_batch` sin destino porque ya sólo exige el conector y registra la orden como
+cita. Sin destino, un cambio incierto de `apply_batch` hace preguntar a la persona antes
+de otro lote en el mismo conector.
+
+### Las gráficas y los tableros salen de la pausa
+
+La pausa de la 2.0.4 acompañaba la de gráficas y tableros de Datalum, que terminó con
+las publicaciones servidas en v2.253.0 y v2.254.0: una gráfica nombra indicadores y ya no
+acepta `dataset_source`, compara por modo con `query_opts.compare`, junta varias cifras
+con su eje en `options.measure_axes`, y editar una gráfica o un tablero activos no cambia
+lo que se sirve hasta que una persona activa la versión nueva. El `spec` de
+`upsert_dashboard` declara todo lo que guarda. Se quitó lo que `MANTENER.md` dice para
+levantar una pausa: la entrada `en_pausa` de `compat/requisitos.json` y el párrafo de la
+Skill. El párrafo de entregables se queda: si el procedimiento del agente entrega un
+tablero como archivo HTML, el asistente arma ese archivo. `compat/requisitos.json` no
+declara las herramientas de gráficas: la Skill no las nombra y lo que se les manda sale
+del esquema que sirve el conector.
+
+### Qué se ejecutó
+
+El 19 de octubre:
+
+| Qué | Resultado |
+|---|---|
+| La sonda sobre `a9f83f73ebda` | `713e328dfbc7`, 91 herramientas, igual al guardado |
+| La sonda sobre `320277a2cdf2`, `62a22ceb71be`, `32e4904ed6c4` y `cbdf86b096d1` | Las huellas de «Cómo se armó el contrato» |
+| `/health`, `initialize` y `tools/list` sin sesión de producción, a las 05:47 UTC, cotejados con `production.cross_check` | Producción sirve `cbdf86b096d1` (v2.256.0), sin diferencias con `c6f03b5854d9`: instrucciones, protocolo y las tres herramientas que se anuncian sin sesión. Contra los contratos de v2.253.0 a v2.255.0 sólo difieren las instrucciones |
+| El aviso de v2.256.0 a `compat.yml` con «simular», y después el de verdad | El ensayo confirmó el despliegue, cotejó el contrato (verificación parcial) y dio `incompatible` sin publicar ni escribir. El de verdad anotó la línea 12 de `compat/registro.jsonl`, guardó el contrato y las instrucciones y abrió el aviso para una persona. Su paso «Resumen» del cierre quedó en rojo, el defecto que corrige la rama `arregla/resumen-del-cierre`, todavía sin fundir |
+| `contract.compare` del contrato de v2.256.0 con `compat/requisitos.json` de la 3.1.0 | Clase `incompatible`: los tres motivos de `user_request_quote` y nueve de revisión |
+| `client/contract-facts.json` derivado de `c6f03b5854d9` con `contract.derive_facts` | Los cambios de la sección anterior y sin `en_pausa` |
+| `python3 scripts/check.py` | Pasa (92 herramientas) |
+| `python3 -m unittest discover -s tests -t .` | 112 pruebas, todas pasan |
+| `node --test tests/client/*.test.js` | 143 pruebas, todas pasan |
+| `python3 scripts/package.py` | Arma `dist/datalum-skill.zip` |
+| `claude plugin validate .`, con el CLI de la aplicación de escritorio (2.1.299) | Pasa, con el aviso de `logo` que ya tenía |
+| Mutantes | MUTANTES_PENDIENTE |
+| El ensayo de `compat.yml` en el PR de esta versión | ENSAYO_PENDIENTE |
+| Evaluaciones con modelo | No se ejecutaron |
+
+| Qué | Dónde se prueba |
+|---|---|
+| Lo que el plugin pide vale con v2.256.0 y con los contratos guardados desde R12, y un rollback a v2.253.0, v2.254.0 o v2.255.0 no pide revisión | `LaOrdenDeLaPersona` en `tests/compat/test_automation.py` |
+| La orden es obligatoria en v2.256.0, no existe en v2.255.0 y el plugin no la manda si el esquema no la declara | El mismo |
+| El contrato de producción es el de v2.256.0, sus textos están leídos y la orden es cita y nunca destino | El mismo |
+| Las gráficas y los tableros ya no están en pausa | `test_el_plugin_ya_no_tiene_en_pausa_las_graficas_ni_los_tableros` en el mismo archivo, `tests/client/la-orden-de-la-persona.test.js` y `tests/client/adapter.test.js` |
+| La orden no entra en la identidad de una escritura ni en el estado, un rechazo por falta de ella no deja la escritura incierta y soltar el agente con ella lo suelta | `tests/client/la-orden-de-la-persona.test.js` |
+| La Skill manda la orden donde el esquema la declara, suelta el agente con las palabras de la persona, dice qué hacer con una lista vieja y ya no pone en pausa las gráficas | `LaVersion400` en `tests/docs/test_documentos.py` |
+
+Sin comprobar: el catálogo completo que sirve producción a una conexión con sesión,
+porque no hay credencial de lectura; el contrato sale del código del commit y del
+servidor sólo se cotejó lo que contesta sin sesión. Tampoco se midió qa. Ni la conducta
+de un modelo con la Skill nueva: si copia las palabras de la persona sin escribirlas por
+su cuenta, si pregunta cuando nadie pidió el cambio y qué hace ChatGPT con la lista
+guardada antes de v2.256.0. Ni cómo usa las anotaciones el panel de cada aplicación.
+
 ## Versión 3.1.0
 
 Preparada el 10 de octubre de 2026 con Datalum R22 (v2.251.0, commit `7d298c8bef6f`),
