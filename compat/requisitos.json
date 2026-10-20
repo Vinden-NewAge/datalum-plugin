@@ -2,49 +2,53 @@
   "_": "Lo que el plugin usa del contrato MCP de Datalum. Se edita a mano junto con la Skill y los controles; scripts/compat.py lo compara con cada despliegue. Qué significa cada clave: MANTENER.md.",
   "citas_humanas": {
     "delete_my_memories": "user_request_quote",
+    "forget": "user_request_quote",
+    "release_agent": "user_request_quote",
+    "remember": "user_request_quote",
     "use_agent": "user_choice_quote",
-    "workspace_purge": "frase"
+    "workspace_purge": "user_request_quote"
   },
   "definiciones_revisadas": {
     "brain_index": [
       "16c19bb9306cfd83b6f0116498ff81d736cb82efb4a6148d1d73e7ed159884a1",
-      "3b9862da88fbe5441e4d60409ddd7e3073742a73a594705e2c86e5cf4fa38a12"
+      "3b9862da88fbe5441e4d60409ddd7e3073742a73a594705e2c86e5cf4fa38a12",
+      "b801f8d5b774975a0db69fd77bdaef09553224cc1c6800267f0ca23559dd481d"
     ],
     "brain_read": [
       "201a4172406fc1e955c60e13a2640b318d53ab093c778d7e186b4bcf13b6fe4f",
-      "d4e046a7f0f3c644e9d09eb37df3d960a2614dbe608a5bd329b67330897db091"
+      "d4e046a7f0f3c644e9d09eb37df3d960a2614dbe608a5bd329b67330897db091",
+      "d9ce649c5d02b1e20fb1fe854f013a5a4be9045d96567fcae289064b96a6d1b4"
     ],
     "forget": [
       "650aa001afd624f286b81844bf1882eea3be0e42589840121a9a55846a7423e1",
-      "9842027ff4b4b4312ded0dae4016a6476ca8d1e211d6eb606a84e80ce67f83bf"
+      "9842027ff4b4b4312ded0dae4016a6476ca8d1e211d6eb606a84e80ce67f83bf",
+      "71a1ce280057f1f3ebff5335b7e79a37e95dd09aeb2f990fb3745c6380e4cd98"
     ],
     "list_agents": [
       "48a62ab647c7ce9acba97c6702b810b5c1efa59174baa700f7f094cb42eca4ed",
       "bb30a4a9a839fe18b862e3603af241a3fdc948a055d2c6f158907fac063dd0d4",
-      "519667e0e949b67005e77445198d6bb59d435a0862f41174eef5a9eac998f8e1"
+      "519667e0e949b67005e77445198d6bb59d435a0862f41174eef5a9eac998f8e1",
+      "e6e1bf07e4589562bc749428b7bc0ab51aec34cbd649879537ce14bdfdde6e2f"
     ],
     "list_memories": [
-      "1f3c4aaa79c06b3b8f660187de2eabbfbb77416499edcdcf3b6f78889372aa00"
+      "1f3c4aaa79c06b3b8f660187de2eabbfbb77416499edcdcf3b6f78889372aa00",
+      "e0789681dd67b3cffe46745ae93529358255f8c1eeed27a031a30f24f6f3d57b"
     ],
     "release_agent": [
-      "cfa64031dde39437baf7b1e32d7a09e26517a62e2b7e889d5f88da783f20806f"
+      "cfa64031dde39437baf7b1e32d7a09e26517a62e2b7e889d5f88da783f20806f",
+      "b8c5319c5134152a248dbdf0b394eba2ab527b15d41ff4dca689eda59d96a86e"
     ],
     "remember": [
       "5b076eb5e6161454d63ed795fae84c0e1411467754a942c5222c8039ce9c31c2",
-      "8e37155ae5c5af6b36a63124fa5d42ad64b5ac118dff7321365c3b752128fd54"
+      "8e37155ae5c5af6b36a63124fa5d42ad64b5ac118dff7321365c3b752128fd54",
+      "77a5ec35f227d5c5ee1533a314d5dd445052a5c7a6d7e9b6d2b908b165ebaa58"
     ],
     "use_agent": [
       "1c6a9d12b6fc335ee6bb6f7473501bf22a1e080c77baa7cd82d26902dde5ccf3",
       "4e431ad77725295fbdc0f22ee89e9df1cf5103a654167435f7d8cff96b436d23",
-      "c636f7da0755737660daa04e0da7c2771c9541d45025a2faefce3e6b21e8f405"
-    ]
-  },
-  "en_pausa": {
-    "_": "Familias de herramientas que el plugin no usa. Para quitar la pausa se borra esta entrada.",
-    "aviso": "Datalum's charts and dashboards are paused in this plugin. Do not call this tool, even if the agent's brain names it, and do not look for another Datalum tool that makes a chart or a dashboard. Tell the person in plain words that charts and dashboards are not available here for now; you can still give them the figures.",
-    "familias": [
-      "chart",
-      "dashboard"
+      "c636f7da0755737660daa04e0da7c2771c9541d45025a2faefce3e6b21e8f405",
+      "c04bcecdade54023170cad157011d5904bae960b7a2bb7215974508bf6173d9b",
+      "57067dfe72617d1c9d7c49479eca9312093d9199128762e20ea09d4837cfe2ca"
     ]
   },
   "esquema": 1,
@@ -75,7 +79,8 @@
     },
     "forget": {
       "obligatorios": [
-        "memory"
+        "memory",
+        "user_request_quote"
       ],
       "usa": [
         "memory",
@@ -96,7 +101,9 @@
       ]
     },
     "release_agent": {
-      "obligatorios": [],
+      "obligatorios": [
+        "user_request_quote"
+      ],
       "usa": [
         "selection_context"
       ]
@@ -105,7 +112,8 @@
       "obligatorios": [
         "kind",
         "title",
-        "body_md"
+        "body_md",
+        "user_request_quote"
       ],
       "usa": [
         "kind",
@@ -131,7 +139,9 @@
   "instrucciones_revisadas": [
     "3faf86c24e3a8800ccb0696ca2888adc1fc48e9b128cec2ecc3a41cd17fa2320",
     "aa0054a7b8e474561f19cc29b8968275581d57484bd1b32bc92531853047a978",
-    "9af5105b3ad303bf708566496b6cdf2b201bce7ac05226cf9e956d0b9c2e5027"
+    "9af5105b3ad303bf708566496b6cdf2b201bce7ac05226cf9e956d0b9c2e5027",
+    "af1763a21d153a77238319e85219a31c6306348445a18e1a8d6a06d1e66e60b9",
+    "8b62c3c709f3814c8a696ea99d8e6f775830aa35a389944b4421f7b07ed6619a"
   ],
   "protocolos": [
     "2025-06-18"

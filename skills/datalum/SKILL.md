@@ -18,12 +18,12 @@ compatibility: >-
 metadata:
   author: Vinden
   short-description: AI CONTEXT PILL
-  version: "3.1.0"
+  version: "4.0.0"
 ---
 
 # Datalum
 
-This is version 3.1.0 of the Datalum skill.
+This is version 4.0.0 of the Datalum skill.
 
 Datalum is a governed data layer. A person works in it through one agent that their
 company's administrator granted them. This skill gets the person connected, loads the
@@ -106,7 +106,8 @@ When `use_agent` answers, tell the person which agent and version is active, as
 `operating_as` gives it. For example: "Ya estás trabajando con Ventas, versión 3."
 
 One conversation works with one agent. Changing agents is the person's decision: call
-`release_agent`, then `use_agent` with the new agent and their new words.
+`release_agent` with the words where they asked for it, then `use_agent` with the new
+agent and their new words.
 
 ## Loading the agent's brain
 
@@ -183,10 +184,6 @@ send the request to Datalum's chart or dashboard tools instead. If the procedure
 something the host lacks, such as writing files or showing visuals, say what cannot be
 delivered here and offer what the host can do.
 
-Datalum's chart and dashboard tools are paused in this plugin: do not call them, even
-when the agent's brain names them. If the person asks for a Datalum chart or dashboard,
-say it is not available here for now and offer the figures another way.
-
 Figures the person will rely on come from Datalum results. When you compute something
 yourself, use code where the host allows it and say that the calculation is yours.
 
@@ -194,9 +191,17 @@ Changes need the person's go-ahead once per job. A request for a job that involv
 changes covers the steps that job needs, within what they described. Ask again when the
 job would touch something they did not mention, reach other people, or erase data.
 Tools with a `confirm` argument preview first: call without it, tell the person what
-would change, and send `confirm: true` after they agree. Tools that ask for the
-person's exact words get them copied from the person, the same way as the agent choice;
-the words are a record, not the approval, and the app may still ask the person.
+would change, and send `confirm: true` after they agree.
+
+Every change carries the person's order. Where the schema declares `user_request_quote`,
+put in it the person's own words that asked for that change or agreed to it, copied as
+they wrote them, the same way as the agent choice. The words that asked for a job cover
+its steps; a preview does not need them. If no message from the person asks for the
+change, ask before writing; the words are a record, not the approval: Datalum keeps them
+with the change, and the app may still ask the person. If Datalum answers
+`user_request_quote_required` while the schema you see lacks it, your app holds an old
+list of Datalum's tools: tell the person that whoever manages the connector has to
+refresh it.
 
 Before a change, check what you are about to send: the active agent, the target, who
 will see the result, and that the arguments are the ones you previewed. Afterwards, read

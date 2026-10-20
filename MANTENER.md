@@ -160,14 +160,20 @@ El aviso del entorno previo sirve para enterarse en el paso 1 y no en producció
 Datalum R12 no siguió este orden: rechaza `tenant` desde que se despliega. La 3.0.0 sale
 con él; lo que hace mientras producción no lo tiene está en `COMPATIBILIDAD.md`.
 
+Datalum v2.256.0 tampoco: exige la orden de la persona en `user_request_quote` en toda
+escritura desde que se despliega, y la 3.1.0 no pide mandarla. La 4.0.0 sale después. Lo
+que pide vale con los dos contratos porque la Skill manda la orden sólo donde el esquema
+la declara: `compat/requisitos.json` la pone en `obligatorios` y no en `usa`.
+
 ## Herramientas en pausa
 
-`compat/requisitos.json` declara en `en_pausa` las familias de herramientas que el
-plugin no usa: hoy `chart` y `dashboard`, por la pausa de gráficas y tableros. Cada
+`compat/requisitos.json` puede declarar en `en_pausa` familias de herramientas que el
+plugin no usa. Hoy no declara ninguna: la pausa de gráficas y tableros (`chart` y
+`dashboard`) que puso la 2.0.4 terminó en la 4.0.0. Con una familia declarada, cada
 comprobación deriva de ahí la lista de `client/contract-facts.json` con los nombres que
-trae el contrato, así que una herramienta nueva de esas familias también queda en pausa.
+trae el contrato, así que una herramienta nueva de esa familia también queda en pausa.
 El cliente niega esas llamadas con el `aviso` de la entrada, y la Skill lo dice para las
-aplicaciones donde el cliente no corre. Para quitar la pausa se borra la entrada, se
+aplicaciones donde el cliente no corre. Para quitar una pausa se borra la entrada, se
 quita el párrafo de la Skill y se publica una versión.
 
 ## Sacar una versión a mano
