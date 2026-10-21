@@ -521,10 +521,15 @@ class ElConectorSimulado(unittest.TestCase):
 
     def test_los_argumentos_del_conector_simulado_salen_del_contrato(self):
         """Salvo los que todavía no sirve producción: los de la herramienta de gráficas
-        para dibujar un indicador activo. Cuando el contrato los traiga, esta lista se
-        vacía."""
+        para dibujar un indicador activo, con nombres provisionales.
+
+        Se compara con el contrato guardado con el que se escribió el conector simulado y
+        no con el de producción: la comprobación tras cada despliegue corre estas pruebas,
+        y un cambio en una herramienta que el plugin no usa no puede dejarla en rojo.
+        Cuando producción sirva los argumentos del indicador, se actualizan aquí el
+        contrato guardado, los nombres y la lista de provisionales."""
         provisionales = {"render_chart": {"metric", "group_by"}}
-        summary = json.loads((ROOT / "compat" / "contrato-produccion.json").read_text(encoding="utf-8"))
+        summary = json.loads((ROOT / "compat" / "contratos" / "c28b2234227a.json").read_text(encoding="utf-8"))
         contract = {h["n"]: set(h["p"]) for h in summary["herramientas"]}
         for name, tool in self.tools().items():
             self.assertIn(name, contract, f"{name} no está en el contrato de producción")
