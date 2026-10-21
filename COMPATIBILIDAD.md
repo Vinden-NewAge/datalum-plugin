@@ -33,8 +33,9 @@ recibirla.
 |---|---|
 | `skills/datalum/SKILL.md` | La sección «Charts come from Datalum» y dos frases en «Who decides what»: las gráficas son la excepción a seguir el cerebro, y las herramientas visuales de la aplicación no dibujan gráficas de los datos de la empresa. El párrafo de entregables queda en una frase que remite a la sección |
 | `CONTROLES.md` | La fila «En el chat sólo hay gráficas de Datalum»: la sostienen la Skill y las instrucciones de Datalum; ni el cliente ni Datalum pueden impedir que la aplicación dibuje |
-| `evals/entregables/` | Nueve casos, todos con el mismo calificador contra una gráfica propia en la respuesta |
-| `tests/docs/` | `LaVersion500` en `test_documentos.py` y los calificadores, sin modelo, en `test_evaluaciones.py` |
+| `README.md` | Las gráficas son la excepción a seguir los formatos del cerebro: sólo Datalum las dibuja |
+| `evals/entregables/` | Nueve casos, todos con el mismo calificador contra una gráfica propia en la respuesta. Los tres casos con archivos miran los que deja la corrida con un mismo patrón, y el informe se califica con el patrón contra el dibujo y con una rúbrica que lee el archivo |
+| `tests/docs/` | `LaVersion500` en `test_documentos.py`, con la sección de las gráficas y el párrafo de entregables fijos, y los calificadores, sin modelo, en `test_evaluaciones.py`, con un dibujo por cada alternativa del patrón y el cotejo de cada patrón con JavaScript |
 
 El código de los controles del cliente no cambia: sólo ven las llamadas a Datalum, y la
 regla es sobre lo que hace la aplicación. Ninguna herramienta entra en
@@ -60,6 +61,24 @@ El 21 de octubre:
 | Veinte mutantes: la Skill recupera el párrafo de la 4.x, pierde la propuesta por familia, el cliente sin imágenes, el documento o la excepción en «Who decides what», o nombra la herramienta de gráficas; un caso pierde el calificador contra el dibujo, o el patrón deja pasar un SVG o las barras de caracteres; el institucional deja de reprobar que proponga el indicador; vuelve el calificador que exigía el archivo HTML; el conector simulado pierde la herramienta de propuestas; `CONTROLES.md` recupera la fila vieja; la respuesta simulada de la gráfica repite el nombre que busca el calificador; el del indicador acepta una gráfica inventada; el cliente sin imágenes deja de reprobar la imagen; el informe se califica sin mirar el archivo; el tablero deja de reprobar la confirmación sin permiso; el creativo la exige; el caso del procedimiento viejo deja de usar la copia que pide HTML | Las pruebas o `check.py` detectan los veinte |
 | `claude plugin eval . --eval-dir evals-sin-conector --runs 1`, con el mismo CLI | No corrió: el CLI no tenía sesión iniciada en esta máquina |
 | Evaluaciones de `evals/entregables/` con modelo | No se ejecutaron |
+
+Tras la revisión del 21 de octubre, que encontró formas de dibujar que el patrón dejaba
+pasar, un informe que podía llevar una gráfica propia sin reprobar, la bandera del patrón
+sin fijar, la sección sin texto fijo, la familia del agente creativo con un valor que
+Datalum no sirve, el README sin la excepción de las gráficas y el aviso de que fundir la
+rama es publicar:
+
+| Qué | Resultado |
+|---|---|
+| `python3 scripts/check.py` | Pasa (95 herramientas) |
+| `python3 -m unittest discover -s tests -t .` | 165 pruebas, todas pasan |
+| `node --test tests/client/*.test.js` | 143 pruebas, todas pasan |
+| `python3 scripts/package.py` | Empaqueta |
+| `claude plugin validate .`, con el CLI 2.1.299 | Pasa, con el aviso de `logo` |
+| Las pruebas de estos arreglos sobre el árbol anterior a la revisión | Fallan diez pruebas, con 335 fallos entre ellas: los dibujos nuevos, los archivos de gráfica, la rúbrica del informe, la familia, el README y el aviso de fundir |
+| Diecisiete mutantes: el informe o los tres casos dejan de reprobar un `.html`; sale la rúbrica que lee el informe o su foco; el informe vuelve al patrón viejo; salen la franja de bloques, las barras cortas o el `div` con ancho; los nueve pierden la bandera `i`; entra una alternativa sin su dibujo; la franja de bloques se come una negrita; una viñeta de la sección permite dibujar; el párrafo de entregables también; una simulación vuelve a «creativo»; el README pierde la excepción; COMPATIBILIDAD pierde el aviso; los cuadros de colores pasan a un rango que JavaScript rechaza | Las pruebas detectan los diecisiete |
+| `claude plugin eval . --tag con-archivos --allow-tools Write`, `--tag entregables` y `--eval-dir evals-sin-conector`, los tres con `--max-cost-usd 0` | Cargan todos los casos sin error y no corre ningún modelo. Con un `focus` mal escrito la carga lo rechaza («invalid case.yaml»), así que los calificadores nuevos tienen la forma que lee la evaluación |
+| `claude plugin eval . --eval-dir evals-sin-conector --runs 1` con modelo | No corrió: el CLI sigue sin sesión iniciada en esta máquina |
 
 Sin comprobar: la conducta de un modelo con la Skill nueva en los nueve casos; si deja de
 dibujar cuando la aplicación le ofrece sus propias herramientas visuales, que las
