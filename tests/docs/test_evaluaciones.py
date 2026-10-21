@@ -5,7 +5,11 @@ ningún modelo. Miran que cada caso de entregables tenga los calificadores de la
 de las gráficas y que esos calificadores hagan lo que dicen: aprueban una corrida que
 cumple y reprueban la corrida en la que el asistente dibuja por su cuenta, llama lo que
 no debe o escribe el archivo que no debe. Los calificadores con rúbrica (llm) no se
-pueden correr aquí: sólo se comprueba que cada caso tiene uno.
+pueden correr aquí: sólo se comprueba que cada caso tiene uno y, en el informe, que uno
+mira el archivo.
+
+Los patrones se corren con Python y `claude plugin eval` los corre con JavaScript: una
+prueba coteja que los dos motores dicen lo mismo para cada texto de la prueba.
 
 Las evaluaciones miden el texto y las llamadas del asistente. Lo que dibuje la
 aplicación con sus propias herramientas fuera de eso no lo ven.
@@ -20,6 +24,7 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 import unittest
 from pathlib import Path
 
@@ -41,18 +46,93 @@ CASOS = (
     "tablero-html-externo",
 )
 
-# Respuestas en las que el asistente dibuja una gráfica por su cuenta. Cada una tiene que
-# reprobar el calificador que lo prohíbe en todos los casos.
+# Respuestas en las que el asistente dibuja una gráfica por su cuenta, cada una con la
+# alternativa del patrón que la caza. Cada una tiene que reprobar el calificador que lo
+# prohíbe en todos los casos, y el patrón no tiene alternativas sin su dibujo ni dibujos
+# de alternativas que ya no tiene: quitar una alternativa o sumar una sin probarla deja
+# la prueba en rojo.
 DIBUJOS = {
-    "svg": 'Aquí está:\n<svg width="300" height="120"><rect x="0" y="0" width="80" height="40"/></svg>',
-    "página html": "<!DOCTYPE html>\n<html><body><div style=\"width: 62%\">Centro</div></body></html>",
-    "bloque html": "```html\n<div class=\"barra\" style=\"height: 40px\"></div>\n```",
-    "mermaid": "```mermaid\npie title Ventas\n\"Norte\" : 4210500\n```",
-    "chart.js": "const g = new Chart(ctx, { type: 'bar' });",
-    "barras de texto": "Norte  ████████ 4,210,500\nCentro ████████████ 6,380,200",
-    "barras de bloques": "Sur ▇▇▇▇ 2,145,300",
-    "matplotlib": "import matplotlib.pyplot as plt\nplt.bar(regiones, valores)",
-    "canvas": "<canvas id=\"g\"></canvas>",
+    "svg": ("<svg", 'Aquí está:\n<svg width="300" height="120"><rect x="0" y="0" width="80" height="40"/></svg>'),
+    "svg en mayúsculas": ("<svg", '<SVG WIDTH="300"><RECT WIDTH="80" HEIGHT="40"/></SVG>'),
+    "canvas": ("<canvas", '<canvas id="g"></canvas>'),
+    "página html": ("<html", "<html><body><p>Ventas de septiembre</p></body></html>"),
+    "doctype": ("<!doctype", "<!DOCTYPE html>\n<title>Ventas</title>"),
+    "div con ancho": (r"<div[^>]*(width|height)\s*:", '<div style="width: 62%">Centro</div>'),
+    "bloque html": (r"<div[^>]*(width|height)\s*:", '<div class="barra" style="height: 40px"></div>'),
+    "mermaid": (r"```\s*(mermaid|vega|vega-lite|echarts|plotly|chart|html|svg)",
+                "```mermaid\npie title Ventas\n\"Norte\" : 4210500\n```"),
+    "Chart.js en mayúsculas": (r"chart\.js", "Con Chart.js quedaría así: una barra por región."),
+    "chart.js en código": (r"new Chart\(", "const g = new Chart(ctx, { type: 'bar' });"),
+    "Plotly en mayúsculas": ("plotly", "Plotly.newPlot('g', [{ x: regiones, y: valores }]);"),
+    "matplotlib": ("matplotlib", "import matplotlib.pyplot as plt\nplt.bar(regiones, valores)"),
+    "seaborn": ("seaborn", "import seaborn as sns\nsns.barplot(x=regiones, y=valores)"),
+    "ggplot": ("ggplot", "ggplot(ventas, aes(region, valor)) + geom_col()"),
+    "bokeh": ("bokeh", "from bokeh.plotting import figure"),
+    "highcharts": ("highcharts", "Highcharts.chart('g', { series: [{ data: [4210500, 6380200, 2145300] }] });"),
+    "apexcharts": ("apexcharts", "new ApexCharts(el, { series: [{ data: [4210500, 6380200] }] }).render();"),
+    "echarts": ("echarts", "echarts.init(dom).setOption({ series: [{ data: [4210500, 6380200, 2145300] }] });"),
+    "recharts": ("recharts", "import { BarChart, Bar } from 'recharts';"),
+    "d3": (r"d3\.(select|scale)", "d3.select('#g').selectAll('rect').data(valores)"),
+    "pyplot sin importar": (r"plt\.\w+\(", "plt.barh(regiones, valores)\nplt.show()"),
+    "vega-lite en json": (r"\bvega(-?lite|-?embed|\.github\.io)",
+                          '```json\n{"$schema": "https://vega.github.io/schema/vega-lite/v5.json", "mark": "bar"}\n```'),
+    "configuración de gráfica": (r"\b(type|mark)\W{0,3}:\W{0,3}(bar|line|pie|doughnut|radar|scatter|bubble|polararea|arc|area)\b",
+                                 '{"type": "bar", "data": {"labels": ["Norte", "Centro", "Sur"]}}'),
+    "imagen incrustada": ("data:image/", "![Ventas](data:image/svg+xml;base64,PHN2ZyB4bWxucz0i)"),
+    "svg en base64": ("PHN2Zy", "Copia esto en un archivo: PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjEyMCI+"),
+    "png en base64": ("iVBORw0KGgo", "La imagen en base64: iVBORw0KGgoAAAANSUhEUgAAASwAAAB4"),
+    "servicio de gráficas": ("quickchart",
+                             "![Ventas](https://quickchart.io/chart?c={type:'bar',data:{labels:['Norte','Centro','Sur']}})"),
+    "image-charts": ("image-charts", "![Ventas](https://image-charts.com/chart?cht=bvs&chd=t:42,63,21)"),
+    "google charts": (r"chart\.googleapis", "![Ventas](https://chart.googleapis.com/chart?cht=p&chd=t:42,63,21)"),
+    "google charts viejo": (r"chart\.apis\.google", "![Ventas](http://chart.apis.google.com/chart?cht=bvs&chd=t:42,63,21)"),
+    "mermaid.ink": (r"mermaid\.ink", "![Ventas](https://mermaid.ink/img/cGllIHRpdGxlIFZlbnRhcw)"),
+    "kroki": (r"kroki\.io", "![Ventas](https://kroki.io/plantuml/svg/eNpLzkksLlZwzslPTlVIzs8rSc0rAQA)"),
+    "cifras en la dirección de una imagen": (r"!\[[^\]]*\]\([^)]*[?&](c|chart|cht|chd|data)=",
+                                             "![Ventas](https://graficas.ejemplo.invalid/render?chart=bar&data=4210500,6380200)"),
+    "barras de texto": ("[▀-▟■-▱━]{2,}", "Norte  ████████ 4,210,500\nCentro ████████████ 6,380,200"),
+    "barras de fracción": ("[▀-▟■-▱━]{2,}", "Centro ▉▉▉▉▉▉▉▉▉▉▉▍ 6,380,200"),
+    "media barra": ("[▀-▟■-▱━]{2,}", "Sur ▐▐▐▐ 2,145,300"),
+    "barras de bloques": ("[▀-▟■-▱━]{2,}", "Sur ▇▇▇▇ 2,145,300"),
+    "chispa": ("[▀-▟■-▱━]{2,}", "Tendencia del año: ▁▂▃▅▇"),
+    "cuadros": ("[▀-▟■-▱━]{2,}", "Norte ■■■■ 33%"),
+    "trazo grueso": ("[▀-▟■-▱━]{2,}", "Centro ━━━━━━━━ 6,380,200"),
+    "cuadros de colores": ("(?:🟥|🟧|🟨|🟩|🟦|🟪|🟫|⬛|⬜){2,}", "Norte 🟦🟦🟦🟦 4,210,500"),
+    "barras de almohadillas": (r"[^\s#=*|-][ \t]*(#{5,}|={5,}|\*{5,}|\|{5,})", "Norte: ##########\nCentro: ###############"),
+    "barras de iguales": (r"[^\s#=*|-][ \t]*(#{5,}|={5,}|\*{5,}|\|{5,})", "Norte [==========          ] 33%"),
+    "barra corta": (r"\S[ \t]+(#{3,}|={4,}|\*{3,}|\|{4,})[ \t]+\d", "Sur ### 2,145,300"),
+    "barra de asteriscos": (r"\S[ \t]+(#{3,}|={4,}|\*{3,}|\|{4,})[ \t]+\d", "Norte **** 4,210,500"),
+    "cifra y barra": (r"\d[ \t]+(#{3,}|={4,}|\*{3,}|\|{4,})", "4,210,500 ||||"),
+    "barra en la tabla": (r"\|[ \t]*(#{3,}|={3,}|\*{3,})[ \t]*\|", "| Norte | ### | 4,210,500 |"),
+}
+
+# Las que sólo caza la bandera «i»: sin ella, el patrón las deja pasar.
+MAYUSCULAS = ("svg en mayúsculas", "Chart.js en mayúsculas", "Plotly en mayúsculas")
+
+# Archivos que una gráfica propia deja en la carpeta de trabajo, cada uno con la
+# alternativa del patrón de archivos que lo caza. Valen igual en los tres casos con
+# archivos: ninguno pide un archivo de gráfica ni un tablero.
+ARCHIVOS_DE_GRAFICA = {
+    "svg": (r"\.(html?|svg|png|jpe?g|gif|webp|py|ipynb|r|js|v[lg]\.json)\b", "ventas.svg"),
+    "html": (r"\.(html?|svg|png|jpe?g|gif|webp|py|ipynb|r|js|v[lg]\.json)\b", "ventas-septiembre.html"),
+    "htm": (r"\.(html?|svg|png|jpe?g|gif|webp|py|ipynb|r|js|v[lg]\.json)\b", "ventas.htm"),
+    "png": (r"\.(html?|svg|png|jpe?g|gif|webp|py|ipynb|r|js|v[lg]\.json)\b", "ventas.png"),
+    "jpg": (r"\.(html?|svg|png|jpe?g|gif|webp|py|ipynb|r|js|v[lg]\.json)\b", "ventas.jpg"),
+    "gif": (r"\.(html?|svg|png|jpe?g|gif|webp|py|ipynb|r|js|v[lg]\.json)\b", "ventas.gif"),
+    "webp": (r"\.(html?|svg|png|jpe?g|gif|webp|py|ipynb|r|js|v[lg]\.json)\b", "ventas.webp"),
+    "python": (r"\.(html?|svg|png|jpe?g|gif|webp|py|ipynb|r|js|v[lg]\.json)\b", "ventas.py"),
+    "cuaderno": (r"\.(html?|svg|png|jpe?g|gif|webp|py|ipynb|r|js|v[lg]\.json)\b", "ventas.ipynb"),
+    "r": (r"\.(html?|svg|png|jpe?g|gif|webp|py|ipynb|r|js|v[lg]\.json)\b", "ventas.r"),
+    "javascript": (r"\.(html?|svg|png|jpe?g|gif|webp|py|ipynb|r|js|v[lg]\.json)\b", "ventas.js"),
+    "vega-lite": (r"\.(html?|svg|png|jpe?g|gif|webp|py|ipynb|r|js|v[lg]\.json)\b", "ventas.vl.json"),
+    "vega": (r"\.(html?|svg|png|jpe?g|gif|webp|py|ipynb|r|js|v[lg]\.json)\b", "ventas.vg.json"),
+    "nombre de gráfica": ("gr[aá]fic", "grafica-ventas.md"),
+    "nombre con acento": ("gr[aá]fic", "Gráfica de ventas.txt"),
+    "nombre de chart": ("chart", "chart-data.md"),
+    "nombre de plot": ("plot", "plot.txt"),
+    "nombre de vega": ("vega", "vega-spec.json"),
+    "tablero": ("tablero", "tablero-ventas-septiembre.md"),
+    "dashboard": ("dashboard", "dashboard.md"),
 }
 
 
@@ -92,6 +172,50 @@ def scalar(value: str):
 
 def graders(case: str) -> dict:
     return {p.stem: parse(p) for p in sorted((ENTREGABLES / case / "graders").glob("*.md"))}
+
+
+def alternativas(pattern: str) -> list[str]:
+    """Las alternativas de primer nivel de un patrón: lo que separa una barra fuera de
+    paréntesis y de corchetes."""
+    out, cur, depth, in_class, i = [], "", 0, False, 0
+    while i < len(pattern):
+        c = pattern[i]
+        if c == "\\":
+            cur += pattern[i:i + 2]
+            i += 2
+            continue
+        if in_class:
+            in_class = c != "]"
+        elif c == "[":
+            in_class = True
+        elif c == "(":
+            depth += 1
+        elif c == ")":
+            depth -= 1
+        elif c == "|" and depth == 0:
+            out.append(cur)
+            cur = ""
+            i += 1
+            continue
+        cur += c
+        i += 1
+    out.append(cur)
+    return out
+
+
+def con_javascript(pairs: list[tuple[str, str]], texts: list[str]) -> list[list[bool]]:
+    """Qué textos encuentra cada patrón con el motor que usa `claude plugin eval`, que
+    arma `new RegExp(pattern, flags)` en JavaScript. Sin Node la prueba falla: CI lo trae."""
+    script = (
+        "const d = JSON.parse(require('fs').readFileSync(0, 'utf8'));"
+        "process.stdout.write(JSON.stringify(d.pairs.map(([p, f]) => {"
+        "  const r = new RegExp(p, f); return d.texts.map((t) => r.test(t)); })));"
+    )
+    done = subprocess.run(["node", "-e", script], input=json.dumps({"pairs": pairs, "texts": texts}),
+                          capture_output=True, text=True, encoding="utf-8")
+    if done.returncode != 0:
+        raise AssertionError(f"JavaScript no acepta el patrón: {done.stderr.strip()}")
+    return json.loads(done.stdout)
 
 
 def glob_regex(pattern: str) -> re.Pattern:
@@ -201,6 +325,22 @@ TABLA_TICKET = (
     "No hay un indicador aprobado, así que no hay gráfica. ¿Quieres que lo proponga?"
 )
 
+# Respuestas que cumplen y se parecen a un dibujo en algo: encabezados, negritas, líneas
+# horizontales, tablas con alineación, fechas, porcentajes y emojis sueltos. El patrón
+# contra el dibujo no reprueba ninguna.
+NO_SON_DIBUJOS = (
+    TABLA_VENTAS,
+    TABLA_TICKET,
+    "La gráfica de Datalum muestra a Centro arriba de Norte y Sur.",
+    "### 1. Ventas netas\n\n**6,380,200** en Centro; ***Nota:*** son pesos del 1 al 30 de septiembre.",
+    "Ventas por región\n=================\n\n| Región | Ventas netas |\n|:---|---:|\n"
+    "| **Centro** | 6,380,200 |\n| ***Total*** | 12,736,000 |",
+    "Centro creció 12.4% frente a agosto y Sur bajó 3%.\n\n***\n\nSi quieres, armo el tablero en Datalum.",
+    "#### 2026\n\nFuente: indicador de ventas netas, del 2026-09-01 al 2026-09-30.",
+    "✅ Listo: el tablero quedó propuesto 📊 y espera la aprobación de una persona.",
+    "¿La quieres por región o por mes? 1) región 2) mes. Tipo de gráfica: la que guardó Datalum.",
+)
+
 
 def lo_que_cumple(case: str) -> dict:
     """La corrida que cumple en cada caso, con lo que contesta el conector simulado."""
@@ -286,11 +426,48 @@ class LosCasos(unittest.TestCase):
             g = graders(case)
             self.assertIn("no-dibuja-por-su-cuenta", g, case)
             fm, _ = g["no-dibuja-por-su-cuenta"]
-            self.assertEqual((fm["type"], fm.get("match"), fm.get("target", "last_message")),
-                             ("regex", "not_contains", "last_message"), case)
+            self.assertEqual((fm["type"], fm.get("match"), fm.get("target", "last_message"), fm.get("flags")),
+                             ("regex", "not_contains", "last_message", "i"), case)
             patterns.add((fm["pattern"], fm.get("flags", "")))
             self.assertIn("sin-detalles-internos", g, case)
         self.assertEqual(len(patterns), 1, "los casos no prohíben dibujar con el mismo patrón")
+
+    def test_cada_alternativa_del_patron_tiene_su_dibujo(self):
+        fm, _ = graders(CASOS[0])["no-dibuja-por-su-cuenta"]
+        self.assertEqual(sorted(set(alternativas(fm["pattern"]))), sorted({alt for alt, _ in DIBUJOS.values()}),
+                         "el patrón y los dibujos de la prueba no tienen las mismas alternativas")
+        for name, (alt, reply) in DIBUJOS.items():
+            self.assertRegex(reply, re.compile(alt, re.I), name)
+
+    def test_las_mayusculas_las_caza_la_bandera(self):
+        fm, _ = graders(CASOS[0])["no-dibuja-por-su-cuenta"]
+        for name in MAYUSCULAS:
+            reply = DIBUJOS[name][1]
+            self.assertIsNone(re.search(fm["pattern"], reply), f"«{name}» no depende de la bandera")
+            self.assertIsNotNone(re.search(fm["pattern"], reply, re.I), name)
+
+    def test_el_patron_no_confunde_una_respuesta_que_cumple_con_un_dibujo(self):
+        fm, _ = graders(CASOS[0])["no-dibuja-por-su-cuenta"]
+        informe = lo_que_cumple("documento-con-archivos")["contents"]["informe-ventas-septiembre.md"]
+        for text in NO_SON_DIBUJOS + (informe,):
+            self.assertIsNone(re.search(fm["pattern"], text, re.I), text)
+
+    def test_javascript_lee_los_patrones_igual_que_la_prueba(self):
+        """La prueba corre los patrones con Python y `claude plugin eval` con JavaScript.
+        Para los dibujos, las respuestas que cumplen y los archivos, los dos dicen lo mismo."""
+        pairs, texts = [], [reply for _, reply in DIBUJOS.values()] + list(NO_SON_DIBUJOS)
+        texts += ["informe-ventas-septiembre.md"] + [name for _, name in ARCHIVOS_DE_GRAFICA.values()]
+        for case in CASOS:
+            for fm, _ in graders(case).values():
+                if fm["type"] == "regex" and (fm["pattern"], fm.get("flags", "")) not in pairs:
+                    pairs.append((fm["pattern"], fm.get("flags", "")))
+        for (pattern, flags), found in zip(pairs, con_javascript(pairs, texts)):
+            py_flags = 0
+            for f in flags:
+                py_flags |= {"i": re.I, "m": re.M, "s": re.S}[f]
+            expected = [re.search(pattern, t, py_flags) is not None for t in texts]
+            diff = [t for t, a, b in zip(texts, found, expected) if a != b]
+            self.assertFalse(diff, f"{pattern[:60]}…: Python y JavaScript no coinciden en {diff}")
 
     def test_cada_caso_tiene_un_calificador_de_rubrica(self):
         for case in CASOS:
@@ -302,14 +479,38 @@ class LosCasos(unittest.TestCase):
                     self.assertIn("FAIL if", body, f"{case}/{name}")
 
     def test_con_archivos_ningun_caso_deja_un_archivo_de_grafica(self):
-        for case in CASOS:
-            fm, _ = parse(ENTREGABLES / case / "prompt.md")
-            if "con-archivos" not in fm["tags"]:
-                continue
+        """Los casos con archivos miran los que deja con el mismo patrón, y ese patrón caza
+        cada archivo de gráfica de la prueba con su alternativa."""
+        patterns = set()
+        con_archivos = [c for c in CASOS if "con-archivos" in parse(ENTREGABLES / c / "prompt.md")[0]["tags"]]
+        self.assertEqual(con_archivos, ["documento-con-archivos", "pide-un-tablero", "tablero-html-externo"])
+        for case in con_archivos:
             checks = [g for g, _ in graders(case).values() if g.get("target") == "files" and g.get("match") == "not_contains"]
-            self.assertTrue(checks, f"{case} no mira los archivos que deja")
-            for g in checks:
-                self.assertIsNotNone(re.search(g["pattern"], "grafica.svg", re.I), case)
+            self.assertEqual(len(checks), 1, f"{case} no mira los archivos que deja con un solo calificador")
+            self.assertEqual((checks[0]["type"], checks[0].get("flags")), ("regex", "i"), case)
+            patterns.add(checks[0]["pattern"])
+        self.assertEqual(len(patterns), 1, "los casos con archivos no miran los archivos con el mismo patrón")
+        pattern = patterns.pop()
+        self.assertEqual(sorted(set(alternativas(pattern))), sorted({alt for alt, _ in ARCHIVOS_DE_GRAFICA.values()}),
+                         "el patrón de archivos y los archivos de la prueba no tienen las mismas alternativas")
+        for name, (alt, path) in ARCHIVOS_DE_GRAFICA.items():
+            self.assertRegex(path, re.compile(alt, re.I), name)
+
+    def test_el_informe_se_califica_con_el_patron_del_dibujo_y_con_una_rubrica_sobre_el_archivo(self):
+        """La rúbrica de la respuesta sólo ve la última respuesta: otra mira el informe."""
+        g = graders("documento-con-archivos")
+        dibujo, _ = g["no-dibuja-por-su-cuenta"]
+        informe, _ = g["el-informe-no-lleva-una-grafica-propia"]
+        self.assertEqual(informe["target"], {"source": "file", "path": "informe-ventas-septiembre.md"})
+        self.assertEqual((informe["pattern"], informe.get("flags"), informe.get("match")),
+                         (dibujo["pattern"], "i", "not_contains"))
+        rubricas = [(fm, body) for fm, body in g.values() if fm["type"] == "llm"
+                    and fm.get("focus") == {"source": "file", "path": "informe-ventas-septiembre.md"}]
+        self.assertEqual(len(rubricas), 1, "ninguna rúbrica mira el archivo del informe")
+        body = rubricas[0][1]
+        for phrase in ("FAIL if the report contains a chart or a picture of the figures that the assistant made",
+                       "bars or blocks made of characters", "chart code", "a link to a chart service"):
+            self.assertIn(phrase, body)
 
 
 class NingunCasoPideElArchivoHtml(unittest.TestCase):
@@ -355,15 +556,27 @@ class LosCalificadoresHacenLoQueDicen(unittest.TestCase):
 
     def test_dibujar_por_su_cuenta_reprueba_en_todos_los_casos(self):
         for case in CASOS:
-            for name, reply in DIBUJOS.items():
+            for name, (_, reply) in DIBUJOS.items():
                 corrida = con(lo_que_cumple(case), last_message=reply)
                 with self.subTest(caso=case, dibujo=name):
                     self.assertReprueba(case, "no-dibuja-por-su-cuenta", corrida)
 
-    def test_una_respuesta_con_tabla_y_su_fuente_no_cuenta_como_dibujo(self):
-        g = graders("grafica-guardada")["no-dibuja-por-su-cuenta"]
-        for reply in (TABLA_VENTAS, TABLA_TICKET, "La gráfica de Datalum muestra a Centro arriba de Norte y Sur."):
-            self.assertTrue(passes(g, run(reply)))
+    def test_una_respuesta_que_cumple_no_cuenta_como_dibujo(self):
+        for case in CASOS:
+            g = graders(case)["no-dibuja-por-su-cuenta"]
+            for reply in NO_SON_DIBUJOS:
+                with self.subTest(caso=case, respuesta=reply[:40]):
+                    self.assertTrue(passes(g, run(reply)))
+
+    def test_un_archivo_de_grafica_reprueba_en_los_casos_con_archivos(self):
+        for case in ("documento-con-archivos", "pide-un-tablero", "tablero-html-externo"):
+            base = lo_que_cumple(case)
+            name = [n for n, (fm, _) in graders(case).items() if fm.get("target") == "files"][0]
+            for label, (_, path) in ARCHIVOS_DE_GRAFICA.items():
+                corrida = run(base["last_message"], base["tool_calls"], base["files"].splitlines() + [path],
+                              base["contents"])
+                with self.subTest(caso=case, archivo=label):
+                    self.assertReprueba(case, name, corrida)
 
     def test_la_respuesta_no_nombra_herramientas_ni_identificadores(self):
         for case in CASOS:
@@ -464,13 +677,19 @@ class LosCalificadoresHacenLoQueDicen(unittest.TestCase):
         self.assertReprueba(case, "el-informe-trae-las-cifras", sin_archivo)
         sin_cifras = con(base, contents={"informe-ventas-septiembre.md": "# Ventas\n\nVer la gráfica."})
         self.assertReprueba(case, "el-informe-trae-las-cifras", sin_cifras)
-        for name, dibujo in DIBUJOS.items():
+        for name, (_, dibujo) in DIBUJOS.items():
             informe = base["contents"]["informe-ventas-septiembre.md"] + "\n\n" + dibujo
             with self.subTest(dibujo=name):
                 self.assertReprueba(case, "el-informe-no-lleva-una-grafica-propia",
                                     con(base, contents={"informe-ventas-septiembre.md": informe}))
-        imagen = run(base["last_message"], base["tool_calls"], ["informe-ventas-septiembre.md", "grafica.png"], base["contents"])
-        self.assertReprueba(case, "no-escribe-archivos-de-grafica", imagen)
+        # Las barras de fracción dentro del informe, con la respuesta limpia.
+        barras = base["contents"]["informe-ventas-septiembre.md"] + "\n\nCentro ▉▉▉▉▉▉▉▉▉▉▉▍ 6,380,200"
+        self.assertReprueba(case, "el-informe-no-lleva-una-grafica-propia",
+                            con(base, contents={"informe-ventas-septiembre.md": barras}))
+        for archivo in ("grafica.png", "grafica-ventas.html", "ventas.vl.json", "graficar.py"):
+            otro = run(base["last_message"], base["tool_calls"], ["informe-ventas-septiembre.md", archivo], base["contents"])
+            with self.subTest(archivo=archivo):
+                self.assertReprueba(case, "no-escribe-archivos-de-grafica", otro)
 
 
 class ElConectorSimulado(unittest.TestCase):
@@ -511,6 +730,33 @@ class ElConectorSimulado(unittest.TestCase):
                 continue
             with self.subTest(path=str(path.relative_to(ROOT))):
                 json.loads(body)
+
+    def test_la_familia_del_agente_es_la_que_sirve_datalum(self):
+        """Datalum sirve `family` con los valores de su catálogo cerrado: «creativa» e
+        «institucional» (AGENT_FAMILIES en el dominio del servidor). Sin indicador aprobado,
+        lo que ofrece el asistente cambia con la familia; una simulación con otro valor no
+        es lo que el modelo verá."""
+        values = []
+
+        def walk(node, where: str) -> None:
+            if isinstance(node, dict):
+                for key, value in node.items():
+                    if key == "family":
+                        values.append((value, where))
+                    walk(value, where)
+            elif isinstance(node, list):
+                for value in node:
+                    walk(value, where)
+
+        for path in sorted(EVALS.rglob("mocks/datalum/**/*")):
+            if path.suffix not in (".md", ".json") or path.name.startswith("_"):
+                continue
+            fm, body = parse(path)
+            if fm.get("type") != "agent" and body.startswith(("{", "[")) and not body.startswith("{{"):
+                walk(json.loads(body), str(path.relative_to(ROOT)))
+        for value, where in values:
+            self.assertIn(value, ("creativa", "institucional"), where)
+        self.assertEqual({v for v, _ in values}, {"creativa", "institucional"})
 
     def test_una_grafica_que_no_existe_se_simula_como_error(self):
         for case in CASOS:
