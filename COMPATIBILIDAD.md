@@ -123,7 +123,7 @@ El 19 de octubre:
 | Lo que el plugin pide vale con v2.256.0 y con los contratos guardados desde R12, y un rollback a v2.253.0, v2.254.0 o v2.255.0 no pide revisión | `LaOrdenDeLaPersona` en `tests/compat/test_automation.py` |
 | La orden es obligatoria en v2.256.0, no existe en v2.255.0 y el plugin no la manda si el esquema no la declara | El mismo |
 | El contrato de producción es el de v2.256.0, sus textos están leídos y la orden es cita y nunca destino | El mismo |
-| Las gráficas y los tableros ya no están en pausa | `test_el_plugin_ya_no_tiene_en_pausa_las_graficas_ni_los_tableros` en el mismo archivo, `tests/client/la-orden-de-la-persona.test.js` y `tests/client/adapter.test.js` |
+| Las gráficas y los tableros ya no están en pausa | `test_produccion_sirve_las_graficas_y_los_tableros_y_el_plugin_no_los_tiene_en_pausa` en el mismo archivo, `tests/client/la-orden-de-la-persona.test.js` y `tests/client/adapter.test.js` |
 | La orden no entra en la identidad de una escritura ni en el estado, un rechazo por falta de ella no deja la escritura incierta y soltar el agente con ella lo suelta | `tests/client/la-orden-de-la-persona.test.js` |
 | La Skill manda la orden donde el esquema la declara, suelta el agente con las palabras de la persona, dice qué hacer con una lista vieja y ya no pone en pausa las gráficas | `LaVersion400` en `tests/docs/test_documentos.py` |
 
