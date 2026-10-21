@@ -4,7 +4,9 @@ Connects AI assistants to [Datalum](https://datalum.ai), a governed data layer. 
 connects their Datalum account, chooses the agent their company's administrator granted
 them and asks for the work. The assistant loads that agent's brain from Datalum each
 time and follows it: its procedures, its limits, its output formats and its rules for
-memory.
+memory. Charts are the exception: they follow Datalum's rule and not the brain's
+output formats. Only Datalum draws charts of the company's data, and the assistant
+never draws one of its own.
 
 The plugin connects the person, prepares the session, recovers context and sends each
 request to the agent's procedure. Business rules and the tool catalog stay with Datalum,

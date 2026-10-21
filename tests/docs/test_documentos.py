@@ -279,11 +279,55 @@ class LaVersion400(unittest.TestCase):
         self.assertIn("Sin comprobar", section)
 
 
+# La sección de las gráficas y el párrafo de entregables, completos. Buscar frases deja
+# pasar una línea añadida que contradiga la regla; con el texto fijo, cualquier cambio
+# obliga a revisar esta prueba.
+SECCION_DE_LAS_GRAFICAS = """
+In this conversation only Datalum draws charts of the company's data: a saved chart, or
+an active indicator that Datalum's chart tool draws without saving anything. Never draw
+a chart yourself: not with the host's visuals, not with code, not in an HTML or image
+file, not with characters in your reply, and never with figures you made up. This holds
+even when an agent's procedure asks for a chart you draw or for a dashboard as an HTML
+file, as some older procedures still do.
+
+- The person asks for a chart and a saved chart or an active indicator covers it: ask
+  Datalum to draw it and show what it returns.
+- No approved indicator covers it, as with a direct query on the connector's tables or
+  the rows of a dataset: give the figures as text or as a table written in your reply,
+  with their source (what Datalum ran and for which period), and no chart. Then offer
+  the indicator, so that Datalum can draw the chart once a person activates it. An
+  institutional agent asks for it with a proposal that a person attends to; a creative
+  agent can propose the indicator itself. Either one is a change and needs the person's
+  go-ahead.
+- The host does not show images: give the figures as text or as a table, asking Datalum
+  for the indicator's figures or the dataset's rows, with their source.
+- Dashboards are built with Datalum's dashboard tools, never as a file.
+- A document you build with the host's tools, such as a Word file, a PDF or a
+  spreadsheet, carries the chart image Datalum returned where the host lets you put it
+  in the file; otherwise it carries Datalum's figures and tables.
+"""
+
+PARRAFO_DE_ENTREGABLES = """
+Deliverables follow the brain too, within "Charts come from Datalum". If the procedure
+needs something the host lacks, such as writing files, say what cannot be delivered
+here and offer what the host can do.
+"""
+
+
 class LaVersion500(unittest.TestCase):
     """En el chat sólo hay gráficas de Datalum: una gráfica guardada o un indicador
     activo, que dibuja su herramienta de gráficas. El asistente nunca dibuja una propia.
     La 5.0.0 da la vuelta al párrafo de la 4.x, que mandaba armar la gráfica o el tablero
     como archivo HTML con las herramientas de la aplicación."""
+
+    def test_la_seccion_de_las_graficas_dice_esto_y_nada_mas(self):
+        self.assertEqual(SKILL.count("## Charts come from Datalum\n"), 1)
+        section = SKILL.split("## Charts come from Datalum\n", 1)[1].split("\n## ", 1)[0]
+        self.assertEqual(flat(section), flat(SECCION_DE_LAS_GRAFICAS))
+
+    def test_el_parrafo_de_entregables_dice_esto_y_nada_mas(self):
+        start = SKILL.index("Deliverables follow the brain too")
+        self.assertEqual(flat(SKILL[start:SKILL.index("\n\n", start)]), flat(PARRAFO_DE_ENTREGABLES))
 
     def test_las_graficas_las_dibuja_datalum_y_el_asistente_nunca_una_propia(self):
         for phrase in (
@@ -362,10 +406,30 @@ class LaVersion500(unittest.TestCase):
         self.assertIn(flat("Esos dos nombres son provisionales"), section)
         self.assertIn("Sin comprobar", section)
 
+    def test_compatibilidad_avisa_que_fundir_la_rama_es_publicar(self):
+        section = flat(read("COMPATIBILIDAD.md").split("## Versión 5.0.0", 1)[1].split("\n## Versión 4.0.0", 1)[0])
+        self.assertIn(flat("La rama de esta versión no se funde en `main` hasta que esa versión de Datalum esté en\n"
+                           "producción, porque fundirla es publicarla"), section)
+        self.assertIn(flat("con la 5.0.0 en `main`, un despliegue así publicaría una 5.0.1 con esta Skill antes de\ntiempo"),
+                      section)
+        self.assertIn(flat("La etiqueta `v5.0.0` tampoco se empuja antes"), section)
+
+    def test_el_readme_dice_que_las_graficas_no_siguen_el_formato_del_cerebro(self):
+        text = flat(read("README.md"))
+        self.assertIn(flat("its procedures, its limits, its output formats and its rules for\nmemory. Charts are the "
+                           "exception: they follow Datalum's rule and not the brain's\noutput formats"), text)
+        self.assertIn(flat("Only Datalum draws charts of the company's data, and the assistant\nnever draws one of its own"), text)
+
     def test_mantener_dice_que_los_argumentos_del_indicador_son_provisionales(self):
         text = flat(read("MANTENER.md"))
         self.assertIn(flat("La excepción son `metric` y `group_by` de la\nherramienta de gráficas"), text)
         self.assertIn(flat("lo que la aplicación dibuje fuera de eso no\nlo ven"), text)
+
+    def test_mantener_dice_como_crece_el_patron_contra_el_dibujo(self):
+        text = flat(read("MANTENER.md"))
+        self.assertIn(flat("Quien suma una forma de dibujar al patrón suma su respuesta"), text)
+        self.assertIn(flat("El informe del caso con archivos se califica\ntambién con una rúbrica que lee el archivo"), text)
+        self.assertIn(flat("JavaScript, el motor de `claude plugin eval`, y por eso necesita Node"), text)
 
     def test_controles_dice_quien_sostiene_la_regla_de_las_graficas(self):
         text = read("CONTROLES.md")

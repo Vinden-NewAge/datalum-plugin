@@ -14,6 +14,14 @@ publica cuando producción sirva la versión de Datalum que deja a su herramient
 gráficas dibujar un indicador activo sin guardar nada y que dice la regla en sus
 instrucciones y en las descripciones de sus herramientas.
 
+La rama de esta versión no se funde en `main` hasta que esa versión de Datalum esté en
+producción, porque fundirla es publicarla. La comprobación tras un despliegue de
+producción parte de la versión que hay en `main` y, cuando cambian los archivos que se
+derivan del contrato, publica un parche sobre ella (`scripts/compatlib/pipeline.py`):
+con la 5.0.0 en `main`, un despliegue así publicaría una 5.0.1 con esta Skill antes de
+tiempo. La etiqueta `v5.0.0` tampoco se empuja antes, porque `release.yml` publica al
+recibirla.
+
 | Plugin | Servidor de Datalum | Contrato | Resultado |
 |---|---|---|---|
 | 5.0.0 | Datalum v2.257.0, commit `c28b2234227a`, el que sirve producción el 21 de octubre | `d47d691788ec`, guardado en `compat/contratos/c28b2234227a.json` y vigente en `compat/contrato-produccion.json` | Compatible en estructura: `check.py` pasa. La Skill no nombra herramientas ni argumentos nuevos y `compat/requisitos.json` no cambia. Con este servidor la herramienta de gráficas todavía no dibuja un indicador activo: la versión no se publica contra él |

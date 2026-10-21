@@ -242,6 +242,13 @@ modelo: cada uno aprueba una corrida que cumple y reprueba la suya. Las evaluaci
 miden el texto y las llamadas del asistente; lo que la aplicación dibuje fuera de eso no
 lo ven.
 
+Cada alternativa del patrón contra el dibujo tiene en esa prueba una respuesta que la
+caza. Quien suma una forma de dibujar al patrón suma su respuesta, y quitar una
+alternativa deja la prueba en rojo. Lo mismo vale para el patrón de archivos, que
+comparten los tres casos con archivos. El informe del caso con archivos se califica
+también con una rúbrica que lee el archivo. La prueba coteja cada patrón con
+JavaScript, el motor de `claude plugin eval`, y por eso necesita Node.
+
 ## Reglas
 
 - **Una sola Skill para todos los productos.** Dos copias del mismo texto terminan
