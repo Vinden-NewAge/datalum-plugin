@@ -23,9 +23,10 @@
       ]
     },
     {
-      "h": "a44703ba3c8234af3059e54edc5faa1cf6db375570ebe7839ced73e557092717",
+      "h": "81db200103d751280308507506d7f33927b4bec0c71133451aef4f7f6e4b16c3",
       "n": "apply_batch",
       "p": [
+        "change_note",
         "confirm",
         "connector",
         "cursor",
@@ -232,7 +233,7 @@
       ]
     },
     {
-      "h": "3a0e2a677b78f5ac1c1a56b8bcbcd2870303ce1e13b13c42e4496ab3754f81d1",
+      "h": "22e0bcfda19fe606515fccf16d912c668049620bf518f68299db8e79a0af9b6b",
       "n": "curate_table",
       "p": [
         "compact",
@@ -261,27 +262,28 @@
       ]
     },
     {
-      "h": "21b6b4ad9db9a66e110dfc853bae9721dc03a0107805751864851febcb54bd65",
+      "h": "2dcaf4543885535e128bff93fd20cc17a17610d1299f152a9cf321cf178bca19",
       "n": "describe_connector",
       "p": [
         "confirm",
         "connector",
         "description",
         "selection_context",
+        "time_zone",
         "user_request_quote"
       ],
       "r": [
-        "connector",
-        "description"
+        "connector"
       ]
     },
     {
-      "h": "08dde22f5c2b4b255dab85661f3a443f8dd07a9b8a7b7073477acc6687e7469a",
+      "h": "9d1ff1b796d3922d6ba2dd53e107a87ea7b7a02a5b0046e713c823d0ad7a801d",
       "n": "describe_dataset_fields",
       "p": [
         "confirm",
         "connector",
         "dataset",
+        "fields",
         "selection_context",
         "user_request_quote"
       ],
@@ -434,7 +436,7 @@
       ]
     },
     {
-      "h": "fdcd7b09b65209089a54216c6336254756ecfcd513cd83873418bed909cffc7e",
+      "h": "4d957ec487c9b4cc0fdbea68cb4190bc6bfb003a4af4f6572a14848f7048bfb9",
       "n": "get_catalog_state",
       "p": [
         "connector",
@@ -443,7 +445,7 @@
       "r": []
     },
     {
-      "h": "91da50b4a26375b4a8c5dfb43419d254efc1bc1cd066b2a3c322aa9ecf9c297c",
+      "h": "22ac5555f9362c9732126ce62863492d97b1e432221b9715ad87adb54cba133d",
       "n": "get_chart",
       "p": [
         "chart",
@@ -458,7 +460,24 @@
       ]
     },
     {
-      "h": "e2ad7710317bccb5a28b743ee1aca6c7e1816d92db9ad150251f131fbe8b1c95",
+      "h": "af763b5f528cabecc0ba68e8810eff7f292ee1d031310571a24fa0da12af8f23",
+      "n": "get_custom_dashboard",
+      "p": [
+        "connector",
+        "custom_dashboard",
+        "list_after",
+        "queries_from",
+        "selection_context",
+        "template_max_bytes",
+        "template_offset",
+        "version"
+      ],
+      "r": [
+        "connector"
+      ]
+    },
+    {
+      "h": "40c83a565f2b82525f71a84b70e3b511cd25173e5af3f31aee8a2db060567467",
       "n": "get_dashboard",
       "p": [
         "connector",
@@ -486,12 +505,13 @@
       ]
     },
     {
-      "h": "704d806a50c5256ee333a40f1888b04d61d93e4d9476ecac5c870cd5bb87d94a",
+      "h": "aaf30ebb2b2c996550044b2ecbdee1a56edd13fb525cbc2eed2d8d02e5d6a206",
       "n": "get_filter_set",
       "p": [
         "connector",
         "filter_set",
-        "selection_context"
+        "selection_context",
+        "version"
       ],
       "r": [
         "connector",
@@ -560,7 +580,7 @@
       ]
     },
     {
-      "h": "d71ebe19f430246547b881a189b33dfc2418bfec96895c3b44a074ba59226248",
+      "h": "370e64b00600273f07d0e69936d47c26275b5eb4bd856844fbd13993880cbc46",
       "n": "list_filter_sets",
       "p": [
         "connector",
@@ -639,7 +659,7 @@
       ]
     },
     {
-      "h": "347784a92d294cc8983b666fc07fa50aef0f18ffaafc2dd60fc70fd697030765",
+      "h": "10438cc7589a2e8c32fa721b2ef15a929f772b9104ef60a4adc91e7aeabb526f",
       "n": "list_templates",
       "p": [
         "connector",
@@ -694,10 +714,30 @@
       ]
     },
     {
-      "h": "a9539932a9b533dacdbc5395920fdf5c028ad7f63f48d4c2540ce1ebc8b9504f",
+      "h": "eb115670a2dd64a50791ce0b75036de4a9e06a134ca29bbf48f4c3ba964a8176",
+      "n": "propose_column_rename",
+      "p": [
+        "confirm",
+        "connector",
+        "new_name",
+        "old_name",
+        "selection_context",
+        "table",
+        "user_request_quote"
+      ],
+      "r": [
+        "connector",
+        "new_name",
+        "old_name",
+        "table"
+      ]
+    },
+    {
+      "h": "8178eff80dfa3d7790cef6a0a9ca5f1149eaecbf0a745b1e71512e4f71f295d2",
       "n": "propose_dataset",
       "p": [
         "business_definition",
+        "change_note",
         "confirm",
         "connector",
         "default_params",
@@ -705,6 +745,7 @@
         "name",
         "selection_context",
         "sql",
+        "tier",
         "user_request_quote"
       ],
       "r": [
@@ -714,11 +755,12 @@
       ]
     },
     {
-      "h": "0b0782db9c346a56b197099beefe1af729c5e1287e70ded6f3eb15a85070717c",
+      "h": "45c097f8d2e57f5c21a057c7e6524854dd45158db2c3c429ff7ea1faf11528dc",
       "n": "propose_dimension",
       "p": [
         "aliases",
         "business_definition",
+        "change_note",
         "closed_list",
         "confirm",
         "connector",
@@ -728,6 +770,7 @@
         "filter_only",
         "if_match",
         "name",
+        "new_name",
         "rolls_up_to",
         "selection_context",
         "source_column",
@@ -742,12 +785,13 @@
       ]
     },
     {
-      "h": "457f78b0abbe2b207a792de21e9abb396bdb7eb4f9eaabf2a3fb5ea05ee227ef",
+      "h": "04011f07c14c0f3dbefee2626f302477a9e1e3efb9eb49340af1c3afbca39eaf",
       "n": "propose_metric",
       "p": [
         "aggregation",
         "aliases",
         "business_definition",
+        "change_note",
         "confirm",
         "connector",
         "conversion_calculation",
@@ -762,6 +806,7 @@
         "metric_class",
         "metric_refs",
         "name",
+        "new_name",
         "non_additive_collapse",
         "non_additive_dimension",
         "non_additive_elements",
@@ -796,6 +841,24 @@
       "r": [
         "connector",
         "template_id"
+      ]
+    },
+    {
+      "h": "e01906ee1bf67d49f1b0a8e3b14cfda37391737a600198ce1cae45b5f6670b47",
+      "n": "propose_template",
+      "p": [
+        "change_note",
+        "confirm",
+        "connector",
+        "description",
+        "name",
+        "selection_context",
+        "slug",
+        "user_request_quote"
+      ],
+      "r": [
+        "connector",
+        "slug"
       ]
     },
     {
@@ -982,9 +1045,10 @@
       ]
     },
     {
-      "h": "c1f830d9411b07d3c55ff0cba8e482605413a223050da370a2b4792a6c34fbc2",
+      "h": "86521a5a7cf28a4c4007ec26d8ead6466c6a2d68670df4529dc41ecb944bb207",
       "n": "save_chart_edit",
       "p": [
+        "change_note",
         "change_summary",
         "chart",
         "confirm",
@@ -998,9 +1062,10 @@
       ]
     },
     {
-      "h": "89d7f0e606be98c59a4e639f2e4b7344e71580d74a8926bf491464739280940d",
+      "h": "5fa0dbbd2b2dc4a5603e6da997ce71f1187bb73d5d0abbd109d6a9fc13e78364",
       "n": "save_dashboard_edit",
       "p": [
+        "change_note",
         "change_summary",
         "confirm",
         "connector",
@@ -1045,7 +1110,7 @@
       ]
     },
     {
-      "h": "e3aca78e2982c4b0077c26743386fd57c4bdb3032379a74544172a230a6cec0e",
+      "h": "ca95e4feb49e3f36b0975115cc2aaa816e4b8d50ce514f3ff8c5dadc3d181005",
       "n": "set_connector_links",
       "p": [
         "confirm",
@@ -1113,7 +1178,7 @@
       ]
     },
     {
-      "h": "1e02b210fb9c00d0f3b92351fb3095b7cd18da5fdf6a10ce996f0a2fed2577e5",
+      "h": "e0eb113238883419fb21e30a8ed0f0eecad6a44d1f7bc60a8d08c8bfe7ae902a",
       "n": "test_custom_dashboard",
       "p": [
         "confirm",
@@ -1217,10 +1282,11 @@
       ]
     },
     {
-      "h": "981ffa0eeb7e7a824c1d283a8a708f5162a4f41f7f8cde22b3236faa396dcaf4",
+      "h": "810847f3743ecfdbba29c866363b777dfe6932e6c40573a411737ed8e207c356",
       "n": "upsert_chart",
       "p": [
         "business_definition",
+        "change_note",
         "chart_type",
         "confirm",
         "connector",
@@ -1238,9 +1304,11 @@
       ]
     },
     {
-      "h": "7f2a7571981eb777beb9472d4314f6a972c350823672810dd78989e4a83175b3",
+      "h": "97073648babd7f6c78d10697a6bd642ecdf37fc39f2f3c5bcc58465cf1687826",
       "n": "upsert_custom_dashboard",
       "p": [
+        "business_definition",
+        "change_note",
         "confirm",
         "connector",
         "contract_version",
@@ -1260,10 +1328,11 @@
       ]
     },
     {
-      "h": "1dbbe8e5dea84fb660abcaa5fded769155c8243829bcbc979abd749de3eaa65e",
+      "h": "9d4e1ca1d6c6152f470624d8942e3e03c420ff1b1737d9b6b9a4d336992f4b31",
       "n": "upsert_dashboard",
       "p": [
         "business_definition",
+        "change_note",
         "confirm",
         "connector",
         "if_match",
@@ -1279,9 +1348,11 @@
       ]
     },
     {
-      "h": "4f1a898557da09e221ac4a0a34fccf1c1a1aab0c26234e64875bd640777e46cb",
+      "h": "93e5e020b44c6935133998cbaf48c494e17e3d7b8ea27c6f5edf9f04099b317d",
       "n": "upsert_filter_set",
       "p": [
+        "business_definition",
+        "change_note",
         "confirm",
         "connector",
         "filters",
@@ -1421,7 +1492,7 @@
       ]
     }
   ],
-  "huella": "c6f03b5854d97763e088ba65e67eb26312f8c00aac0a24bed90ff3df714eefa1",
+  "huella": "d47d691788ec7852b7d0488081aa0618ba9e5690794ce0e6aee8a6b5eca8032c",
   "instrucciones_sha256": "8b62c3c709f3814c8a696ea99d8e6f775830aa35a389944b4421f7b07ed6619a",
   "protocolo": "2025-06-18"
 }

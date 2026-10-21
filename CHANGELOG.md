@@ -4,6 +4,22 @@ Cada versión del plugin de Datalum dice qué cambia para quien usa la Skill, co
 versión del servidor se comprobó y qué hay que hacer para recibirla. La más reciente va
 primero.
 
+## [4.0.1] - 2026-10-21
+
+Versión generada por la comprobación automática tras un despliegue de Datalum.
+
+### Cambiado
+
+- Los controles del cliente siguen al catálogo del servidor: se regeneró la lista de herramientas que usan los controles.
+
+### Servidor
+
+- Comprobada contra el despliegue v2.257.0 de producción (contrato `d47d691788ec`).
+
+### Cómo recibirla
+
+- Como cualquier versión: los pasos por aplicación están en `ACTUALIZAR.md`.
+
 ## [4.0.0] - 2026-10-19
 
 Datalum v2.256.0 exige en toda escritura la orden de la persona, con sus palabras, y
