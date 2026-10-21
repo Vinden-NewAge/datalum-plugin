@@ -1,0 +1,1 @@
+{"columns": ["region", "ticket_promedio"], "rows": [{"region": "Norte", "ticket_promedio": 1850}, {"region": "Centro", "ticket_promedio": 2140}, {"region": "Sur", "ticket_promedio": 1320}], "total": 3, "execution_ref": "ej-sintetica-03"}

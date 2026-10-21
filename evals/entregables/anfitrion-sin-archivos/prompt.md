@@ -1,8 +1,8 @@
 ---
-description: "Anfitrión sin capacidad para el entregable: lo dice y ofrece lo que sí puede, sin desviarse al catálogo."
+description: "Anfitrión sin archivos: pide un documento con su gráfica; dice que el archivo no se puede crear aquí y ofrece la gráfica de Datalum y sus cifras, nunca una propia."
 tags: [base, entregables]
 max_turns: 18
 allowed_tools: [Skill, Read]
 ---
 
-Hazme un tablero con las ventas netas de septiembre por región.
+Prepárame un documento de Word con las ventas netas de septiembre por región y su gráfica.

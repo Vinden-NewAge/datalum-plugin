@@ -1,0 +1,1 @@
+{"concept_id": "agents/builder/superpoderes/tableros_de_ventas", "frontmatter": {"type": "Skill", "title": "Tableros de ventas"}, "body": "# Tableros de ventas\n\nUn tablero de ventas del mes lleva la gráfica de ventas netas por región y una nota con el periodo.", "bytes_totales": 140, "bytes_servidos": 140, "offset": 0, "truncado": false, "links": []}

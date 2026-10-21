@@ -733,7 +733,7 @@
   },
   {
    "name": "render_chart",
-   "description": "[Lee] Devuelve la imagen de una gráfica del catálogo de Datalum.",
+   "description": "[Lee] Dibuja una gráfica de Datalum y devuelve su imagen: una gráfica guardada del catálogo (`chart`) o un indicador activo (`metric`, con su desglose, detalle de tiempo y filtros), que dibuja sin guardar nada. Dibuja la versión que se sirve.",
    "inputSchema": {
     "type": "object",
     "properties": {
@@ -742,7 +742,19 @@
       "description": "Slug del conector."
      },
      "chart": {
-      "type": "string"
+      "type": "string",
+      "description": "Una gráfica guardada. Sin `chart`, nombra un indicador activo en `metric`."
+     },
+     "metric": {
+      "type": "string",
+      "description": "Un indicador activo, para dibujarlo sin guardar una gráfica."
+     },
+     "group_by": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "description": "Con `metric`: el desglose."
      },
      "version_id": {
       "type": "string"
@@ -790,8 +802,7 @@
      }
     },
     "required": [
-     "connector",
-     "chart"
+     "connector"
     ],
     "additionalProperties": false
    },
@@ -2404,6 +2415,155 @@
      "connector",
      "name",
      "template"
+    ],
+    "additionalProperties": false
+   },
+   "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": true,
+    "idempotentHint": false,
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "submit_proposal",
+   "description": "[Escribe] Envía una propuesta de mejora para que una persona la atienda en el panel de Datalum. Antes de enviarla, enséñale el texto a la persona, dile quién la verá y espera su confirmación. La ven la empresa del agente, quien puede arreglarla y Datalum. Lleva la orden textual de la persona en `user_request_quote`.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "title": {
+      "type": "string",
+      "description": "Título corto y accionable: el hecho en una línea."
+     },
+     "kind": {
+      "type": "string",
+      "enum": [
+       "agente",
+       "datalum"
+      ],
+      "description": "Opcional. ¿Quién puede arreglarlo? Omitido: agente."
+     },
+     "context": {
+      "type": "string",
+      "description": "Qué estaba haciendo la persona y por qué surge."
+     },
+     "what_happens": {
+      "type": "string",
+      "description": "El hecho que se ve hoy, sin la solución."
+     },
+     "where": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "description": "Dónde se ve, una línea por sitio."
+     },
+     "what_is_asked": {
+      "type": "string",
+      "description": "Qué se pide."
+     },
+     "how_to_verify": {
+      "type": "string",
+      "description": "Cómo se comprueba que quedó."
+     },
+     "body": {
+      "type": "string",
+      "description": "Opcional. Detalle libre."
+     },
+     "selection_context": {
+      "type": "string",
+      "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
+     },
+     "user_request_quote": {
+      "type": "string",
+      "description": "La orden de la persona para este cambio, con sus palabras textuales copiadas de la conversación."
+     }
+    },
+    "required": [
+     "title",
+     "user_request_quote"
+    ],
+    "additionalProperties": false
+   },
+   "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": false,
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "propose_metric",
+   "description": "[Escribe] Crea o edita un indicador (por nombre) con su definición, su significado y cómo se lee el número. El alta nace en propuesto y lo activa una persona en el panel. Sin `confirm: true` sólo previsualiza. Lleva la orden textual de la persona en `user_request_quote`.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "connector": {
+      "type": "string",
+      "description": "Slug del conector."
+     },
+     "name": {
+      "type": "string",
+      "description": "Nombre del indicador, clave única en el conector."
+     },
+     "business_definition": {
+      "type": "string",
+      "description": "Qué significa el indicador, en palabras de negocio."
+     },
+     "definition": {
+      "type": "object",
+      "description": "La definición estructurada: tabla de origen, medida y agregación."
+     },
+     "source_table": {
+      "type": "string"
+     },
+     "aggregation": {
+      "type": "string",
+      "enum": [
+       "sum",
+       "avg",
+       "count",
+       "count_distinct",
+       "min",
+       "max",
+       "ratio",
+       "derived"
+      ]
+     },
+     "unit": {
+      "type": "string"
+     },
+     "currency": {
+      "type": "string"
+     },
+     "value_format": {
+      "type": "string"
+     },
+     "valid_dimensions": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "period_date_column": {
+      "type": "string"
+     },
+     "confirm": {
+      "type": "boolean",
+      "description": "true = deja la propuesta. Sin esto, previsualiza."
+     },
+     "selection_context": {
+      "type": "string",
+      "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
+     },
+     "user_request_quote": {
+      "type": "string",
+      "description": "La orden de la persona para este cambio, con sus palabras textuales copiadas de la conversación."
+     }
+    },
+    "required": [
+     "connector",
+     "name"
     ],
     "additionalProperties": false
    },

@@ -1,0 +1,1 @@
+{"schema_version": "8.0.0", "connector": "comercial", "metrics": [{"name": "ventas_netas", "desc": "Ventas netas facturadas", "status": "activo"}], "datasets": [{"name": "ticket_por_region", "desc": "Ticket promedio por región y mes", "status": "activo"}], "charts": [], "dashboards": []}

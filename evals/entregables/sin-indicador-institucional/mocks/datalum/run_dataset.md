@@ -1,0 +1,1 @@
+{"dataset": "ticket_por_region", "rows": [{"region": "Norte", "mes": "2026-09", "ticket_promedio": 1850}, {"region": "Centro", "mes": "2026-09", "ticket_promedio": 2140}, {"region": "Sur", "mes": "2026-09", "ticket_promedio": 1320}], "unidad": "MXN", "total": 3, "execution_ref": "ej-sintetica-02"}

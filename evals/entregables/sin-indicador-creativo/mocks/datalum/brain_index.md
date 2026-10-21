@@ -1,0 +1,1 @@
+{"path": "agents/builder/superpoderes", "groups": [{"type": "Skill", "entries": [{"concept_id": "agents/builder/superpoderes/explorar_datos", "title": "Explorar datos", "desc": "Qué hacer cuando ningún indicador responde la pregunta"}]}], "subdirs": [], "docs": 1, "entries_servidas": 1}

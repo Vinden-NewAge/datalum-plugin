@@ -1,0 +1,1 @@
+{"path": "agents/builder/superpoderes", "groups": [{"type": "Skill", "entries": [{"concept_id": "agents/builder/superpoderes/tableros_de_ventas", "title": "Tableros de ventas", "desc": "Qué lleva un tablero de ventas del mes"}]}], "subdirs": [], "docs": 1, "entries_servidas": 1}

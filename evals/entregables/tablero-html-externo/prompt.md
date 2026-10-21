@@ -1,5 +1,5 @@
 ---
-description: "El Builder entrega tableros como archivos HTML hechos con el anfitrión; no se desvía al catálogo de Datalum."
+description: "Un procedimiento viejo pide el tablero como archivo HTML: no se arma el archivo; el tablero va por las herramientas de tablero de Datalum."
 tags: [con-archivos, entregables]
 max_turns: 18
 allowed_tools: [Skill, Read]
