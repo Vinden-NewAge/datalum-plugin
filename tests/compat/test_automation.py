@@ -631,16 +631,25 @@ class PausedFamilies(unittest.TestCase):
         summary = summary_of([tool("render_chart", ["name"], ["name"])])
         self.assertNotIn("en_pausa", contract.derive_facts(summary, {}))
 
-    def test_el_plugin_ya_no_tiene_en_pausa_las_graficas_ni_los_tableros(self):
-        """La 4.0.0 levanta la pausa de la 2.0.4: el contrato vigente sigue sirviendo las
-        14 herramientas de esas familias y ni los requisitos ni los hechos del cliente
-        las niegan."""
+    # Las herramientas de gráficas y tableros que servía Datalum cuando la 4.0.0 levantó
+    # la pausa. Un despliegue posterior puede sumar otras de las mismas familias.
+    GRAFICAS_Y_TABLEROS_DE_LA_4_0_0 = (
+        "export_chart_csv", "get_chart", "get_dashboard", "render_chart", "run_dashboard",
+        "save_chart_edit", "save_dashboard_edit", "set_chart_options", "test_chart",
+        "test_custom_dashboard", "test_dashboard", "upsert_chart", "upsert_custom_dashboard",
+        "upsert_dashboard",
+    )
+
+    def test_produccion_sirve_las_graficas_y_los_tableros_y_el_plugin_no_los_tiene_en_pausa(self):
+        """La 4.0.0 levanta la pausa de la 2.0.4: el contrato de producción sigue sirviendo
+        al menos las 14 herramientas de esas familias que había entonces, sin importar
+        cuántas sume después, y ni los requisitos ni los hechos del cliente las niegan."""
         root = Path(__file__).resolve().parents[2]
         facts = json.loads((root / "client/contract-facts.json").read_text(encoding="utf-8"))
         requirements = json.loads((root / "compat/requisitos.json").read_text(encoding="utf-8"))
-        names = [t["n"] for t in json.loads((root / "compat/contrato-produccion.json").read_text(encoding="utf-8"))["herramientas"]]
-        served = sorted(n for n in names if "chart" in n.split("_") or "dashboard" in n.split("_"))
-        self.assertEqual(len(served), 14)
+        names = {t["n"] for t in json.loads((root / "compat/contrato-produccion.json").read_text(encoding="utf-8"))["herramientas"]}
+        self.assertEqual(len(self.GRAFICAS_Y_TABLEROS_DE_LA_4_0_0), 14)
+        self.assertEqual(sorted(set(self.GRAFICAS_Y_TABLEROS_DE_LA_4_0_0) - names), [], "producción dejó de servirlas")
         self.assertNotIn("en_pausa", requirements)
         self.assertNotIn("en_pausa", facts)
 
@@ -782,9 +791,16 @@ class LaOrdenDeLaPersona(unittest.TestCase):
             self.assertIn("user_request_quote", need[name]["obligatorios"], name)
             self.assertNotIn("user_request_quote", need[name]["usa"], name)
 
-    def test_el_contrato_de_produccion_es_el_de_v2_256_0_y_sus_textos_estan_revisados(self):
-        summary = self.load("compat/contrato-produccion.json")
-        self.assertEqual(summary, self.load(self.V2_256_0))
+    def test_el_contrato_de_produccion_es_uno_de_los_guardados_y_sus_textos_estan_revisados(self):
+        """Sea cual sea el despliegue que sirve producción, su contrato es uno de los
+        guardados en compat/contratos/, y sus instrucciones y las definiciones de lo que
+        el plugin usa están leídas contra la Skill."""
+        summary = contract.validate(self.load("compat/contrato-produccion.json"))
+        guardados = [
+            path.name for path in sorted((self.ROOT / "compat/contratos").glob("*.json"))
+            if self.load(f"compat/contratos/{path.name}") == summary
+        ]
+        self.assertNotEqual(guardados, [], f"el contrato {summary['huella'][:12]} de producción no está en compat/contratos/")
         comparison = contract.compare(summary, self.load("compat/requisitos.json"), current_facts=self.load("client/contract-facts.json"))
         self.assertEqual(comparison["incompatible"], [])
         self.assertEqual(comparison["revision"], [])
