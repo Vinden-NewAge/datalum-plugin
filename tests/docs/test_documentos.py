@@ -345,6 +345,28 @@ class LaVersion500(unittest.TestCase):
         named = set(re.findall(r"`([a-z]+(?:_[a-z]+)+)`", SKILL)) & tools
         self.assertLessEqual(len(named), 10)
 
+    def test_el_changelog_dice_por_que_sube_el_numero_mayor_y_cuando_se_publica(self):
+        text = read("CHANGELOG.md")
+        section = flat(text.split("## [5.0.0]", 1)[1].split("\n## [4.0.1]", 1)[0])
+        self.assertIn(flat("por eso sube el número mayor"), section)
+        self.assertIn(flat("Se publica cuando producción sirva la versión\nde Datalum que dibuja un indicador activo"), section)
+        self.assertIn(flat("Sale la guía de armar el tablero como archivo HTML"), section)
+        self.assertIn("`d47d691788ec`", section)
+
+    def test_compatibilidad_dice_contra_que_se_preparo_y_lo_que_queda_sin_comprobar(self):
+        text = read("COMPATIBILIDAD.md")
+        self.assertIn("## Versión 5.0.0", text)
+        section = flat(text.split("## Versión 5.0.0", 1)[1].split("\n## Versión 4.0.0", 1)[0])
+        self.assertIn("`d47d691788ec`", section)
+        self.assertIn(flat("la versión no se publica contra él"), section)
+        self.assertIn(flat("Esos dos nombres son provisionales"), section)
+        self.assertIn("Sin comprobar", section)
+
+    def test_mantener_dice_que_los_argumentos_del_indicador_son_provisionales(self):
+        text = flat(read("MANTENER.md"))
+        self.assertIn(flat("La excepción son `metric` y `group_by` de la\nherramienta de gráficas"), text)
+        self.assertIn(flat("lo que la aplicación dibuje fuera de eso no\nlo ven"), text)
+
     def test_controles_dice_quien_sostiene_la_regla_de_las_graficas(self):
         text = read("CONTROLES.md")
         self.assertIn("| En el chat sólo hay gráficas de Datalum |", text)

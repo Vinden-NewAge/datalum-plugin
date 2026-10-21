@@ -4,6 +4,61 @@ Qué versión del plugin se comprobó contra qué, y cómo. «Comprobado» quier
 algo se ejecutó y dio ese resultado. Lo que sólo consta en la documentación de un
 producto se marca «Sin comprobar».
 
+## Versión 5.0.0
+
+Preparada el 21 de octubre de 2026 sobre la 4.0.1, sin publicar. Da la vuelta al párrafo
+de entregables: en la conversación sólo hay gráficas de Datalum, una gráfica guardada o un
+indicador activo, y el asistente nunca dibuja una propia. La 4.x mandaba lo contrario
+cuando el procedimiento del agente lo pedía, así que la versión sube el número mayor. Se
+publica cuando producción sirva la versión de Datalum que deja a su herramienta de
+gráficas dibujar un indicador activo sin guardar nada y que dice la regla en sus
+instrucciones y en las descripciones de sus herramientas.
+
+| Plugin | Servidor de Datalum | Contrato | Resultado |
+|---|---|---|---|
+| 5.0.0 | Datalum v2.257.0, commit `c28b2234227a`, el que sirve producción el 21 de octubre | `d47d691788ec`, guardado en `compat/contratos/c28b2234227a.json` y vigente en `compat/contrato-produccion.json` | Compatible en estructura: `check.py` pasa. La Skill no nombra herramientas ni argumentos nuevos y `compat/requisitos.json` no cambia. Con este servidor la herramienta de gráficas todavía no dibuja un indicador activo: la versión no se publica contra él |
+| 5.0.0 | La versión de Datalum que dibuja el indicador activo y dice la regla | Todavía no existe | Sin comprobar. Sus instrucciones nuevas dejarán la comprobación de ese despliegue en `revision_requerida`: el PR que la cierre es el de esta versión, con la huella de las instrucciones leídas en `instrucciones_revisadas` y, si cambia la definición de `use_agent`, la suya en `definiciones_revisadas` |
+
+### Dónde vive la regla
+
+| Superficie | Qué dice |
+|---|---|
+| `skills/datalum/SKILL.md` | La sección «Charts come from Datalum» y dos frases en «Who decides what»: las gráficas son la excepción a seguir el cerebro, y las herramientas visuales de la aplicación no dibujan gráficas de los datos de la empresa. El párrafo de entregables queda en una frase que remite a la sección |
+| `CONTROLES.md` | La fila «En el chat sólo hay gráficas de Datalum»: la sostienen la Skill y las instrucciones de Datalum; ni el cliente ni Datalum pueden impedir que la aplicación dibuje |
+| `evals/entregables/` | Nueve casos, todos con el mismo calificador contra una gráfica propia en la respuesta |
+| `tests/docs/` | `LaVersion500` en `test_documentos.py` y los calificadores, sin modelo, en `test_evaluaciones.py` |
+
+El código de los controles del cliente no cambia: sólo ven las llamadas a Datalum, y la
+regla es sobre lo que hace la aplicación. Ninguna herramienta entra en
+`compat/requisitos.json`: la Skill dice la regla sin nombrarlas, y los nombres los traen
+las descripciones y el contexto del agente que sirve Datalum. El conector simulado de las
+evaluaciones sí las trae: suma la herramienta de propuestas y la de proponer un
+indicador, con los argumentos del contrato guardado, y la de gráficas acepta `metric` y
+`group_by` para un indicador activo. Esos dos nombres son provisionales: cuando
+producción sirva los suyos, se cambian por los del contrato y se vacía la lista de
+provisionales de `tests/docs/test_evaluaciones.py`.
+
+### Qué se ejecutó
+
+El 21 de octubre:
+
+| Qué | Resultado |
+|---|---|
+| `python3 scripts/check.py` | Pasa (95 herramientas) |
+| `python3 -m unittest discover -s tests -t .` | 153 pruebas, todas pasan |
+| `node --test tests/client/*.test.js` | 143 pruebas, todas pasan |
+| `claude plugin validate .`, con el CLI de la aplicación de escritorio (2.1.299) | Pasa, con el aviso de `logo` que ya tenía |
+| Las pruebas nuevas de `tests/docs/` sobre el árbol de `origin/main` (4.0.1) | Fallan: 157 fallos y 5 errores en 83 pruebas. Sobre esta versión pasan las 83 |
+| Veinte mutantes: la Skill recupera el párrafo de la 4.x, pierde la propuesta por familia, el cliente sin imágenes, el documento o la excepción en «Who decides what», o nombra la herramienta de gráficas; un caso pierde el calificador contra el dibujo, o el patrón deja pasar un SVG o las barras de caracteres; el institucional deja de reprobar que proponga el indicador; vuelve el calificador que exigía el archivo HTML; el conector simulado pierde la herramienta de propuestas; `CONTROLES.md` recupera la fila vieja; la respuesta simulada de la gráfica repite el nombre que busca el calificador; el del indicador acepta una gráfica inventada; el cliente sin imágenes deja de reprobar la imagen; el informe se califica sin mirar el archivo; el tablero deja de reprobar la confirmación sin permiso; el creativo la exige; el caso del procedimiento viejo deja de usar la copia que pide HTML | Las pruebas o `check.py` detectan los veinte |
+| `claude plugin eval . --eval-dir evals-sin-conector --runs 1`, con el mismo CLI | No corrió: el CLI no tenía sesión iniciada en esta máquina |
+| Evaluaciones de `evals/entregables/` con modelo | No se ejecutaron |
+
+Sin comprobar: la conducta de un modelo con la Skill nueva en los nueve casos; si deja de
+dibujar cuando la aplicación le ofrece sus propias herramientas visuales, que las
+evaluaciones no ven porque miden el texto y las llamadas; el contrato de la versión de
+Datalum con la que se publica; y si la imagen que devuelve la herramienta de gráficas
+puede entrar en un documento que arma el asistente en cada aplicación.
+
 ## Versión 4.0.0
 
 Preparada el 19 de octubre de 2026 con Datalum v2.256.0 (commit `cbdf86b096d1`), que

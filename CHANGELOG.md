@@ -4,6 +4,67 @@ Cada versión del plugin de Datalum dice qué cambia para quien usa la Skill, co
 versión del servidor se comprobó y qué hay que hacer para recibirla. La más reciente va
 primero.
 
+## [5.0.0] - 2026-10-21
+
+En la conversación sólo hay gráficas de Datalum. La 4.x mandaba armar la gráfica o el
+tablero como archivo HTML cuando el procedimiento del agente lo pedía; la 5.0.0 dice lo
+contrario, y por eso sube el número mayor. Se publica cuando producción sirva la versión
+de Datalum que dibuja un indicador activo y dice la regla en sus instrucciones.
+
+### Cambiado
+
+- Las gráficas de los datos de la empresa las dibuja Datalum: una gráfica guardada o un
+  indicador activo, que su herramienta de gráficas dibuja sin guardar nada. El asistente
+  nunca dibuja una propia: ni con las herramientas visuales de la aplicación, ni con
+  código, ni en un archivo HTML o de imagen, ni con caracteres en la respuesta, ni con
+  cifras inventadas. Vale también cuando el procedimiento del agente pide un archivo
+  HTML, como todavía lo piden copias viejas del cerebro.
+- Sin indicador aprobado, como en una consulta directa o en las filas de un conjunto de
+  datos, el asistente da las cifras en texto o en una tabla escrita, con su fuente y sin
+  gráfica, y ofrece el indicador: un agente institucional lo pide con una propuesta que
+  atiende una persona y uno creativo puede proponerlo. Las dos cosas son cambios y piden
+  el visto bueno de la persona.
+- Si la aplicación no muestra imágenes, el asistente da las cifras del indicador o las
+  filas del conjunto en texto o en tabla, con su fuente.
+- Los tableros se arman con las herramientas de tablero de Datalum, como hasta ahora, y
+  nunca como archivo. Sale la guía de armar el tablero como archivo HTML.
+- Un documento que arma el asistente con las herramientas de la aplicación (Word, PDF u
+  hoja de cálculo) lleva la imagen de la gráfica que devolvió Datalum donde la aplicación
+  deja ponerla y, si no, las cifras y tablas de Datalum.
+- La Skill dice la regla sin nombrar herramientas: sigue nombrando seis.
+- `CONTROLES.md` dice quién sostiene la regla: la Skill y las instrucciones de Datalum.
+  Ni el cliente ni Datalum pueden impedir que la aplicación dibuje.
+
+### Evaluaciones
+
+- Se reescriben `entregables/tablero-html-externo`, que ahora comprueba que un
+  procedimiento viejo no hace armar el archivo, y `entregables/anfitrion-sin-archivos`,
+  que pide un documento con su gráfica sin poder escribir archivos. Entran siete casos:
+  gráfica guardada, indicador activo sin gráfica, sin indicador aprobado para el agente
+  institucional y para el creativo, cliente sin imágenes, pide un tablero y documento con
+  archivos. Todos reprueban una gráfica dibujada por el asistente en su respuesta.
+- `tests/docs/test_evaluaciones.py` corre esos calificadores sin modelo: aprueban una
+  corrida que cumple y reprueban la que dibuja, llama lo que no debe o deja un archivo de
+  gráfica.
+- El conector simulado suma la herramienta de propuestas y la de proponer un indicador.
+  La de gráficas acepta un indicador activo con argumentos provisionales (`metric` y
+  `group_by`) hasta que producción los sirva.
+
+### Servidor
+
+- Preparada contra Datalum v2.257.0 (contrato `d47d691788ec`). `compat/requisitos.json`
+  no cambia: la Skill no nombra herramientas nuevas.
+- Se publica después de la versión de Datalum que deja a su herramienta de gráficas
+  dibujar un indicador activo y que dice la regla en sus instrucciones y en las
+  descripciones. Con la de hoy, la Skill pediría dibujar un indicador que la herramienta
+  todavía no acepta, y la respuesta se quedaría en las cifras.
+
+### Cómo recibirla
+
+- Como cualquier versión: los pasos por aplicación están en `ACTUALIZAR.md`.
+- Donde el cerebro del agente todavía pide el tablero como archivo HTML, la regla llega
+  igual con la Skill. El documento del cerebro se actualiza aparte, en Datalum.
+
 ## [4.0.1] - 2026-10-21
 
 Versión generada por la comprobación automática tras un despliegue de Datalum.

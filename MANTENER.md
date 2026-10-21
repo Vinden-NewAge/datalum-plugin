@@ -230,6 +230,18 @@ estructura de argumentos de `_tools.json` sale del catálogo real; las descripci
 están escritas para la suite y son más cortas que las del servidor. Para una corrida con
 las descripciones reales, guarda ahí el `tools/list` del conector sin versionarlo.
 
+La estructura sale del contrato guardado en `compat/contratos/c28b2234227a.json`, y
+`tests/docs/test_evaluaciones.py` lo coteja. La excepción son `metric` y `group_by` de la
+herramienta de gráficas, provisionales hasta que producción sirva cómo se nombra un
+indicador activo. Cuando los sirva, se cambian por los del contrato, la prueba pasa a
+cotejar con el contrato guardado de ese despliegue y su lista de provisionales se vacía.
+
+Los casos de `evals/entregables/` llevan el mismo calificador contra una gráfica que
+dibuje el asistente. `tests/docs/test_evaluaciones.py` corre sus calificadores sin
+modelo: cada uno aprueba una corrida que cumple y reprueba la suya. Las evaluaciones
+miden el texto y las llamadas del asistente; lo que la aplicación dibuje fuera de eso no
+lo ven.
+
 ## Reglas
 
 - **Una sola Skill para todos los productos.** Dos copias del mismo texto terminan
