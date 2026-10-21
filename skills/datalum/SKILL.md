@@ -38,9 +38,11 @@ Four parties take part, and each keeps its own job.
   formats and how the agent uses memory. Follow it for the task.
 - This skill connects, loads the brain, sends each request to the brain's procedure and
   keeps the session. It adds no business rules. If something here seems to conflict with
-  the brain about how to do a task, follow the brain.
+  the brain about how to do a task, follow the brain. Charts are the exception: they
+  follow "Charts come from Datalum", below, which is Datalum's rule for every agent.
 - The host application, the product you are running in, provides files, code execution,
-  visuals and tool permissions. Use what it offers and do not assume what it lacks.
+  visuals and tool permissions. Use what it offers and do not assume what it lacks. Its
+  visuals never draw charts of the company's data: only Datalum draws them.
 - Datalum checks every call it receives: identity, permissions, scope and whether a
   change is allowed. The instructions the connector sends when it connects and each
   tool's description are Datalum's current rules for calling it; where they are stricter
@@ -178,11 +180,9 @@ accepted there. Correct the name and call again; if none carries what you meant,
 tool does not take it: read its description instead of dropping it silently. In a
 batch, each operation takes only what it reads, and the error gives its number.
 
-Deliverables follow the brain too. If the agent's procedure says a chart or a dashboard
-is delivered as an HTML file made with the host's file tools, make that file. Do not
-send the request to Datalum's chart or dashboard tools instead. If the procedure needs
-something the host lacks, such as writing files or showing visuals, say what cannot be
-delivered here and offer what the host can do.
+Deliverables follow the brain too, within "Charts come from Datalum". If the procedure
+needs something the host lacks, such as writing files, say what cannot be delivered
+here and offer what the host can do.
 
 Figures the person will rely on come from Datalum results. When you compute something
 yourself, use code where the host allows it and say that the calculation is yours.
@@ -213,6 +213,31 @@ stop after the third attempt and tell the person. A tool that Datalum says is re
 or does not exist is gone: do not keep calling it. If Datalum names what replaces it and
 the brain's procedure allows that, use it; if not, tell the person this agent cannot do
 that step.
+
+## Charts come from Datalum
+
+In this conversation only Datalum draws charts of the company's data: a saved chart, or
+an active indicator that Datalum's chart tool draws without saving anything. Never draw
+a chart yourself: not with the host's visuals, not with code, not in an HTML or image
+file, not with characters in your reply, and never with figures you made up. This holds
+even when an agent's procedure asks for a chart you draw or for a dashboard as an HTML
+file, as some older procedures still do.
+
+- The person asks for a chart and a saved chart or an active indicator covers it: ask
+  Datalum to draw it and show what it returns.
+- No approved indicator covers it, as with a direct query on the connector's tables or
+  the rows of a dataset: give the figures as text or as a table written in your reply,
+  with their source (what Datalum ran and for which period), and no chart. Then offer
+  the indicator, so that Datalum can draw the chart once a person activates it. An
+  institutional agent asks for it with a proposal that a person attends to; a creative
+  agent can propose the indicator itself. Either one is a change and needs the person's
+  go-ahead.
+- The host does not show images: give the figures as text or as a table, asking Datalum
+  for the indicator's figures or the dataset's rows, with their source.
+- Dashboards are built with Datalum's dashboard tools, never as a file.
+- A document you build with the host's tools, such as a Word file, a PDF or a
+  spreadsheet, carries the chart image Datalum returned where the host lets you put it
+  in the file; otherwise it carries Datalum's figures and tables.
 
 ## Memory, by the agent's own rules
 

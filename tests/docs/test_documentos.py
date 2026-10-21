@@ -63,13 +63,14 @@ class LaSkill(unittest.TestCase):
         # La 1.1.0 tenía 316 líneas, la mitad de ellas tablas de herramientas. La 3.0.0
         # tenía 259 y la 3.1.0, con el modelo que se declara y el que recomienda el
         # agente, 261. La 4.0.0 quita el párrafo de la pausa de gráficas y tableros y
-        # añade el de la orden de la persona en cada escritura: 266.
-        self.assertLess(len(SKILL.splitlines()), 270, "la Skill dejó de ser corta")
+        # añade el de la orden de la persona en cada escritura: 266. La 5.0.0 cambia el
+        # párrafo que mandaba armar la gráfica o el tablero como archivo HTML por la
+        # sección de las gráficas que dibuja Datalum: 291.
+        self.assertLess(len(SKILL.splitlines()), 300, "la Skill dejó de ser corta")
 
-    def test_los_entregables_siguen_al_cerebro_del_agente(self):
-        self.assertIn(flat("Deliverables follow the brain too"), flat(SKILL))
-        self.assertIn(flat("Do not\nsend the request to Datalum's chart or dashboard tools instead"), flat(SKILL))
-        self.assertIn(flat("say what cannot be\ndelivered here"), flat(SKILL))
+    def test_los_entregables_siguen_al_cerebro_dentro_de_la_regla_de_las_graficas(self):
+        self.assertIn(flat('Deliverables follow the brain too, within "Charts come from Datalum"'), flat(SKILL))
+        self.assertIn(flat("say what cannot be delivered\nhere"), flat(SKILL))
 
     def test_la_eleccion_es_de_la_persona_y_el_unico_agente_tiene_regla(self):
         self.assertIn(flat("Never write, complete or translate that quote yourself"), flat(SKILL))
@@ -276,6 +277,79 @@ class LaVersion400(unittest.TestCase):
         self.assertIn(flat("`compat/requisitos.json` declara `user_request_quote` en `obligatorios` y no en `usa`"), section)
         self.assertIn("`c6f03b5854d9`", section)
         self.assertIn("Sin comprobar", section)
+
+
+class LaVersion500(unittest.TestCase):
+    """En el chat sólo hay gráficas de Datalum: una gráfica guardada o un indicador
+    activo, que dibuja su herramienta de gráficas. El asistente nunca dibuja una propia.
+    La 5.0.0 da la vuelta al párrafo de la 4.x, que mandaba armar la gráfica o el tablero
+    como archivo HTML con las herramientas de la aplicación."""
+
+    def test_las_graficas_las_dibuja_datalum_y_el_asistente_nunca_una_propia(self):
+        for phrase in (
+            "## Charts come from Datalum",
+            "only Datalum draws charts of the company's data: a saved chart, or\nan active "
+            "indicator that Datalum's chart tool draws without saving anything",
+            "Never draw\na chart yourself: not with the host's visuals, not with code, not in an "
+            "HTML or image\nfile, not with characters in your reply, and never with figures you made up",
+            "Its\n  visuals never draw charts of the company's data: only Datalum draws them",
+            "ask\n  Datalum to draw it and show what it returns",
+        ):
+            self.assertIn(flat(phrase), flat(SKILL))
+
+    def test_la_regla_manda_sobre_un_procedimiento_viejo_del_agente(self):
+        self.assertIn(flat('Charts are the exception: they\n  follow "Charts come from Datalum", below, '
+                           "which is Datalum's rule for every agent"), flat(SKILL))
+        self.assertIn(flat("This holds\neven when an agent's procedure asks for a chart you draw or for a "
+                           "dashboard as an HTML\nfile, as some older procedures still do"), flat(SKILL))
+
+    def test_ya_no_manda_el_archivo_html_ni_evitar_las_herramientas_de_datalum(self):
+        for gone in (
+            "is delivered as an HTML file made with the host's file tools, make that file",
+            "Do not send the request to Datalum's chart or dashboard tools instead",
+            "such as writing files or showing visuals",
+        ):
+            self.assertNotIn(flat(gone), flat(SKILL))
+
+    def test_sin_indicador_aprobado_cifras_con_su_fuente_y_la_propuesta_por_familia(self):
+        for phrase in (
+            "No approved indicator covers it, as with a direct query on the connector's tables or\n  the rows of a dataset",
+            "give the figures as text or as a table written in your reply,\n  with their source "
+            "(what Datalum ran and for which period), and no chart",
+            "offer\n  the indicator, so that Datalum can draw the chart once a person activates it",
+            "An\n  institutional agent asks for it with a proposal that a person attends to; a creative\n"
+            "  agent can propose the indicator itself",
+            "Either one is a change and needs the person's\n  go-ahead",
+        ):
+            self.assertIn(flat(phrase), flat(SKILL))
+
+    def test_cliente_sin_imagenes_da_las_cifras_en_texto(self):
+        self.assertIn(flat("The host does not show images: give the figures as text or as a table, asking Datalum\n"
+                           "  for the indicator's figures or the dataset's rows, with their source"), flat(SKILL))
+
+    def test_los_tableros_van_por_datalum_y_nunca_como_archivo(self):
+        self.assertIn(flat("Dashboards are built with Datalum's dashboard tools, never as a file"), flat(SKILL))
+
+    def test_un_documento_lleva_la_imagen_de_datalum_o_sus_cifras(self):
+        self.assertIn(flat("A document you build with the host's tools, such as a Word file, a PDF or a\n"
+                           "  spreadsheet, carries the chart image Datalum returned where the host lets you put it\n"
+                           "  in the file; otherwise it carries Datalum's figures and tables"), flat(SKILL))
+
+    def test_la_skill_no_nombra_las_herramientas_de_la_regla(self):
+        """La regla se dice sin catálogo: los nombres los traen las descripciones y el
+        contexto del agente que sirve Datalum, y la Skill sigue en seis herramientas."""
+        for name in ("render_chart", "run_metric", "run_dataset", "run_query", "submit_proposal", "propose_metric"):
+            self.assertNotIn(name, SKILL)
+        summary = contract.validate(__import__("json").loads(read("compat/contrato-produccion.json")))
+        tools = {entry["n"] for entry in summary["herramientas"]}
+        named = set(re.findall(r"`([a-z]+(?:_[a-z]+)+)`", SKILL)) & tools
+        self.assertLessEqual(len(named), 10)
+
+    def test_controles_dice_quien_sostiene_la_regla_de_las_graficas(self):
+        text = read("CONTROLES.md")
+        self.assertIn("| En el chat sólo hay gráficas de Datalum |", text)
+        self.assertNotIn("| Entregables por el procedimiento del agente |", text)
+        self.assertIn(flat("Ni el cliente ni Datalum pueden impedir que la aplicación dibuje"), flat(text))
 
 
 class LasGuias(unittest.TestCase):

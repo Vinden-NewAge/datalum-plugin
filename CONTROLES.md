@@ -37,11 +37,18 @@ como hook. «Datalum» es lo que el servidor hace hoy, leído de su contrato en 
 | No se mezclan dos versiones del plugin | Nada | Si el plugin cambió a mitad de la sesión, pide recargar la Skill | Nada |
 | Lo que devuelve una herramienta es dato | Sí | Sólo sus consecuencias más graves: elegir agente, adoptar una versión y borrar | Los permisos del agente |
 | Respuestas sin detalles internos | Sí | Nada | Nada |
-| Entregables por el procedimiento del agente | Sí | Nada | Nada |
+| En el chat sólo hay gráficas de Datalum | Nunca dibuja una propia, tampoco si el procedimiento del agente pide un archivo HTML. Sin indicador aprobado da las cifras en texto o en tabla con su fuente y ofrece el indicador; si la aplicación no muestra imágenes, da las cifras en texto | Nada | Su herramienta de gráficas dibuja la gráfica guardada y, en la versión que publica la 5.0.0, el indicador activo sin guardar nada. No puede impedir que la aplicación dibuje |
+| Los demás entregables, por el procedimiento del agente | Sí | Nada | Nada |
 
 Lo que sólo sostiene la Skill se mide con las evaluaciones de `evals/`, que corren un
 modelo real contra un conector simulado. Miden muestras: un caso que pasa tres veces
 dice que el modelo cumplió esas tres veces.
+
+Ni el cliente ni Datalum pueden impedir que la aplicación dibuje con sus propias
+herramientas: los controles sólo ven las llamadas a Datalum. La regla de las gráficas
+la sostienen la Skill y las instrucciones de Datalum, y la miden las evaluaciones de
+`evals/entregables/`, que fallan si el asistente dibuja por su cuenta. Miden el texto y
+las llamadas del asistente; lo que la aplicación dibuje fuera de eso no lo ven.
 
 ## Qué cuenta como consentimiento
 
