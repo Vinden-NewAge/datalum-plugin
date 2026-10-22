@@ -681,7 +681,7 @@
       ]
     },
     {
-      "h": "ba0006aa90f12e7741fc0aa1b8faec7d83e6191f4c6e62ff60c62df6cb074ddd",
+      "h": "a3437a0778460ba2bd6ea91e81571ac19307273fc245c1eae88d8bf7511cf883",
       "n": "profile_table",
       "p": [
         "connector",
@@ -1027,7 +1027,7 @@
       ]
     },
     {
-      "h": "162a02782eb660230530be09924b478f4b641b03ea11425d93dcaadb32a3e779",
+      "h": "fc7b067a852ef30af25b306ff1c9293ee62d739f0fa535d6109c5b0817c6e9c8",
       "n": "run_query",
       "p": [
         "connector",
@@ -1492,7 +1492,7 @@
       ]
     }
   ],
-  "huella": "d47d691788ec7852b7d0488081aa0618ba9e5690794ce0e6aee8a6b5eca8032c",
+  "huella": "31875b521c2a5f66a5e0e1a9d665f40e1a60838737c13e3233c065e761386dde",
   "instrucciones_sha256": "8b62c3c709f3814c8a696ea99d8e6f775830aa35a389944b4421f7b07ed6619a",
   "protocolo": "2025-06-18"
 }
