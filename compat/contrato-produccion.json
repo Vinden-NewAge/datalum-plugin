@@ -733,7 +733,7 @@
       ]
     },
     {
-      "h": "8178eff80dfa3d7790cef6a0a9ca5f1149eaecbf0a745b1e71512e4f71f295d2",
+      "h": "7c31c1584e6730b9331bc8798f6ee19f956f9ae86c64135dc837478613def24a",
       "n": "propose_dataset",
       "p": [
         "business_definition",
@@ -1492,7 +1492,7 @@
       ]
     }
   ],
-  "huella": "31875b521c2a5f66a5e0e1a9d665f40e1a60838737c13e3233c065e761386dde",
+  "huella": "c1246bc166b62f532f4c61c15fceeba7e8306efa12388669f51b4f3124b2c669",
   "instrucciones_sha256": "8b62c3c709f3814c8a696ea99d8e6f775830aa35a389944b4421f7b07ed6619a",
   "protocolo": "2025-06-18"
 }
