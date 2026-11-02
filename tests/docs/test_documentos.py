@@ -287,18 +287,22 @@ class LaVersion410(unittest.TestCase):
     def test_la_skill_abre_las_piezas_que_no_cupieron_antes_de_la_primera_accion(self):
         for phrase in (
             "`mission` carries the agent's guardrails, rules and persona, in that order, as far as\nthe response has room",
-            "If the response carries `leelo_antes_de_actuar`, some pieces did not fit",
-            "Before your\nfirst action, open each one it lists with `brain_read`, its `concept_id` and\n`unit: \"arranque\"`, and read it to the end",
+            "If the response carries `fuera_de_la_respuesta`, something did not fit; its `aviso`\nsays what and where",
+            "Before your first action, open each piece listed in\n`leelo_antes_de_actuar` with `brain_read`, its `concept_id` and `unit: \"arranque\"`,\nand read it to the end",
         ):
             self.assertIn(flat(phrase), flat(SKILL))
         self.assertNotIn(flat("guardrails, rules and persona, complete"), flat(SKILL))
 
     def test_la_skill_abre_lo_que_no_se_lista_con_la_misma_unidad(self):
         self.assertIn(
-            flat("If\n`fuera_de_la_respuesta` counts `sin_listar`, open with that unit the agent document\nits `aviso` names"),
+            flat("If `fuera_de_la_respuesta` counts\n`sin_listar`, open with that unit the agent document its `aviso` names"),
             flat(SKILL),
         )
-        self.assertIn(flat("What is missing from\n`connectors` or `news` is where that `aviso` says"), flat(SKILL))
+        self.assertIn(flat("What is missing from `connectors` or `news` is where that `aviso` says"), flat(SKILL))
+        self.assertIn(
+            flat("so open, also before your first\naction, the guardrails, rules and persona that are neither in `mission` nor in the\nlist"),
+            flat(SKILL),
+        )
 
     def test_con_todo_dentro_no_abre_nada_de_mas(self):
         self.assertIn(flat("Without these keys, everything\nis in `mission`"), flat(SKILL))

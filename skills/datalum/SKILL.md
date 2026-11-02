@@ -121,13 +121,15 @@ Do this before any work specific to the agent.
    several and the request does not say which, ask. If the response carries
    `aviso_del_modelo`, the agent recommends a more capable kind of model: if yours has
    less capacity, tell the person before you start.
-2. If the response carries `leelo_antes_de_actuar`, some pieces did not fit. Before your
-   first action, open each one it lists with `brain_read`, its `concept_id` and
-   `unit: "arranque"`, and read it to the end: they are the agent's rules. If
-   `fuera_de_la_respuesta` counts `sin_listar`, open with that unit the agent document
-   its `aviso` names; its Documentos section lists the rest. What is missing from
-   `connectors` or `news` is where that `aviso` says. Without these keys, everything
-   is in `mission`.
+2. If the response carries `fuera_de_la_respuesta`, something did not fit; its `aviso`
+   says what and where. Before your first action, open each piece listed in
+   `leelo_antes_de_actuar` with `brain_read`, its `concept_id` and `unit: "arranque"`,
+   and read it to the end: they are the agent's rules. If `fuera_de_la_respuesta` counts
+   `sin_listar`, open with that unit the agent document its `aviso` names: its
+   Documentos section names all the agent's documents, so open, also before your first
+   action, the guardrails, rules and persona that are neither in `mission` nor in the
+   list. What is missing from `connectors` or `news` is where that `aviso` says.
+   Without these keys, everything is in `mission`.
 3. Find the procedure for the request. `index` shows one level of the agent's branch.
    List the level you need with `brain_index` and its `path`, then open the document that
    covers the request with `brain_read`, copying its `concept_id` as returned. Open the
