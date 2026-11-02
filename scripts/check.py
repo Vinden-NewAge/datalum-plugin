@@ -50,6 +50,8 @@ RESPONSE_NAMES = {
     "agent_context_conflict",
     "agent_not_selected",
     "aviso_del_modelo",
+    "fuera_de_la_respuesta",
+    "leelo_antes_de_actuar",
     "next_cursor",
     "next_offset",
     "operating_as",
@@ -57,6 +59,7 @@ RESPONSE_NAMES = {
     "rate_limited",
     "retry_after",
     "sello_posterior",
+    "sin_listar",
     "user_request_quote_required",
 }
 # La Skill arranca la sesión y carga el cerebro; el oficio lo trae el agente. Si nombra

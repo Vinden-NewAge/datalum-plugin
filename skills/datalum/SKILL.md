@@ -18,12 +18,12 @@ compatibility: >-
 metadata:
   author: Vinden
   short-description: AI CONTEXT PILL
-  version: "4.0.1"
+  version: "4.1.0"
 ---
 
 # Datalum
 
-This is version 4.0.1 of the Datalum skill.
+This is version 4.1.0 of the Datalum skill.
 
 Datalum is a governed data layer. A person works in it through one agent that their
 company's administrator granted them. This skill gets the person connected, loads the
@@ -115,21 +115,31 @@ Do this before any work specific to the agent.
 
 1. Read the whole `use_agent` response. `agent` gives the name, version and family, and
    its `herramientasRetiradas` lists tools withdrawn for this agent; do not call them.
-   `mission` carries the agent's guardrails, rules and persona, complete. `connectors`
-   lists the data sources it reaches. Pass a connector's `slug` as `connector` where a
-   tool asks for it, and if the agent reaches several and the request does not say
-   which, ask. If the response carries `aviso_del_modelo`, the agent recommends a more
-   capable kind of model: if yours has less capacity, tell the person before you start.
-2. Find the procedure for the request. `index` shows one level of the agent's branch.
+   `mission` carries the agent's guardrails, rules and persona, in that order, as far as
+   the response has room. `connectors` lists the data sources it reaches. Pass a
+   connector's `slug` as `connector` where a tool asks for it, and if the agent reaches
+   several and the request does not say which, ask. If the response carries
+   `aviso_del_modelo`, the agent recommends a more capable kind of model: if yours has
+   less capacity, tell the person before you start.
+2. If the response carries `fuera_de_la_respuesta`, something did not fit; its `aviso`
+   says what and where. Before your first action, open each piece listed in
+   `leelo_antes_de_actuar` with `brain_read`, its `concept_id` and `unit: "arranque"`,
+   and read it to the end: they are the agent's rules. If `fuera_de_la_respuesta` counts
+   `sin_listar`, open with that unit the agent document its `aviso` names: its
+   Documentos section names all the agent's documents, so open, also before your first
+   action, the guardrails, rules and persona that are neither in `mission` nor in the
+   list. What is missing from `connectors` or `news` is where that `aviso` says.
+   Without these keys, everything is in `mission`.
+3. Find the procedure for the request. `index` shows one level of the agent's branch.
    List the level you need with `brain_index` and its `path`, then open the document that
    covers the request with `brain_read`, copying its `concept_id` as returned. Open the
    documents it refers to when the task needs them.
-3. Read every document you rely on to the end. `brain_read` cuts long documents: while
+4. Read every document you rely on to the end. `brain_read` cuts long documents: while
    the response carries `next_offset`, call again with that `offset`. Asking for
    `max_bytes: 32768` reads most documents in one call. `brain_index` and
    `list_memories` continue the same way with `next_cursor`. A reading that still has a
    continuation is partial. Do not act on it or present it as complete.
-4. Reading the brain has a budget per piece of work. Open what the request needs, not
+5. Reading the brain has a budget per piece of work. Open what the request needs, not
    the whole brain. If Datalum says the budget is used up, work with what you read and
    say what you could not check.
 
@@ -142,8 +152,9 @@ selected version and tell the person. Move to the new one only when they ask, wi
 read before belongs to the old one: open it again and do not mix the two.
 
 An update of this plugin changes none of that. It does not switch agents, adopt a brain
-version, edit a brain or save one. A person saves a version of an agent, activates
-things and approves pending changes in the Datalum panel.
+version, edit a brain or save one. A person saves a version of an agent and activates
+things only in the Datalum panel, and approves pending changes as Datalum's
+instructions say.
 
 ## Keeping the conversation on its agent
 

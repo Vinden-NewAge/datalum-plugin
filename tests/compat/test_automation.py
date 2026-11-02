@@ -822,6 +822,66 @@ class LaOrdenDeLaPersona(unittest.TestCase):
         self.assertEqual(facts["destinos"]["forget"], "memory")
 
 
+class ElArranquePorPartes(unittest.TestCase):
+    """Datalum v2.266.0 arranca el agente por partes y cambia el texto de `use_agent` y de
+    las instrucciones, sin tocar sus argumentos. Antes, v2.265.0 retiró `open_agent_card`,
+    añadió las herramientas de las propuestas de mejora y también cambió las
+    instrucciones. Lo que el plugin pide vale con los dos, y sus textos están leídos."""
+
+    ROOT = Path(__file__).resolve().parents[2]
+    V2_266_0 = "compat/contratos/35bad1406854.json"
+    V2_265_0 = "compat/contratos/5322933881ba.json"
+    V2_259_4 = "compat/contratos/c30df6792c2d.json"
+    USA = ("brain_index", "brain_read", "forget", "list_agents", "list_memories", "release_agent", "remember", "use_agent")
+
+    def load(self, relative: str) -> dict:
+        return json.loads((self.ROOT / relative).read_text(encoding="utf-8"))
+
+    def test_produccion_es_v2_266_0_y_sus_textos_estan_revisados(self):
+        summary = contract.validate(self.load("compat/contrato-produccion.json"))
+        self.assertEqual(summary, self.load(self.V2_266_0))
+        comparison = contract.compare(summary, self.load("compat/requisitos.json"), current_facts=self.load("client/contract-facts.json"))
+        self.assertEqual(comparison["incompatible"] + comparison["revision"], [])
+        self.assertFalse(comparison["derivados_cambian"])
+
+    def test_un_rollback_a_v2_265_0_o_a_v2_259_4_no_pide_revision(self):
+        requirements = self.load("compat/requisitos.json")
+        for stored in (self.V2_265_0, self.V2_259_4):
+            comparison = contract.compare(contract.validate(self.load(stored)), requirements)
+            self.assertEqual(comparison["incompatible"] + comparison["revision"], [], stored)
+
+    def test_use_agent_cambia_de_texto_y_no_de_argumentos(self):
+        nuevo = contract.by_name(self.load(self.V2_266_0))
+        anterior = contract.by_name(self.load(self.V2_265_0))
+        self.assertNotEqual(nuevo["use_agent"]["h"], anterior["use_agent"]["h"])
+        for name in self.USA:
+            self.assertEqual((nuevo[name]["p"], nuevo[name]["r"]), (anterior[name]["p"], anterior[name]["r"]), name)
+            if name != "use_agent":
+                self.assertEqual(nuevo[name]["h"], anterior[name]["h"], name)
+
+    def test_las_instrucciones_de_v2_265_0_y_v2_266_0_estan_guardadas_y_revisadas(self):
+        reviewed = self.load("compat/requisitos.json")["instrucciones_revisadas"]
+        for stored in (self.V2_265_0, self.V2_266_0):
+            digest = self.load(stored)["instrucciones_sha256"]
+            self.assertIn(digest, reviewed, stored)
+            text = (self.ROOT / "compat/instrucciones" / f"{digest[:12]}.txt").read_text(encoding="utf-8")
+            self.assertEqual(contract.sha256_text(text), digest, stored)
+        nuevas = (self.ROOT / "compat/instrucciones" / f"{self.load(self.V2_266_0)['instrucciones_sha256'][:12]}.txt").read_text(encoding="utf-8")
+        self.assertIn("`leelo_antes_de_actuar`", nuevas)
+        self.assertIn('unit:"arranque"', nuevas)
+
+    def test_open_agent_card_salio_y_los_controles_ya_no_la_nombran(self):
+        anterior = contract.by_name(self.load(self.V2_259_4))
+        for stored in (self.V2_265_0, self.V2_266_0):
+            names = set(contract.by_name(self.load(stored)))
+            self.assertIn("open_agent_card", anterior)
+            self.assertNotIn("open_agent_card", names, stored)
+            self.assertTrue({"list_proposals", "set_proposal_state"} <= names, stored)
+        facts = self.load("client/contract-facts.json")
+        self.assertNotIn("open_agent_card", facts["destinos"])
+        self.assertNotIn("open_agent_card", facts["sin_selection_context"])
+
+
 class Events(unittest.TestCase):
     def test_avisos_mal_formados_se_rechazan(self):
         good = event(SHA_A, summary_of(base_tools()))

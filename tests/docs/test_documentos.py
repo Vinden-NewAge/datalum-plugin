@@ -63,8 +63,9 @@ class LaSkill(unittest.TestCase):
         # La 1.1.0 tenía 316 líneas, la mitad de ellas tablas de herramientas. La 3.0.0
         # tenía 259 y la 3.1.0, con el modelo que se declara y el que recomienda el
         # agente, 261. La 4.0.0 quita el párrafo de la pausa de gráficas y tableros y
-        # añade el de la orden de la persona en cada escritura: 266.
-        self.assertLess(len(SKILL.splitlines()), 270, "la Skill dejó de ser corta")
+        # añade el de la orden de la persona en cada escritura: 266. La 4.1.0 añade el
+        # paso del arranque por partes: 274.
+        self.assertLess(len(SKILL.splitlines()), 280, "la Skill dejó de ser corta")
 
     def test_los_entregables_siguen_al_cerebro_del_agente(self):
         self.assertIn(flat("Deliverables follow the brain too"), flat(SKILL))
@@ -275,6 +276,56 @@ class LaVersion400(unittest.TestCase):
         section = flat(text.split("## Versión 4.0.0", 1)[1].split("\n## Versión 3.1.0", 1)[0])
         self.assertIn(flat("`compat/requisitos.json` declara `user_request_quote` en `obligatorios` y no en `usa`"), section)
         self.assertIn("`c6f03b5854d9`", section)
+        self.assertIn("Sin comprobar", section)
+
+
+class LaVersion410(unittest.TestCase):
+    """Datalum v2.266.0 arranca el agente por partes: la respuesta de `use_agent` cabe en
+    unos 25 000 caracteres, y las piezas críticas que no caben se abren con `brain_read`
+    y la unidad del arranque antes de la primera acción."""
+
+    def test_la_skill_abre_las_piezas_que_no_cupieron_antes_de_la_primera_accion(self):
+        for phrase in (
+            "`mission` carries the agent's guardrails, rules and persona, in that order, as far as\nthe response has room",
+            "If the response carries `fuera_de_la_respuesta`, something did not fit; its `aviso`\nsays what and where",
+            "Before your first action, open each piece listed in\n`leelo_antes_de_actuar` with `brain_read`, its `concept_id` and `unit: \"arranque\"`,\nand read it to the end",
+        ):
+            self.assertIn(flat(phrase), flat(SKILL))
+        self.assertNotIn(flat("guardrails, rules and persona, complete"), flat(SKILL))
+
+    def test_la_skill_abre_lo_que_no_se_lista_con_la_misma_unidad(self):
+        self.assertIn(
+            flat("If `fuera_de_la_respuesta` counts\n`sin_listar`, open with that unit the agent document its `aviso` names"),
+            flat(SKILL),
+        )
+        self.assertIn(flat("What is missing from `connectors` or `news` is where that `aviso` says"), flat(SKILL))
+        self.assertIn(
+            flat("so open, also before your first\naction, the guardrails, rules and persona that are neither in `mission` nor in the\nlist"),
+            flat(SKILL),
+        )
+
+    def test_con_todo_dentro_no_abre_nada_de_mas(self):
+        self.assertIn(flat("Without these keys, everything\nis in `mission`"), flat(SKILL))
+
+    def test_la_version_de_un_agente_se_guarda_solo_en_el_panel(self):
+        self.assertIn(
+            flat("A person saves a version of an agent and activates\nthings only in the Datalum panel"),
+            flat(SKILL),
+        )
+        for gone in ("open_agent_card", "save_agent_version", "agent card"):
+            self.assertNotIn(gone, SKILL)
+
+    def test_el_changelog_pide_una_conversacion_nueva(self):
+        section = flat(read("CHANGELOG.md").split("## [4.1.0]", 1)[1].split("\n## [4.0.1]", 1)[0])
+        self.assertIn("`leelo_antes_de_actuar`", section)
+        self.assertIn(flat("empieza una\n  conversación nueva"), section)
+
+    def test_compatibilidad_dice_como_se_armo_y_lo_que_queda_sin_comprobar(self):
+        text = read("COMPATIBILIDAD.md")
+        self.assertIn("## Versión 4.1.0", text)
+        section = flat(text.split("## Versión 4.1.0", 1)[1].split("\n## Versión 4.0.0", 1)[0])
+        self.assertIn("`770acd3ec907`", section)
+        self.assertIn("`be4804699c4f`", section)
         self.assertIn("Sin comprobar", section)
 
 
