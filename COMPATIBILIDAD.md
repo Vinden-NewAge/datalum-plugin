@@ -98,7 +98,7 @@ El 2 de noviembre:
 | `node --test tests/client/*.test.js` | 143 pruebas, todas pasan |
 | `claude plugin validate .`, con el CLI de la aplicación de escritorio (2.1.309) | Pasa, con el aviso de `logo` que ya tenía |
 | Doce mutantes: la Skill pierde el paso del arranque por partes o su rama de `sin_listar`, vuelve a decir que `mission` llega completa, pierde que sin las llaves todo está en `mission`, pide otra unidad o vuelve a nombrar `open_agent_card`; `compat/requisitos.json` pierde la huella de `use_agent` de v2.266.0 o la de las instrucciones de v2.266.0 o de v2.265.0; `client/contract-facts.json` queda sin regenerar; el contrato de producción vuelve al anterior, o falta el texto guardado de las instrucciones de v2.266.0 | `check.py` o las pruebas detectan los doce |
-| Las dos evaluaciones nuevas, con `claude plugin eval` y una corrida cada una | No llegaron al modelo: el CLI de la aplicación de escritorio no tiene sesión iniciada y las dos corridas terminaron con «Not logged in», sin costo. En esas corridas vacías, los evaluadores del caso por partes que piden abrir cada pieza fallan, como deben. Los patrones de orden se probaron aparte con llamadas inventadas: aciertan con las dos piezas leídas antes de la consulta y fallan si una se lee después o ninguna se lee |
+| Las dos evaluaciones nuevas, con `claude plugin eval --case 'arranque-*' --runs 1` | Con la Skill, las dos dan 1.00. Sin la Skill, el caso por partes da 0.25 (no abre ninguna pieza ni aplica su regla) y el caso entero da 0.60. Con la Skill abre las dos piezas con la unidad del arranque antes de consultar la cifra; con todo dentro no abre nada. Costo: 0.51 dólares |
 
 | Qué | Dónde se prueba |
 |---|---|
@@ -113,8 +113,8 @@ Sin comprobar: el catálogo completo que sirve producción a una conexión con s
 porque no hay credencial de lectura; el contrato sale del código del commit y del
 servidor sólo se cotejó lo que contesta sin sesión. Tampoco una respuesta real de
 `use_agent` que no quepa, ni la rama de `sin_listar`, que ninguna evaluación ejercita. Ni
-qa. Ni la conducta de un modelo con la Skill nueva: las dos evaluaciones están escritas y
-no corrieron.
+qa. La conducta del modelo se midió con una sola corrida por caso, con el conector
+simulado y no con el servidor de verdad.
 
 ## Versión 4.0.0
 
