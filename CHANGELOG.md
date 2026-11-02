@@ -4,6 +4,62 @@ Cada versión del plugin de Datalum dice qué cambia para quien usa la Skill, co
 versión del servidor se comprobó y qué hay que hacer para recibirla. La más reciente va
 primero.
 
+## [4.1.0] - 2026-11-02
+
+Datalum v2.266.0 entrega el arranque del agente por partes: la respuesta de `use_agent`
+cabe en unos 25 000 caracteres y nombra lo que no cupo para leerlo antes de actuar. La
+Skill 4.0.1 da por hecho que `mission` llega completa, y el flujo de compatibilidad pidió
+leer el texto nuevo de las instrucciones y de `use_agent`. Nada de lo que el plugin usa
+sale ni pasa a ser obligatorio: por eso sube el número menor.
+
+### Cambiado
+
+- `mission` trae enteros los límites, las reglas y la personalidad del agente, en ese
+  orden, hasta donde cabe la respuesta. Si la respuesta trae `leelo_antes_de_actuar`, el
+  asistente abre cada pieza de esa lista con `brain_read`, su `concept_id` y
+  `unit: "arranque"`, y la lee entera antes de su primera acción: son reglas del agente.
+- Si `fuera_de_la_respuesta` cuenta piezas en `sin_listar`, el asistente abre con la
+  misma unidad el documento del agente que nombra el aviso, cuya sección «Documentos»
+  las lista. Los conectores o las notas de versión que no caben en `connectors` o `news`
+  están donde dice el aviso.
+- Con todo dentro, la respuesta no trae ninguna de las dos llaves y sale igual que
+  antes. La Skill dice que entonces todo está en `mission`, y el asistente no abre nada
+  de más.
+- Guardar la versión de un agente y activar lo hace una persona, sólo en el panel de
+  Datalum. Aprobar lo pendiente sigue lo que dicen las instrucciones del servidor.
+- El código de los controles del cliente no cambia. `client/contract-facts.json`,
+  derivado del contrato de v2.266.0, deja de nombrar `open_agent_card` y suma
+  `set_proposal_state`.
+
+### Servidor
+
+- Datalum v2.266.0, commit `35bad1406854`, que producción sirve desde el 2 de
+  noviembre. La lista pasa de 95 a 96 herramientas.
+- `use_agent` no cambia sus argumentos. Su descripción dice que, si algo no cabe, la
+  respuesta trae `fuera_de_la_respuesta` y `leelo_antes_de_actuar`, y que lo omitido se
+  abre con `brain_read` y `unit:"arranque"` antes de la primera acción. `brain_read` ya
+  no se puede retirar en la ficha de un agente, porque abre lo que el arranque no trae.
+- Entre la 4.0.1 y esta versión producción sirvió v2.265.0, commit `5322933881ba`, del
+  que la comprobación no tuvo contrato. Sale `open_agent_card` y entran `list_proposals`
+  y `set_proposal_state`. Las instrucciones del servidor cambiaron dos veces: v2.265.0
+  añade que las propuestas de mejora las aprueba una persona de Datalum en la
+  conversación y que guardar la versión de un agente se hace sólo en el panel, y v2.266.0
+  añade el arranque por partes.
+- Se comprobó con el contrato del código de v2.266.0 (`770acd3ec907`), cotejado con lo que
+  producción contesta sin sesión, que pasa a ser el contrato de producción guardado. Se
+  leyeron las instrucciones de v2.265.0 y de v2.266.0 y la definición nueva de
+  `use_agent` contra la Skill; sus huellas quedan como revisadas en
+  `compat/requisitos.json`. El detalle está en `COMPATIBILIDAD.md`.
+
+### Cómo recibirla
+
+- Los pasos por aplicación están en `ACTUALIZAR.md`. Después de actualizar, empieza una
+  conversación nueva: la que se abrió con la 4.0.1 tiene una Skill que da la misión por
+  completa aunque falten piezas.
+- En ChatGPT, quien administra el conector pulsa Actualizar (Refresh) en Workspace
+  settings > Apps para recibir la descripción nueva de `use_agent`. Las herramientas que
+  usa el plugin conservan sus argumentos, así que la lista guardada sigue funcionando.
+
 ## [4.0.1] - 2026-10-21
 
 Versión generada por la comprobación automática tras un despliegue de Datalum.

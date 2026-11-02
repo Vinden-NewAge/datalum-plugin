@@ -17,7 +17,7 @@
   },
   {
    "name": "use_agent",
-   "description": "Pone a esta conversación a trabajar con un agente de la lista. Llámalo cuando la persona haya dicho con cuál trabaja y pasa sus palabras tal cual en `user_choice_quote`. Devuelve la misión del agente (límites, reglas y persona, completos), el índice de su cerebro, los conectores que alcanza, las herramientas retiradas para él y `selection_context`, que hay que mandar en cada llamada siguiente. Volver a llamarlo con el mismo agente es volver a elegirlo y toma su última versión guardada: hazlo sólo cuando la persona lo pida. Para cambiar de agente, primero release_agent.",
+   "description": "Pone a esta conversación a trabajar con un agente de la lista. Llámalo cuando la persona haya dicho con cuál trabaja y pasa sus palabras tal cual en `user_choice_quote`. Devuelve la misión del agente (límites, reglas y persona, enteros hasta donde cabe la respuesta; lo que no cabe lo nombran `leelo_antes_de_actuar` y `fuera_de_la_respuesta`), el índice de su cerebro, los conectores que alcanza, las herramientas retiradas para él y `selection_context`, que hay que mandar en cada llamada siguiente. Volver a llamarlo con el mismo agente es volver a elegirlo y toma su última versión guardada: hazlo sólo cuando la persona lo pida. Para cambiar de agente, primero release_agent.",
    "inputSchema": {
     "type": "object",
     "properties": {

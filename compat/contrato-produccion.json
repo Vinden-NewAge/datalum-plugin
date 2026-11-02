@@ -2,7 +2,7 @@
   "esquema": 1,
   "herramientas": [
     {
-      "h": "cb144b5ec16d6853464dfec02d65e789e13891893cbc223164a4e6c30e9e60a9",
+      "h": "01b621052409a8173ae6aa2aa9d30b4d46af55f14acfaae85c1f32099e52bf13",
       "n": "add_agent_document",
       "p": [
         "agentId",
@@ -41,7 +41,7 @@
       ]
     },
     {
-      "h": "954ef89629d8cf7272352d05971ef0869907a571f39a18e205ce376e32d618ab",
+      "h": "c6a181eb79e04e56acf3058713519a4e03c7133690d3070ef96ec565d9d016c1",
       "n": "apply_solution_update",
       "p": [
         "confirm",
@@ -54,7 +54,7 @@
       ]
     },
     {
-      "h": "538caa6db4e8daf578477e59019effac34fd5e3d41adf119304ffeed60d39864",
+      "h": "0447b5436cfc686b1a184ecba1e5f44f468455fea718ad5fa615dcc006aad09c",
       "n": "attach_agent_document",
       "p": [
         "agentId",
@@ -205,7 +205,7 @@
       ]
     },
     {
-      "h": "88582959c64dbd02efb4e7602f65553cfad8c8b2824643608fcf3908c2100931",
+      "h": "4db9ec40bf4ac123738430022d573e9ae6bcb241b3afeb9a30a3b2e9ee037338",
       "n": "clone_agent",
       "p": [
         "name",
@@ -306,7 +306,7 @@
       ]
     },
     {
-      "h": "9c90abde86da827ca14f41ade869cdd2f8a933cc32b40b386de6a12e806f69cd",
+      "h": "c976a77423861803d27907504e881b94236ebe6cb0395981d7b27e6030316b83",
       "n": "detach_agent_document",
       "p": [
         "agentId",
@@ -351,7 +351,7 @@
       ]
     },
     {
-      "h": "6d8b4aa2a082e168ed210f99d023b5338b5e28bdfde28ef6a6438a6c9f7e047b",
+      "h": "2ffed2c2a75b74d5b05b2cc620ee4c3768b9134d77e9b2455371eb4b65931725",
       "n": "edit_agent_profile",
       "p": [
         "agentId",
@@ -405,7 +405,7 @@
       ]
     },
     {
-      "h": "db8a7f9641012769183393be8163fa4c69fc7133cbfef4db6ecbfb03cc2daf84",
+      "h": "77c6d5bbd2b4fb0487ea8f50a1fd7c23fa25c03ef4c57c432e9397aab4797cfa",
       "n": "export_chart_csv",
       "p": [
         "chart",
@@ -413,6 +413,7 @@
         "drill",
         "filters",
         "params",
+        "preparation_ref",
         "selection_context",
         "time_grain",
         "version_id"
@@ -533,7 +534,7 @@
       ]
     },
     {
-      "h": "bf6e5bf9bcd30b28c214ff6dbbd92e30d68b47084130986ba203f4610f92cf56",
+      "h": "e06ae532ea6f10fe14d9e2324272d3ee7ec8c5ec706010a8729c92b04ce6bdb9",
       "n": "install_solution",
       "p": [
         "acuerdoRef",
@@ -564,13 +565,14 @@
       "r": []
     },
     {
-      "h": "9f176d5d83414c62cbc0dfa6144c91519df6fc171740d29a9b4373581e557985",
+      "h": "04dc2073432626c03e32e6dc002e2425ac6dee0e26b3fc6ace356fc61b9825a6",
       "n": "list_dimension_values",
       "p": [
         "cap",
         "connector",
         "cursor",
         "dimension",
+        "preparation_ref",
         "search",
         "selection_context"
       ],
@@ -620,7 +622,7 @@
       "r": []
     },
     {
-      "h": "fd38246ac8f51bdbf7deaee9c995448c95cdf646217a8fb626feb529764fd0a4",
+      "h": "ba0b6433bdffae31b4eff515d95a5d0f5ffaa69ae9bb6e4734153383c052fc1d",
       "n": "list_my_proposals",
       "p": [
         "selection_context"
@@ -632,6 +634,18 @@
       "n": "list_organization_agents",
       "p": [
         "selection_context"
+      ],
+      "r": []
+    },
+    {
+      "h": "717f60de7ebd3ba07c6309cbc3c86b7c32492247a3aa628977c86aec6074bf56",
+      "n": "list_proposals",
+      "p": [
+        "limit",
+        "offset",
+        "owner_id",
+        "selection_context",
+        "state"
       ],
       "r": []
     },
@@ -670,17 +684,6 @@
       ]
     },
     {
-      "h": "78ac79827b2ad7a97d49fedbb10a99a9fc27217721f125ae04728d0cec59076d",
-      "n": "open_agent_card",
-      "p": [
-        "agent",
-        "selection_context"
-      ],
-      "r": [
-        "agent"
-      ]
-    },
-    {
       "h": "a3437a0778460ba2bd6ea91e81571ac19307273fc245c1eae88d8bf7511cf883",
       "n": "profile_table",
       "p": [
@@ -695,7 +698,7 @@
       ]
     },
     {
-      "h": "13a089d91d9adcee856b866a180bbd1c9dfe2e2f111f1ef9a17ceb7d2cd2c788",
+      "h": "12ddefad22b5b6d7cb030fefe3a27698c89f0afa091bba833709b73d67658869",
       "n": "propose_agent",
       "p": [
         "connectors",
@@ -755,7 +758,7 @@
       ]
     },
     {
-      "h": "45c097f8d2e57f5c21a057c7e6524854dd45158db2c3c429ff7ea1faf11528dc",
+      "h": "bd005b812dfb1177c9f1103996263adaba789545a4698545ea71c4f7687d89f6",
       "n": "propose_dimension",
       "p": [
         "aliases",
@@ -785,7 +788,7 @@
       ]
     },
     {
-      "h": "04011f07c14c0f3dbefee2626f302477a9e1e3efb9eb49340af1c3afbca39eaf",
+      "h": "e666313115fc008e6f67eb7c7afb3e16730f0dbb8b3db2e868642d771253b054",
       "n": "propose_metric",
       "p": [
         "aggregation",
@@ -905,7 +908,7 @@
       ]
     },
     {
-      "h": "46ac351a2d0002ad4ae4ccf7f96458f6984deeb486f45ee8116ffee51e0de094",
+      "h": "641001677636d7131cea8ee387250b99245a86f9558360e66629bcfe4e096ac1",
       "n": "render_chart",
       "p": [
         "chart",
@@ -915,6 +918,7 @@
         "height",
         "params",
         "pixel_ratio",
+        "preparation_ref",
         "selection_context",
         "time_grain",
         "version_id",
@@ -926,7 +930,7 @@
       ]
     },
     {
-      "h": "a38c71d001f015cc09991586b5b8753d28023c85db6f384eefc5a25088425f4e",
+      "h": "99bc9f6e5954bd867ef21aee46c7e3f4fc8b7610c1da39fdeb7d6497c5008ed4",
       "n": "reorder_agent_documents",
       "p": [
         "agentId",
@@ -973,7 +977,7 @@
       ]
     },
     {
-      "h": "41b49513389238f69c41f1318f22eb9ac7dd69373ecb3b9bea4b0667381f12c2",
+      "h": "20e8565df5ce23158d89321b2c52e8bf4a750f62c2d3795e332eca06a9e62ddc",
       "n": "run_dashboard",
       "p": [
         "connector",
@@ -987,13 +991,15 @@
       ]
     },
     {
-      "h": "a6af87c5053035742be85f2ab879be3439d8791d3dc7a83e5aa7dbf75d804c3b",
+      "h": "c53f06c10f63a3543c11dd246d254175b7862df2fdecb7b57834079d70e940bd",
       "n": "run_dataset",
       "p": [
         "connector",
         "cursor",
         "dataset",
         "params",
+        "preparation_ref",
+        "row_format",
         "selection_context",
         "version"
       ],
@@ -1003,7 +1009,7 @@
       ]
     },
     {
-      "h": "2e83eb19d194ece5c2c905c0fa06df6462a63512e6f9f2c9d04e4ae2d5e4348a",
+      "h": "47ac09a3a215e16ad15deb1179222153344aec47dee4f86e4f5d8182941e6d28",
       "n": "run_metric",
       "p": [
         "calendar_axis",
@@ -1017,6 +1023,8 @@
         "metrics",
         "order_by",
         "params",
+        "preparation_ref",
+        "row_format",
         "selection_context",
         "share_of_total",
         "time_grain",
@@ -1027,7 +1035,7 @@
       ]
     },
     {
-      "h": "fc7b067a852ef30af25b306ff1c9293ee62d739f0fa535d6109c5b0817c6e9c8",
+      "h": "a3aaf86b4062ec1fffe21d1351b344ea6322f223dd4406d4fc14410834f375ab",
       "n": "run_query",
       "p": [
         "connector",
@@ -1035,6 +1043,7 @@
         "limit",
         "page_size",
         "projection",
+        "row_format",
         "sample",
         "selection_context",
         "sql"
@@ -1125,6 +1134,28 @@
       ]
     },
     {
+      "h": "deb2367f0f9eb9ee24a425af4dbcd249cab7b0fb1657d68952d9c39b26750972",
+      "n": "set_proposal_state",
+      "p": [
+        "action",
+        "confirm",
+        "note",
+        "priority",
+        "priority_reason",
+        "proposal_id",
+        "resolution",
+        "selection_context",
+        "state",
+        "user_request_quote"
+      ],
+      "r": [
+        "action",
+        "confirm",
+        "proposal_id",
+        "user_request_quote"
+      ]
+    },
+    {
       "h": "0bf466d280800f920bb5f14fc1d470da6310198cfe61260f4fa17399b13ee612",
       "n": "set_relations",
       "p": [
@@ -1140,7 +1171,7 @@
       ]
     },
     {
-      "h": "5b3b6be935ce0d4690366b137d44e6c0972da0bc680f95e6868f6de8ec0e23e4",
+      "h": "39d38e6c1fbf7e9cce3b5d93f180d52243da8c579d1925706960e27aa8797d56",
       "n": "submit_proposal",
       "p": [
         "body",
@@ -1160,7 +1191,7 @@
       ]
     },
     {
-      "h": "71f171d205cda8b8de706df4269a18fe82f1b3ef8b6a568183afa0de4109b738",
+      "h": "b419f86208eb301a92fd9786c27d6fb7724da73095d35c0f74bad07b219afdf4",
       "n": "test_chart",
       "p": [
         "chart",
@@ -1168,6 +1199,7 @@
         "connector",
         "if_match",
         "params",
+        "preparation_ref",
         "selection_context",
         "user_request_quote",
         "version_id"
@@ -1212,7 +1244,7 @@
       ]
     },
     {
-      "h": "0f9ab5920c27961e9cdb46a630283c0fc06aca9f7ef6c4cf80cf61366d668072",
+      "h": "f5e2978872a7003e3bf41da787564a8af3816c12bbdf6281bbdd457c4e8a17a3",
       "n": "test_dimension",
       "p": [
         "confirm",
@@ -1220,6 +1252,7 @@
         "dimension",
         "if_match",
         "params",
+        "preparation_ref",
         "selection_context",
         "user_request_quote"
       ],
@@ -1244,7 +1277,7 @@
       ]
     },
     {
-      "h": "f9899d3ac73d76a40a187aa5f041b031753df26b865a80495e782db79aed9908",
+      "h": "c989e285bb5f346f2915ee1b50bb9f447c0f8787e1ed406d588bf00daee6358e",
       "n": "test_metric",
       "p": [
         "confirm",
@@ -1254,6 +1287,7 @@
         "if_match",
         "metric",
         "params",
+        "preparation_ref",
         "selection_context",
         "share_of_total",
         "time_grain",
@@ -1265,7 +1299,7 @@
       ]
     },
     {
-      "h": "b08fc9e8b2111c993545f744e2f3fb3f173227644df7bd61dabd9491257e3641",
+      "h": "c07dd138013aac91015de72777c836de6b3c331cfea3192078120cdd3af32ffc",
       "n": "toggle_agent_document",
       "p": [
         "agentId",
@@ -1368,7 +1402,7 @@
       ]
     },
     {
-      "h": "57067dfe72617d1c9d7c49479eca9312093d9199128762e20ea09d4837cfe2ca",
+      "h": "845e2ae658309c7b6680d19e318446570dd99335acba9d4fa81fdf1cc5428565",
       "n": "use_agent",
       "p": [
         "agent",
@@ -1476,7 +1510,7 @@
       ]
     },
     {
-      "h": "f1f77478aae8f87da129dea6cabeaaaf60d62f79eb1fd2da39164d1f236df456",
+      "h": "1a945fb385dc5bb41abf3db736ffd4369077cd18ded171a526b268a82ca99ead",
       "n": "write_agent_document",
       "p": [
         "body",
@@ -1492,7 +1526,7 @@
       ]
     }
   ],
-  "huella": "c1246bc166b62f532f4c61c15fceeba7e8306efa12388669f51b4f3124b2c669",
-  "instrucciones_sha256": "8b62c3c709f3814c8a696ea99d8e6f775830aa35a389944b4421f7b07ed6619a",
+  "huella": "770acd3ec907fe59aeaea8a310773c58132aeea94ef14db3334c75b09011f52f",
+  "instrucciones_sha256": "9e6139bbc98b395f84a753948103afe410e92a3cbb3efe651cd088da8949da9d",
   "protocolo": "2025-06-18"
 }

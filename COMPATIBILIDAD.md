@@ -4,6 +4,117 @@ Qué versión del plugin se comprobó contra qué, y cómo. «Comprobado» quier
 algo se ejecutó y dio ese resultado. Lo que sólo consta en la documentación de un
 producto se marca «Sin comprobar».
 
+## Versión 4.1.0
+
+Preparada el 2 de noviembre de 2026 con Datalum v2.266.0 (commit `35bad1406854`), que
+producción sirve desde ese día. v2.266.0 arranca el agente por partes: la respuesta de
+`use_agent` cabe en unos 25 000 caracteres, lleva enteras las piezas críticas del agente
+que caben, en orden límites, reglas y personalidad, y nombra las demás para abrirlas con
+`brain_read` antes de actuar. La Skill 4.0.1 decía que `mission` llega completa. Ninguna
+herramienta ni argumento que el plugin usa sale ni pasa a ser obligatorio, así que la
+versión sube el número menor.
+
+| Plugin | Servidor de Datalum | Contrato | Resultado |
+|---|---|---|---|
+| 4.1.0 | Datalum v2.266.0, commit `35bad1406854`. Lo servía producción (`mcp.datalum.ai`) el 2 de noviembre a las 13:28 UTC | `770acd3ec907`, 96 herramientas, armado del código de ese commit. Sus instrucciones (`9e6139bbc98b`), su protocolo y las herramientas que anuncia sin sesión son los que producción contesta | Compatible: `check.py` pasa con ese contrato como el de producción, con las huellas nuevas de las instrucciones de v2.265.0 y v2.266.0 y de `use_agent` añadidas a `compat/requisitos.json` tras leer su texto |
+| 4.1.0 | Datalum v2.265.0, commit `5322933881ba`. Producción lo servía el 30 de octubre a las 01:56 UTC, cuando la lectura de esa hora lo anotó como `contrato_no_disponible` | `be4804699c4f`, 96 herramientas, armado del código de ese commit | Compatible y sin texto por leer: un rollback a v2.265.0 no pide revisión |
+| 4.1.0 | Los contratos guardados en `compat/contratos/` desde R12 (v2.249.0) | Los guardados | Compatible: lo que pide `compat/requisitos.json` está en todos, y ninguno pide revisión |
+| 4.0.1 | Datalum v2.266.0 | `770acd3ec907` | Revisión: la comprobación simulada del 2 de noviembre dio `revision_requerida` por las instrucciones y por la definición de `use_agent` |
+
+### Cómo se armó el contrato
+
+Con el método de la 3.0.0, sobre una copia de sólo lectura del servidor en cada commit.
+La sonda no vive aquí porque importa código del servidor.
+
+| Código del servidor | Resultado |
+|---|---|
+| `c30df6792c2d` (v2.259.4) | `c1246bc166b6`, 95 herramientas: el contrato guardado, huella por huella. Con eso se da por bueno el método |
+| `5322933881ba` (v2.265.0) | `be4804699c4f`, 96 herramientas. Sale `open_agent_card` y entran `list_proposals` y `set_proposal_state`. Cambian las instrucciones (`d6f82d63462c`) y 25 definiciones, ninguna de las que usa el plugin |
+| `35bad1406854` (v2.266.0) | `770acd3ec907`, 96 herramientas. Cambian las instrucciones (`9e6139bbc98b`) y cuatro definiciones: `use_agent`, `edit_agent_profile`, `propose_agent` y `render_chart`. De las que usa el plugin, sólo `use_agent` |
+
+Producción pasó de v2.259.4 a v2.265.0 sin que la comprobación tuviera el contrato, y de
+v2.265.0 a v2.266.0 el 2 de noviembre. Hasta v2.259.4, una conversación que negoció la
+extensión de vistas recibía además `save_agent_version`, que no entraba en el contrato.
+En el código de v2.265.0 ya no se sirve: guardar la versión de un agente se hace sólo en
+el panel.
+
+### La lectura de lo que cambió
+
+Contra lo revisado para la 4.0.0, el contrato de v2.266.0 da dos motivos de revisión y
+ninguno de incompatibilidad. El 2 de noviembre se leyeron con `diff` las instrucciones de
+v2.265.0 contra las de v2.256.0, las de v2.266.0 contra las de v2.265.0 y la definición
+de `use_agent` de v2.266.0 contra la de v2.265.0:
+
+| Qué cambió | Cómo | Huella nueva |
+|---|---|---|
+| Las instrucciones | En v2.265.0 la regla suprema tiene una excepción: las propuestas de mejora las aprueba una persona de Datalum en la conversación, y el agente mueve su estado con `set_proposal_state` y su cita. Activar, aprobar, retirar y guardar la versión de un agente lo hace una persona en el panel; ya no se nombra la tarjeta. En v2.266.0 el paso 2 del arranque añade que, si la respuesta trae `leelo_antes_de_actuar`, cada pieza se abre con `brain_read` y `unit:"arranque"` antes de la primera acción; que, si `fuera_de_la_respuesta` cuenta `sin_listar`, se abre con la misma unidad el concepto del agente que nombra el aviso, y que lo que falte en `connectors` o `news` está donde dice ese aviso | `d6f82d63462c` y `9e6139bbc98b` |
+| `use_agent` | Los límites, las reglas y la persona llegan «enteros» en vez de «completos», y si algo no cabe la respuesta trae `fuera_de_la_respuesta` y `leelo_antes_de_actuar`, con lo omitido para abrirlo con `brain_read` y `unit:"arranque"` antes de la primera acción. Los argumentos no cambian | `845e2ae65830` |
+| `brain_index`, `brain_read`, `forget`, `list_agents`, `list_memories`, `release_agent` y `remember` | Sin cambios desde v2.256.0 | Las ya revisadas |
+
+En el código del commit se leyó la forma de la respuesta. `leelo_antes_de_actuar` es una
+lista con `segment`, `title`, `name`, `description`, `concept_id` y `chars` de cada pieza
+que no cupo. `fuera_de_la_respuesta` trae `aviso`, `piezas`, `caracteres`, `sin_listar`,
+`conectores` y `notas_de_version`. Con todo dentro y sin pasar del tope, la respuesta no
+trae ninguna de las dos llaves y sale igual que antes. Cada elección del agente estrena su
+unidad de lectura del arranque. `edit_agent_profile` y `propose_agent` ya no dejan
+retirar `brain_read` en la ficha de un agente, porque abre lo que el arranque no trae.
+
+Las tres huellas nuevas quedan en `instrucciones_revisadas` y `definiciones_revisadas`
+de `compat/requisitos.json`. Los argumentos que el plugin declara no cambian.
+
+La Skill cambia el paso que carga el cerebro tras `use_agent`. `mission` trae las piezas
+en orden y enteras hasta donde cabe la respuesta. Un paso nuevo dice que, si la respuesta
+trae `leelo_antes_de_actuar`, cada pieza de la lista se abre con `brain_read`, su
+`concept_id` y `unit: "arranque"`, y se lee entera antes de la primera acción; que, si
+`fuera_de_la_respuesta` cuenta `sin_listar`, se abre con esa unidad el documento del
+agente que nombra el aviso, y que lo que falta en `connectors` o `news` está donde dice
+ese aviso. Sin esas llaves todo está en `mission`. La Skill no nombraba la tarjeta del
+agente ni `save_agent_version`; ahora dice que guardar la versión y activar lo hace una
+persona sólo en el panel, y que aprobar lo pendiente sigue las instrucciones de Datalum,
+que traen la excepción de las propuestas de mejora. Las piezas abiertas así están bajo la
+rama del agente, así que cuentan como instrucciones del cerebro, como la `mission`.
+
+El código de los controles del cliente no cambia: no leen `mission` ni la unidad de
+lectura. Derivado de `770acd3ec907` con `compat.py evaluar`, como lo hace el flujo,
+`client/contract-facts.json` deja de nombrar `open_agent_card` y suma
+`set_proposal_state` con destino `action`. La regla que deriva los destinos toma el
+primer argumento obligatorio en orden alfabético, y en esta herramienta es el acto y no la
+propuesta: dos cambios de estado con el mismo acto sobre propuestas distintas, en la misma
+conversación, cuentan como el mismo destino. El plugin no usa esa herramienta, y la regla
+no cambia en esta versión.
+
+### Qué se ejecutó
+
+El 2 de noviembre:
+
+| Qué | Resultado |
+|---|---|
+| La sonda sobre `c30df6792c2d`, `5322933881ba` y `35bad1406854` | Las huellas de «Cómo se armó el contrato» |
+| `compat.yml` con «simular», lanzado a mano con el contrato de `35bad1406854`, a las 13:28 UTC | Confirmó que producción sirve `35bad1406854` (v2.266.0), cotejó el contrato con lo que contesta sin sesión (verificación parcial) y dio `revision_requerida` por las instrucciones y por `use_agent`, sin publicar ni escribir |
+| `compat.py aviso` y `compat.py evaluar` con el contrato de `35bad1406854` y los requisitos nuevos, en una copia desechable del árbol | Producción vuelve a confirmar el commit y las instrucciones que sirve son, byte por byte, las del código. Clase `compatible`: el flujo habría publicado una versión de parche con los mismos `client/contract-facts.json`, contrato guardado e instrucciones que trae esta versión |
+| `contract.compare` de `compat/requisitos.json` con cada contrato guardado | Ninguno pide revisión. Sólo el de v2.243.0, anterior a R12, es incompatible, como con los requisitos de la 4.0.1 |
+| `python3 scripts/check.py` | PENDIENTE_CHECK |
+| `python3 -m unittest discover -s tests -t .` | PENDIENTE_PY |
+| `node --test tests/client/*.test.js` | PENDIENTE_NODE |
+| `claude plugin validate .` | PENDIENTE_VALIDATE |
+| Mutantes | PENDIENTE_MUTANTES |
+| Evaluaciones con modelo | PENDIENTE_EVALS |
+
+| Qué | Dónde se prueba |
+|---|---|
+| Producción es v2.266.0, sus textos están leídos y los derivados son los suyos | `ElArranquePorPartes` en `tests/compat/test_automation.py` |
+| Un rollback a v2.265.0 o a v2.259.4 no pide revisión | El mismo |
+| `use_agent` cambia de texto y no de argumentos, y las demás que usa el plugin no cambian | El mismo |
+| `open_agent_card` salió y los controles ya no la nombran | El mismo |
+| La Skill abre las piezas que no cupieron con la unidad del arranque antes de la primera acción, abre lo que no se lista con la misma unidad, no abre nada de más con todo dentro y guarda la versión sólo en el panel | `LaVersion410` en `tests/docs/test_documentos.py` |
+| Un modelo con la Skill abre cada pieza antes de actuar, y con todo dentro no abre nada de más | `evals/cerebro/arranque-por-partes` y `evals/cerebro/arranque-entero` |
+
+Sin comprobar: el catálogo completo que sirve producción a una conexión con sesión,
+porque no hay credencial de lectura; el contrato sale del código del commit y del
+servidor sólo se cotejó lo que contesta sin sesión. Tampoco una respuesta real de
+`use_agent` que no quepa, ni la rama de `sin_listar`, que ninguna evaluación ejercita. Ni
+qa. Ni la conducta de un modelo distinto del de las evaluaciones, ni de otra aplicación.
+
 ## Versión 4.0.0
 
 Preparada el 19 de octubre de 2026 con Datalum v2.256.0 (commit `cbdf86b096d1`), que
