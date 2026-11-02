@@ -93,12 +93,12 @@ El 2 de noviembre:
 | `compat.yml` con «simular», lanzado a mano con el contrato de `35bad1406854`, a las 13:28 UTC | Confirmó que producción sirve `35bad1406854` (v2.266.0), cotejó el contrato con lo que contesta sin sesión (verificación parcial) y dio `revision_requerida` por las instrucciones y por `use_agent`, sin publicar ni escribir |
 | `compat.py aviso` y `compat.py evaluar` con el contrato de `35bad1406854` y los requisitos nuevos, en una copia desechable del árbol | Producción vuelve a confirmar el commit y las instrucciones que sirve son, byte por byte, las del código. Clase `compatible`: el flujo habría publicado una versión de parche con los mismos `client/contract-facts.json`, contrato guardado e instrucciones que trae esta versión |
 | `contract.compare` de `compat/requisitos.json` con cada contrato guardado | Ninguno pide revisión. Sólo el de v2.243.0, anterior a R12, es incompatible, como con los requisitos de la 4.0.1 |
-| `python3 scripts/check.py` | PENDIENTE_CHECK |
-| `python3 -m unittest discover -s tests -t .` | PENDIENTE_PY |
-| `node --test tests/client/*.test.js` | PENDIENTE_NODE |
-| `claude plugin validate .` | PENDIENTE_VALIDATE |
-| Mutantes | PENDIENTE_MUTANTES |
-| Evaluaciones con modelo | PENDIENTE_EVALS |
+| `python3 scripts/check.py` | Pasa (96 herramientas) |
+| `python3 -m unittest discover -s tests -t .` | 124 pruebas, todas pasan |
+| `node --test tests/client/*.test.js` | 143 pruebas, todas pasan |
+| `claude plugin validate .`, con el CLI de la aplicación de escritorio (2.1.309) | Pasa, con el aviso de `logo` que ya tenía |
+| Doce mutantes: la Skill pierde el paso del arranque por partes o su rama de `sin_listar`, vuelve a decir que `mission` llega completa, pierde que sin las llaves todo está en `mission`, pide otra unidad o vuelve a nombrar `open_agent_card`; `compat/requisitos.json` pierde la huella de `use_agent` de v2.266.0 o la de las instrucciones de v2.266.0 o de v2.265.0; `client/contract-facts.json` queda sin regenerar; el contrato de producción vuelve al anterior, o falta el texto guardado de las instrucciones de v2.266.0 | `check.py` o las pruebas detectan los doce |
+| Las dos evaluaciones nuevas, con `claude plugin eval` y una corrida cada una | No llegaron al modelo: el CLI de la aplicación de escritorio no tiene sesión iniciada y las dos corridas terminaron con «Not logged in», sin costo. En esas corridas vacías, los evaluadores del caso por partes que piden abrir cada pieza fallan, como deben. Los patrones de orden se probaron aparte con llamadas inventadas: aciertan con las dos piezas leídas antes de la consulta y fallan si una se lee después o ninguna se lee |
 
 | Qué | Dónde se prueba |
 |---|---|
@@ -113,7 +113,8 @@ Sin comprobar: el catálogo completo que sirve producción a una conexión con s
 porque no hay credencial de lectura; el contrato sale del código del commit y del
 servidor sólo se cotejó lo que contesta sin sesión. Tampoco una respuesta real de
 `use_agent` que no quepa, ni la rama de `sin_listar`, que ninguna evaluación ejercita. Ni
-qa. Ni la conducta de un modelo distinto del de las evaluaciones, ni de otra aplicación.
+qa. Ni la conducta de un modelo con la Skill nueva: las dos evaluaciones están escritas y
+no corrieron.
 
 ## Versión 4.0.0
 
