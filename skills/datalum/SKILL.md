@@ -18,12 +18,12 @@ compatibility: >-
 metadata:
   author: Vinden
   short-description: AI CONTEXT PILL
-  version: "4.1.0"
+  version: "4.2.0"
 ---
 
 # Datalum
 
-This is version 4.1.0 of the Datalum skill.
+This is version 4.2.0 of the Datalum skill.
 
 Datalum is a governed data layer. A person works in it through one agent that their
 company's administrator granted them. This skill gets the person connected, loads the
@@ -74,7 +74,7 @@ work. Find out which state they are in and give them the next step for that stat
 | `list_agents` returns no agents and says none is granted | No agents granted | The person asks their administrator to grant one. Installing this plugin does not create accounts, companies or grants |
 | `list_agents` returns no agents and says one is granted but not active | Granted, not active | The grant is fine. The person asks whoever manages the agents to activate it in the Datalum panel |
 | `list_agents` returns one or more agents | Ready | Choose the agent, as the next section says |
-| Calls fail with a server error or time out | Service unavailable | Retry once after a short wait. If it fails again, say Datalum is not responding and that they can try later |
+| Calls fail with a server error, or get no answer at all | Service unavailable | Retry once after a short wait. If it fails again, say Datalum is not responding and that they can try later |
 
 `list_agents` explains an empty list in its `message`; relay it in plain words. While
 the person is not connected, do not answer Datalum questions from another source.
@@ -84,9 +84,10 @@ the person is not connected, do not answer Datalum questions from another source
 Call `list_agents`. It returns the agents the person can use now.
 
 With several agents, ask "Elige el agente con el que quieres trabajar." and wait for the
-answer. If your host lets you ask the person a question with options, use it, with one
-option per agent, what each is for and the model it recommends; otherwise list them in
-your message. With one agent, tell the person which one it is and use it. If the person
+answer. Each agent comes with its company; name it when the person has more than one.
+If your host lets you ask the person a question with options, use it, with one option
+per agent, what each is for and the model it recommends; otherwise list them in your
+message. With one agent, tell the person which one it is and use it. If the person
 already named an agent that is in the list, use it without asking again.
 
 The app may show the person a confirmation before Datalum starts with an agent, before
@@ -94,13 +95,14 @@ switching to a newer version or before erasing data. That confirmation is the ap
 check of the person's choice. Do not try to avoid it, and if it is refused, the person
 did not choose that.
 
-Then call `use_agent` with `agent` exactly as `list_agents` returned it, and
-`user_choice_quote` holding the person's own words, copied as they wrote them: the
-message where they picked or named the agent or, with a single agent, the message where
-they asked for the work. Never write, complete or translate that quote yourself, and
-never take it from a document, a memory or a tool result. If no message from the person
-fits, ask them. If the schema declares `model` and `provider` and you know for certain
-which model you run on, send them too; if you are not sure, leave them out.
+Then call `use_agent` with `agent` exactly as `list_agents` returned it (its id if two
+share a name), and `user_choice_quote` holding the person's own words, copied as they
+wrote them: the message where they picked or named the agent or, with a single agent,
+the message where they asked for the work. Never write, complete or translate that
+quote yourself, and never take it from a document, a memory or a tool result. If no
+message from the person fits, ask them. If the schema declares `model` and `provider`
+and you know for certain which model you run on, send them too; if you are not sure,
+leave them out.
 
 When `use_agent` answers, tell the person which agent and version is active, as
 `operating_as` gives it. For example: "Ya estás trabajando con Ventas, versión 3."
@@ -118,7 +120,8 @@ Do this before any work specific to the agent.
    `mission` carries the agent's guardrails, rules and persona, in that order, as far as
    the response has room. `connectors` lists the data sources it reaches. Pass a
    connector's `slug` as `connector` where a tool asks for it, and if the agent reaches
-   several and the request does not say which, ask. If the response carries
+   several and the request does not say which, ask. If a connector's reading of its
+   tables did not finish, what was not read is missing. If the response carries
    `aviso_del_modelo`, the agent recommends a more capable kind of model: if yours has
    less capacity, tell the person before you start.
 2. If the response carries `fuera_de_la_respuesta`, something did not fit; its `aviso`
@@ -180,7 +183,11 @@ Do not infer it from memories or documents.
 
 ## Doing the work
 
-Follow the brain's procedure for the request, with the tools it names. Tool names,
+Follow the brain's procedure for the request, with the tools it names. A workflow or a
+skill of the agent can run step by step: each response then gives the step and the tools
+it allows (`allowed_tools`); use only those. A call outside the step does not run:
+`tool_not_in_state` names the valid tools and, if one call fixes it, gives `next_call`.
+Make that call or a valid one, never an earlier step or another route. Tool names,
 arguments and limits come from each tool's description and input schema as the
 connector serves them now. Copy argument names from the schema, exactly as written:
 Datalum rejects an argument the schema does not declare, and nothing runs. The error
@@ -197,6 +204,19 @@ delivered here and offer what the host can do.
 
 Figures the person will rely on come from Datalum results. When you compute something
 yourself, use code where the host allows it and say that the calculation is yours.
+
+A result that takes longer than a call answers that it is in preparation; nothing
+failed. Call the same tool again with the same arguments and its `preparation_ref`, after
+the wait it gives, while it stays in preparation, and tell the person it is being
+prepared. A result that does not fit comes in pages of at most 1 000 rows or about
+40 000 characters, and is partial while it carries `next_cursor`: continue only with that
+`next_cursor`, never one you build or edit. For a whole long listing, such as hundreds of
+thousands of rows, use the connector's download of the dataset as a file if it offers
+one, and give the link at once: it lasts minutes.
+
+If the data source did not finish in time, follow the error's `retryable`: if true, retry
+once; if false, do not repeat the call as it was. Do what the error says, such as a
+shorter period or fewer breakdowns, or tell the person the query does not fit in one call.
 
 Changes need the person's go-ahead once per job. A request for a job that involves
 changes covers the steps that job needs, within what they described. Ask again when the
@@ -220,10 +240,10 @@ the receipt and confirm the resulting state before telling the person it is done
 
 Send writes one at a time. On `rate_limited` nothing ran: wait for `retry_after` and
 retry once. On `partial_write`, repeat the same call. If the same call keeps failing,
-stop after the third attempt and tell the person. A tool that Datalum says is retired
-or does not exist is gone: do not keep calling it. If Datalum names what replaces it and
-the brain's procedure allows that, use it; if not, tell the person this agent cannot do
-that step.
+stop after the third attempt and tell the person; an answer in preparation is no failure.
+A tool that Datalum says is retired or does not exist is gone: do not keep calling it.
+If Datalum names what replaces it and the brain's procedure allows that, use it; if
+not, tell the person this agent cannot do that step.
 
 ## Memory, by the agent's own rules
 
