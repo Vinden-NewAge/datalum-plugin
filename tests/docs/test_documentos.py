@@ -300,8 +300,12 @@ class LaVersion420(unittest.TestCase):
         self.assertIn(flat("continue only with that\n`next_cursor`, never one you build or edit"), flat(SKILL))
 
     def test_un_listado_entero_se_descarga(self):
-        self.assertIn(flat("use the connector's download of the dataset as a file"), flat(SKILL))
+        self.assertIn(flat("offer the connector's download of the dataset as a file"), flat(SKILL))
         self.assertIn(flat("give the link at once: it lasts minutes"), flat(SKILL))
+
+    def test_antes_de_paginar_o_descargar_dice_el_tamano(self):
+        self.assertIn(flat("Before reading more pages or downloading,\ntell the person how big the whole result is, in rows, size and pages as Datalum gives\nthem, or that the total is not known"), flat(SKILL))
+        self.assertIn(flat("say the\nfile's rows and size"), flat(SKILL))
 
     def test_el_plazo_agotado_sigue_a_retryable(self):
         self.assertIn(flat("follow the error's `retryable`: if true, retry\nonce; if false, do not repeat the call as it was"), flat(SKILL))

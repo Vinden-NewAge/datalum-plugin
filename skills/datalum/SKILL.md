@@ -210,9 +210,11 @@ failed. Call the same tool again with the same arguments and its `preparation_re
 the wait it gives, while it stays in preparation, and tell the person it is being
 prepared. A result that does not fit comes in pages of at most 1 000 rows or about
 40 000 characters, and is partial while it carries `next_cursor`: continue only with that
-`next_cursor`, never one you build or edit. For a whole long listing, such as hundreds of
-thousands of rows, use the connector's download of the dataset as a file if it offers
-one, and give the link at once: it lasts minutes.
+`next_cursor`, never one you build or edit. Before reading more pages or downloading,
+tell the person how big the whole result is, in rows, size and pages as Datalum gives
+them, or that the total is not known. When it is large, such as hundreds of thousands of
+rows, offer the connector's download of the dataset as a file if it offers one, say the
+file's rows and size, and give the link at once: it lasts minutes.
 
 If the data source did not finish in time, follow the error's `retryable`: if true, retry
 once; if false, do not repeat the call as it was. Do what the error says, such as a
