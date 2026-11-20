@@ -23,9 +23,11 @@ menor.
 - Un resultado que no cabe llega por páginas de hasta 1 000 filas o unos 40 000
   caracteres. El asistente sigue sólo con el `next_cursor` que devolvió la página
   anterior, nunca arma uno, y no presenta como completo un resultado parcial.
-- Para un listado entero muy largo, el asistente usa la descarga del conjunto como
-  archivo cuando el conector la ofrece, en vez de recorrerlo página por página, y da el
-  enlace en cuanto lo tiene, porque dura unos minutos.
+- Antes de seguir paginando o de descargar, el asistente le dice a la persona cuánto
+  mide el resultado entero (filas, tamaño y páginas, como los da Datalum) o que no se
+  sabe. Si es grande, propone la descarga del conjunto como archivo cuando el conector
+  la ofrece, dice las filas y el tamaño del archivo y da el enlace en cuanto lo tiene,
+  porque dura unos minutos.
 - Cuando la fuente de datos no termina a tiempo, el asistente lee `retryable`. Con
   verdadero reintenta una vez; con falso no repite la llamada tal cual: pide un periodo
   más corto o menos desgloses, o le dice a la persona que la consulta no cabe en una

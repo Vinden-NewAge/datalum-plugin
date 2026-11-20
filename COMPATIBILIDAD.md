@@ -104,9 +104,16 @@ dice el paso y sus herramientas, ya está en la 4.2.0. Cuando producción la sir
 comprobación de cada hora la verá; el contrato hay que armarlo del commit que se
 despliegue, porque fundir el tren cambia el commit.
 
-v2.293.1 cambia sólo el panel: activar un conjunto que no cabe en la espera corre en
-segundo plano y el panel dice «Probando…». La Skill no habla de activar conjuntos: dice
-que activar lo hace una persona en el panel, y eso no cambia.
+v2.293.1 cambia el panel: activar un conjunto que no cabe en la espera corre en segundo
+plano y el panel dice «Probando…». La Skill no habla de activar conjuntos: dice que
+activar lo hace una persona en el panel, y eso no cambia. La misma versión va a declarar
+el tamaño de lo que se entrega: la primera página que sale de lo guardado dirá el total
+de filas, los bytes y cuántas páginas son; la descarga, las filas y los bytes del
+archivo, y una página servida en la misma llamada, que el total no se conoce. La 4.2.0
+ya pide decir ese tamaño, o que no se sabe, antes de seguir paginando o de descargar, sin
+nombrar los campos. Cuando v2.293.1 llegue a producción hay que cotejar los nombres de
+esos campos contra su contrato: si la Skill los va a nombrar, entran en
+`RESPONSE_NAMES` de `scripts/check.py`.
 
 ### Qué se ejecutó
 
@@ -118,10 +125,30 @@ El 20 de noviembre:
 | `contract.compare` de cada contrato con los requisitos de la 4.1.0 y de la 4.2.0 | Con la 4.1.0, `revision` en las 25. Con la 4.2.0, `compatible` o `sin_cambios` en las 25 y en el tren. Ninguna `incompatible` con ninguno |
 | `compat.py aviso` y `compat.py evaluar` con el contrato de `6f24d473aef7`, en una copia desechable del árbol | Producción confirma el commit. Clase `compatible`: el flujo habría publicado la 4.1.1 con el mismo `client/contract-facts.json`, el mismo contrato guardado y las mismas instrucciones que trae esta versión |
 | `python3 scripts/check.py` | Pasa (99 herramientas) |
-| `python3 -m unittest discover -s tests -t .` | 136 pruebas, todas pasan |
+| `python3 -m unittest discover -s tests -t .` | 137 pruebas, todas pasan |
 | `node --test tests/client/*.test.js` | 143 pruebas, todas pasan |
 | `claude plugin validate .`, con el CLI de la aplicación de escritorio (2.1.326) | Pasa, con los avisos que ya tenía |
-| Catorce mutantes: la Skill pierde `preparation_ref`, `retryable`, el cursor devuelto, la descarga o el paso, vuelve a reintentar todo plazo o nombra `export_dataset_csv`; `compat/requisitos.json` pierde la huella de `use_agent` de v2.292.2 o la de las instrucciones de v2.281.0; `client/contract-facts.json` sin regenerar; el contrato de producción vuelve a v2.266.0; falta el texto de las instrucciones de v2.277.0 o el contrato de v2.292.1 | Las pruebas o `check.py` detectan trece. Sobrevive uno: quitar la huella de `brain_read` de v2.277.0, que sólo pesa en un rollback a v2.277.0–v2.288.0, cuyos contratos no se guardan |
+| Dieciséis mutantes: la Skill pierde el tamaño total o el del archivo, `preparation_ref`, `retryable`, el cursor devuelto, la descarga o el paso, vuelve a reintentar todo plazo o nombra `export_dataset_csv`; `compat/requisitos.json` pierde la huella de `use_agent` de v2.292.2 o la de las instrucciones de v2.281.0; `client/contract-facts.json` sin regenerar; el contrato de producción vuelve a v2.266.0; falta el texto de las instrucciones de v2.277.0 o el contrato de v2.292.1 | Las pruebas o `check.py` detectan quince. Sobrevive uno: quitar la huella de `brain_read` de v2.277.0, que sólo pesa en un rollback a v2.277.0–v2.288.0, cuyos contratos no se guardan |
+
+Las evaluaciones con modelo corrieron con `claude plugin eval --case <caso> --runs 1`, una
+corrida por caso y brazo, sobre los cuatro casos nuevos y los dos que tocan el reintento.
+Costaron 1.81 dólares.
+
+| Caso | Con la Skill | Sin la Skill |
+|---|---|---|
+| `sesion/entrega-en-preparacion` | 1.00 | 0.33 |
+| `sesion/plazo-sin-reintento` | 1.00 | 0.50 |
+| `sesion/paso-acotado` | 1.00 | 0.75 |
+| `entregables/listado-entero-se-descarga` | 1.00 | 0.33 |
+| `sesion/reintentos-con-limite` | 1.00 | 0.80 |
+| `inicio/servicio-no-disponible` | 1.00 | 0.50 |
+
+En `paso-acotado` y en la primera corrida de `listado-entero-se-descarga` tres
+calificadores `tool_used` no declaraban `min: 0` y exigían una llamada que el modelo, bien,
+no hizo. Se corrigieron y el puntaje de `paso-acotado` se recalculó con las llamadas
+registradas en esa corrida, sin repetirla. `listado-entero-se-descarga` se volvió a correr
+con el tamaño total en la Skill y en el simulador; con la Skill dice las filas y el tamaño
+del archivo antes de dar el enlace.
 
 | Qué | Dónde se prueba |
 |---|---|
@@ -129,10 +156,12 @@ El 20 de noviembre:
 | Un rollback a v2.292.1, a v2.292.0 o a v2.266.0 no pide revisión | El mismo y `ElArranquePorPartes` |
 | Las herramientas que usa el plugin sólo suman `run_id` desde v2.266.0 | `LaEntregaDespues` |
 | La Skill recoge lo que está en preparación, sigue el cursor devuelto, descarga el listado entero, sigue a `retryable`, se queda en el paso y nombra la empresa del agente | `LaVersion420` en `tests/docs/test_documentos.py` |
+| La Skill dice el tamaño total, o que no se sabe, antes de paginar o descargar | El mismo |
 | La Skill no nombra las herramientas nuevas | El mismo |
 
 Sin comprobar: el catálogo completo que sirve producción a una conexión con sesión,
-porque sigue sin haber credencial de lectura. Una respuesta real «en preparación», un
+porque sigue sin haber credencial de lectura. Los nombres de los campos del tamaño de
+v2.293.1, que todavía no está en producción; el simulador los inventa. Una respuesta real «en preparación», un
 rechazo real fuera del paso y una descarga real, que no se pidieron al servidor de
 verdad.
 
