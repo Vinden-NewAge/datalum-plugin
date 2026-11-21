@@ -1,0 +1,1 @@
+{"path": "datasets", "groups": [{"type": "Dataset", "entries": [{"concept_id": "datasets/clientes", "title": "Clientes", "desc": "Un renglón por cliente: nombre, región, alta y estado"}]}], "subdirs": [], "docs": 1, "entries_servidas": 1}

@@ -1,0 +1,1 @@
+{"dataset": "clientes", "url": "https://descargas.datalum.example/clientes-sintetico.csv?firma=xyz123", "expira_en": "2026-11-20T18:05:00Z", "segundos_restantes": 300, "filas": 352410, "bytes": 41873220, "columnas_ocultas": 0, "declaracion_de_la_corrida": {"objeto": "clientes", "version": 4}}

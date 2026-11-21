@@ -4,6 +4,63 @@ Cada versión del plugin de Datalum dice qué cambia para quien usa la Skill, co
 versión del servidor se comprobó y qué hay que hacer para recibirla. La más reciente va
 primero.
 
+## [4.2.0] - 2026-11-20
+
+Desde v2.266.0, producción pasó por 25 versiones de Datalum sin que la comprobación
+tuviera su contrato. Ninguna quita una herramienta ni un argumento que el plugin usa,
+ni lo vuelve obligatorio. Sí cambian las instrucciones del servidor y el texto de las
+ocho herramientas que la Skill nombra, y llegan conductas que la Skill no sabía: un
+resultado que se entrega después, la descarga de un conjunto entero, el texto nuevo
+de un plazo agotado y los procedimientos que van paso a paso. Por eso sube el número
+menor.
+
+### Cambiado
+
+- Un resultado que tarda más que una llamada responde que está en preparación. El
+  asistente vuelve a pedirlo con los mismos argumentos y su `preparation_ref`, tras la
+  espera que dice, mientras siga en preparación. No cambia los argumentos ni cuenta
+  esas llamadas como fallos.
+- Un resultado que no cabe llega por páginas de hasta 1 000 filas o unos 40 000
+  caracteres. El asistente sigue sólo con el `next_cursor` que devolvió la página
+  anterior, nunca arma uno, y no presenta como completo un resultado parcial.
+- Antes de seguir paginando o de descargar, el asistente le dice a la persona cuánto
+  mide el resultado entero (filas, tamaño y páginas, como los da Datalum) o que no se
+  sabe. Si es grande, propone la descarga del conjunto como archivo cuando el conector
+  la ofrece, dice las filas y el tamaño del archivo y da el enlace en cuanto lo tiene,
+  porque dura unos minutos.
+- Cuando la fuente de datos no termina a tiempo, el asistente lee `retryable`. Con
+  verdadero reintenta una vez; con falso no repite la llamada tal cual: pide un periodo
+  más corto o menos desgloses, o le dice a la persona que la consulta no cabe en una
+  llamada. Antes la Skill mandaba reintentar todo tiempo agotado.
+- Un workflow o una skill del agente pueden guiar el trabajo paso a paso. El asistente
+  usa sólo las herramientas del paso en curso. Si Datalum rechaza una llamada fuera del
+  paso, hace la llamada que el rechazo propone o una de las que nombra, sin volver a un
+  paso anterior ni buscar otro camino.
+- La lista de agentes trae los de todas las empresas de la persona, cada uno con su
+  empresa. El asistente dice de qué empresa es cada uno y, si dos se llaman igual, elige
+  por su id.
+- Si un conector dice que la lectura de sus tablas no terminó, el asistente lo dice
+  cuando la petición depende de lo que falta.
+
+### Servidor
+
+- Comprobada con Datalum v2.292.2, commit `6f24d473aef7`, que producción sirve desde el
+  20 de noviembre. La lista pasa de 96 a 99 herramientas: entran `complete_run`,
+  `cancel_run` y `export_dataset_csv`.
+- Preparada para Datalum v2.293.0, que suma `run_workflow` y no cambia las
+  instrucciones ni las herramientas que el plugin usa. La Skill no nombra las
+  herramientas nuevas: describe la conducta, y así vale con los contratos de antes y con
+  el que llega.
+- El código de los controles del cliente no cambia. `client/contract-facts.json`,
+  derivado del contrato de v2.292.2, suma `complete_run` y `export_dataset_csv` y deja
+  de nombrar `render_chart`, que ya no tiene un argumento obligatorio.
+- El detalle, versión por versión, está en `COMPATIBILIDAD.md`.
+
+### Para recibirla
+
+Lo de siempre, según la aplicación: `ACTUALIZAR.md`. Una conversación abierta sigue con
+la Skill que cargó hasta que se recarga.
+
 ## [4.1.0] - 2026-11-02
 
 Datalum v2.266.0 entrega el arranque del agente por partes: la respuesta de `use_agent`
