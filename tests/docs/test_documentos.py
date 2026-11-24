@@ -337,6 +337,14 @@ class LaVersion420(unittest.TestCase):
         for name in ("export_dataset_csv", "run_workflow", "complete_run", "cancel_run", "run_dataset"):
             self.assertNotIn(name, SKILL)
 
+    def test_el_changelog_pone_la_4_2_0_encima_de_la_4_1_1(self):
+        """La 4.2.0 sale después de la 4.1.1 y dice lo que trae frente a ella."""
+        text = read("CHANGELOG.md")
+        headings = re.findall(r"^## \[(\d+\.\d+\.\d+)\]", text, re.M)
+        self.assertEqual(headings[:3], ["4.2.0", "4.1.1", "4.1.0"])
+        section = flat(text.split("## [4.2.0]", 1)[1].split("\n## [4.1.1]", 1)[0])
+        self.assertIn("Frente a la 4.1.1 cambia la Skill", section)
+
     def test_los_agentes_llevan_su_empresa(self):
         self.assertIn(flat("Each agent comes with its company"), flat(SKILL))
         self.assertIn(flat("(its id if two\nshare a name)"), flat(SKILL))

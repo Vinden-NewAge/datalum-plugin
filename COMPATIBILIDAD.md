@@ -6,16 +6,79 @@ producto se marca «Sin comprobar».
 
 ## Versión 4.2.0
 
-Preparada el 20 de noviembre de 2026 con Datalum v2.292.2 (commit `6f24d473aef7`), que
-producción sirve desde ese día. Entre v2.266.0 y v2.292.2 producción pasó por 25
-versiones, y la lectura de cada hora anotó todas como `contrato_no_disponible` porque el
-servidor todavía no avisa con su contrato. Ninguna quita una herramienta o un argumento
-que el plugin usa, ni vuelve obligatorio uno nuevo. Las instrucciones cambiaron tres
-veces y el texto de las ocho herramientas que la Skill nombra cambió varias, así que con
-los requisitos de la 4.1.0 todas daban `revision_requerida`. La Skill cambia de conducta
-en cinco puntos y la versión sube el número menor.
+Preparada el 20 de noviembre de 2026 con Datalum v2.292.2 (commit `6f24d473aef7`) y
+puesta al día el 24 de noviembre con Datalum v2.297.0 (commit `6cfe471036cc`), que
+producción sirve ese día según su `/health`. Lleva dentro la 4.1.1: los controles del
+cliente y el cotejo de cada despliegue son los suyos.
 
-### Cada versión de producción
+Entre v2.266.0 y v2.297.0 producción pasó por 33 versiones, y la lectura de cada hora
+anotó todas como `contrato_no_disponible` porque el servidor todavía no avisa con su
+contrato. Ninguna quita una herramienta o un argumento que el plugin usa, ni vuelve
+obligatorio uno nuevo. Las instrucciones cambiaron tres veces y el texto de las ocho
+herramientas que la Skill nombra cambió varias, así que con los requisitos de la 4.1.1
+todas dan `revision_requerida`. La Skill cambia de conducta en ocho puntos y la versión
+sube el número menor.
+
+### De v2.293.0 a v2.297.0
+
+Los contratos se armaron del código de cada commit con el método de la 3.0.0, el 24 de
+noviembre. «Con la 4.1.1» y «con la 4.2.0» son lo que da `contract.compare` con los
+requisitos de cada versión y el contrato anterior; la primera fila se compara con el de
+v2.292.2. «Usadas que cambian» son las herramientas que el plugin declara y cuya
+definición cambia respecto de la versión anterior.
+
+| Versión | Commit | Contrato, herramientas | Instrucciones | Usadas que cambian | Con la 4.1.1 | Con la 4.2.0 |
+|---|---|---|---|---|---|---|
+| v2.293.0 | `f325234b96cf` | `c8d2563d0e6c`, 100 | `6a3181a6053b` | — | revision | compatible |
+| v2.293.1 | `12e67bb95093` | `06d158ec5f5e`, 100 | `6a3181a6053b` | — | revision | compatible |
+| v2.293.2 | `5df1953f092a` | `06d158ec5f5e`, 100 | `6a3181a6053b` | — | revision | sin_cambios |
+| v2.294.0 | `c5f7957224d0` | `06d158ec5f5e`, 100 | `6a3181a6053b` | — | revision | sin_cambios |
+| v2.295.0 | `b252076b9e36` | `0a6f5e828f96`, 100 | `6a3181a6053b` | `use_agent` | revision | compatible |
+| v2.296.0 | `31e5506cd27d` | `0a6f5e828f96`, 100 | `6a3181a6053b` | — | revision | sin_cambios |
+| v2.296.1 | `cd6982d20052` | `0a6f5e828f96`, 100 | `6a3181a6053b` | — | revision | sin_cambios |
+| v2.297.0 | `6cfe471036cc` | `33e83205c5ba`, 100 | `6a3181a6053b` | — | revision | compatible |
+
+Ninguna sale `incompatible` con ninguna de las dos. Las instrucciones no cambian desde
+v2.281.0. Con la 4.1.1 todas piden revisión por lo que ya cambió hasta v2.292.2; con la
+4.2.0 sólo pedía revisión `use_agent` de v2.295.0, y su huella está leída en
+`compat/requisitos.json`. El contrato de v2.293.0 sale igual, huella por huella, que el
+que se armó el 20 de noviembre del último commit de su tren (`8f3457b8d6ef`). v2.296.1
+sirve con sesión el mismo contrato que v2.296.0: lo que cambia es la respuesta sin
+credencial. `compat/contratos/` guarda los ocho.
+
+| Qué cambió | En qué versión | Cómo | ¿Pide cambiar la Skill o `compat/requisitos.json`? |
+|---|---|---|---|
+| Entra `run_workflow` | v2.293.0 | Inicia un workflow del agente, consulta en qué paso va o lo prueba con un caso. Cada respuesta lleva el paso y sus herramientas | No: la Skill ya dice seguir el paso y sus herramientas, sin nombrar la herramienta |
+| `run_dataset` y `export_dataset_csv`, que el plugin no declara | v2.293.1 | La página dice en `continuacion.total` cuánto mide el resultado entero, o que no se sabe; la descarga dice las filas y los bytes del archivo | Sí, la Skill: dice dónde leer el tamaño. Abajo, el cotejo de los campos |
+| `use_agent` | v2.295.0 | Cada conector dice cuántos objetos de cada clase lleva el agente (`objetos`; nulo si alcanza el conector entero) y avisa cuando no lleva ninguno. El resto del texto se acorta. Los argumentos no cambian | `compat/requisitos.json` sí: la huella entra en `definiciones_revisadas`. La Skill no: la cuenta es dato de la respuesta, y el aviso del conector lo dice |
+| `render_chart` y `export_chart_csv`, que el plugin no declara | v2.295.0 | Filtros por lo que el indicador no desglosa | No |
+| Los rechazos | v2.296.0 | Cada rechazo sale con el código de su causa. Un fallo de Datalum sale como error interno que no pide reintentar. Una herramienta llamada fuera de su paso cuenta para el corte de tres | No: la Skill corta al tercer intento y sigue el texto de Datalum donde es más estricto |
+| Sin credencial | v2.296.1 | Todo mensaje sin `Authorization` recibe 401 con `WWW-Authenticate`, el saludo y la lista de herramientas incluidos. Sin sesión no hay ninguna herramienta, ni siquiera `list_agents`. El cliente abre el inicio de sesión por su cuenta | Sí, la Skill: el estado sin herramientas dice que Datalum no lista nada hasta iniciar sesión, y que con el conector puesto se inicia sesión desde su panel. El cotejo lo acepta desde la 4.1.1 |
+| Los tableros y `propose_agent`, que el plugin no declara | v2.297.0 | Formato único del tablero, su enlace en el panel y `run_dashboard` sin imagen. Todo agente nace con las reglas de control encendidas, y lo instalado se liga a su pieza oficial | No: la Skill no usa herramientas de tableros y deja los entregables al cerebro. Con más agentes en reglas de control, el paso acotado de la 4.2.0 vale más a menudo |
+
+### El tamaño de lo entregado
+
+La versión del 20 de noviembre pedía decir el tamaño sin nombrar los campos, porque
+v2.293.1 no estaba en producción. Ya lo está, y los campos que sirve son éstos:
+
+| Lo que la Skill pide decir | Dónde lo da Datalum desde v2.293.1 |
+|---|---|
+| Las filas, el tamaño y las páginas del resultado entero | En cada página que sale de lo guardado, `continuacion.total` con `conocido: true`, `filas`, `bytes_guardados`, `paginas`, `filas_por_pagina` y una frase en `mensaje`. `bytes_guardados` es nulo cuando no se sabe o cuando el agente no ve todos los campos del conjunto |
+| Que el total no se sabe | En la página que se sirve sin guardar, `continuacion.total` con `conocido: false` y un `mensaje` que remite a la descarga |
+| Las filas y el tamaño del archivo | En la respuesta de la descarga que trae el enlace: `row_count`, `bytes` y una frase en `mensaje`. El enlace va en `url`, con `expires_at` y `expires_in` |
+
+La Skill nombra sólo `continuacion.total`, que no lleva guion bajo y no entra en
+`RESPONSE_NAMES` de `scripts/check.py`; lo demás se lee donde está. Las páginas son de
+`filas_por_pagina`, 1 000 filas: el tamaño de las partes guardadas, que el fundador fijó
+el 21 de noviembre, y lo que la Skill ya decía. Esa misma decisión dice que un resultado
+grande se baja con el enlace de la descarga y no recorriendo páginas, y la Skill lo dice
+ahora así. Tras un rollback a v2.292.2 o anterior la página no trae `total`, y la Skill
+dice que el total no se sabe.
+
+El simulador de las evaluaciones lleva desde esta puesta al día esos mismos nombres en
+`run_dataset` y `export_dataset_csv`; el del 20 de noviembre los inventaba.
+
+### De v2.267.0 a v2.292.2
 
 Los contratos se armaron del código de cada commit con el método de la 3.0.0. «Clase» es
 lo que da `contract.compare` con los requisitos de la 4.2.0 y el contrato anterior; con
@@ -56,11 +119,10 @@ primera página de un conjunto y no cambia lo que el servidor declara. v2.292.2 
 después. v2.289.0 suma `complete_run` y `cancel_run`, y `run_id`, opcional, en todas las
 herramientas.
 
-`compat/contratos/` guarda los de v2.292.2, v2.292.1 y v2.292.0, los destinos probables
-de un rollback. Los demás quedan fuera del repositorio: sus huellas están en la tabla y
-en `compat/requisitos.json`.
+`compat/contratos/` guarda de este tramo los de v2.292.2, v2.292.1 y v2.292.0. Los demás
+quedan fuera del repositorio: sus huellas están en la tabla y en `compat/requisitos.json`.
 
-### La lectura de lo que cambió
+### La lectura de lo que cambió hasta v2.292.2
 
 Se leyeron con `diff` las tres instrucciones nuevas contra las anteriores y cada
 definición nueva de las ocho herramientas contra la anterior.
@@ -93,29 +155,47 @@ añade las páginas, la descarga del conjunto entero y el paso acotado. No nombr
 herramientas nuevas: describe la conducta, y así `compat/requisitos.json` no las declara
 y un rollback a un contrato sin ellas no es incompatible.
 
-### Lo que llega: v2.293.0 y v2.293.1
-
-v2.293.0 está en su tren y sin fundir el 20 de noviembre. Su contrato, armado del último
-commit del tren (`8f3457b8d6ef`, 100 herramientas, `c8d2563d0e6c`), suma `run_workflow`
-y no cambia las instrucciones ni ninguna de las ocho herramientas que usa el plugin:
-contra los requisitos de la 4.2.0 sale `compatible`. Lo que la Skill tiene que saber de
-ella, que un workflow se arranca con la herramienta de workflows y que cada respuesta
-dice el paso y sus herramientas, ya está en la 4.2.0. Cuando producción la sirva, la
-comprobación de cada hora la verá; el contrato hay que armarlo del commit que se
-despliegue, porque fundir el tren cambia el commit.
-
-v2.293.1 cambia el panel: activar un conjunto que no cabe en la espera corre en segundo
-plano y el panel dice «Probando…». La Skill no habla de activar conjuntos: dice que
-activar lo hace una persona en el panel, y eso no cambia. La misma versión va a declarar
-el tamaño de lo que se entrega: la primera página que sale de lo guardado dirá el total
-de filas, los bytes y cuántas páginas son; la descarga, las filas y los bytes del
-archivo, y una página servida en la misma llamada, que el total no se conoce. La 4.2.0
-ya pide decir ese tamaño, o que no se sabe, antes de seguir paginando o de descargar, sin
-nombrar los campos. Cuando v2.293.1 llegue a producción hay que cotejar los nombres de
-esos campos contra su contrato: si la Skill los va a nombrar, entran en
-`RESPONSE_NAMES` de `scripts/check.py`.
-
 ### Qué se ejecutó
+
+El 24 de noviembre, sobre la rama con `main` (4.1.1) fundido:
+
+| Qué | Resultado |
+|---|---|
+| La sonda sobre los ocho commits de producción, de `f325234b96cf` (v2.293.0) a `6cfe471036cc` (v2.297.0) | Las huellas de la primera tabla. El contrato de v2.293.0 sale igual que el del 20 de noviembre. La sonda arma la lista con un cliente con sesión en memoria, así que el 401 de v2.296.1, que va delante, no la toca: no hubo que cambiarla |
+| `contract.compare` de cada contrato con los requisitos de la 4.1.1 y de la 4.2.0 | Con la 4.1.1, `revision` en las ocho. Con la 4.2.0, `compatible` o `sin_cambios`. Ninguna `incompatible` |
+| `/health` de producción y un saludo sin credencial a `mcp.datalum.ai` | Sirve `6cfe471036cc`, v2.297.0. El saludo recibe 401 con `WWW-Authenticate` y `resource_metadata` |
+| `compat.py aviso` y `compat.py evaluar` sin credencial, con el contrato de `6cfe471036cc`, en dos copias desechables: `main` y esta rama | Producción confirma el commit y el cotejo sale `minima` con `pide_credencial`. Con `main`, `revision_requerida`; con esta rama, `compatible_sin_cambios`. Con esta rama y sin contrato en el aviso, como la lectura de cada hora, lo toma de `compat/contratos/` y da lo mismo: fundida, esa lectura cierra v2.297.0 sin publicar nada |
+| `python3 scripts/check.py` | Pasa (100 herramientas) |
+| `python3 -m unittest discover -s tests -t .` | 175 pruebas, todas pasan |
+| `node --test tests/client/*.test.js` | 149 pruebas, todas pasan |
+| `claude plugin validate .`, con el CLI de la aplicación de escritorio (2.1.326) | Pasa, con el aviso de antes sobre `privacyPolicyUrl` |
+| Catorce mutantes, en una copia aparte del commit ya guardado: la Skill pierde `continuacion.total`, «do not walk its pages», que sin sesión no hay herramientas, iniciar sesión desde el panel del conector o el estado que espera un inicio de sesión, o nombra un campo con guion bajo que no declara; `compat/requisitos.json` pierde la huella de `use_agent` de v2.295.0; el contrato de producción vuelve a v2.292.2; falta el contrato guardado de v2.296.1; el de v2.297.0 cambia una huella; el de v2.293.0 pierde `run_workflow`; la versión vuelve a 4.1.1; los ganchos vuelven a `node` con `args`; el CHANGELOG pierde la cabecera de la 4.1.1 | Las pruebas o `check.py` detectan los catorce. El último sobrevivió la primera vez y se le añadió la prueba del orden del CHANGELOG |
+
+Las evaluaciones con modelo corrieron con `claude plugin eval . --case <caso> --runs 1`,
+una corrida por caso y brazo, sobre los casos cuya conducta cambia: los dos de la descarga,
+uno de ellos nuevo, y los dos de inicio sin sesión. Costaron 0.90 dólares.
+
+| Caso | Con la Skill | Sin la Skill |
+|---|---|---|
+| `entregables/listado-entero-se-descarga`, con los campos reales de v2.293.1 en el simulador | 1.00 | 0.33 |
+| `entregables/listado-sin-total`, nuevo: la página dice que el total no se conoce | 1.00 | 0.67 |
+| `inicio/cuenta-sin-sesion` | 1.00 | 0.80 |
+| `conector-sin-configurar`, de `evals-sin-conector/`: sin ninguna herramienta de Datalum | 1.00 | 0.33 |
+
+| Qué | Dónde se prueba |
+|---|---|
+| Producción es v2.297.0, sus textos están leídos y los derivados son los suyos | `LaVersion297` en `tests/compat/test_automation.py` |
+| Un rollback a cualquiera de las ocho no pide revisión ni cambia los derivados | El mismo |
+| Las herramientas que usa el plugin no cambian de argumentos desde v2.292.2, `use_agent` cambia sólo en v2.295.0 y su huella está leída | El mismo |
+| La Skill dice dónde viene el tamaño, que lo grande se descarga sin recorrer páginas y que sin sesión Datalum no lista herramientas | `LaVersion420` en `tests/docs/test_documentos.py` |
+| El cotejo sin credencial acepta el 401 de v2.296.1 | `tests/compat/test_cotejo_por_http.py`, de la 4.1.1 |
+
+Sin comprobar: el catálogo completo que sirve producción a una conexión con sesión,
+porque sigue sin haber credencial de lectura; el contrato sale del código de cada commit.
+Una respuesta real con `continuacion.total`, una descarga real y una aplicación real ante
+el 401 sin sesión, que no se pidieron al servidor de verdad: los campos se cotejaron
+contra el código de v2.297.0 y el simulador. Los controles en Codex con una herramienta
+de Datalum, como dice la 4.1.1.
 
 El 20 de noviembre:
 
@@ -152,18 +232,17 @@ del archivo antes de dar el enlace.
 
 | Qué | Dónde se prueba |
 |---|---|
-| Producción es v2.292.2, sus textos están leídos y los derivados son los suyos | `LaEntregaDespues` en `tests/compat/test_automation.py` |
-| Un rollback a v2.292.1, a v2.292.0 o a v2.266.0 no pide revisión | El mismo y `ElArranquePorPartes` |
+| Un rollback a v2.292.2, a v2.292.1, a v2.292.0 o a v2.266.0 no pide revisión | `LaEntregaDespues` en `tests/compat/test_automation.py` y `ElArranquePorPartes` |
 | Las herramientas que usa el plugin sólo suman `run_id` desde v2.266.0 | `LaEntregaDespues` |
 | La Skill recoge lo que está en preparación, sigue el cursor devuelto, descarga el listado entero, sigue a `retryable`, se queda en el paso y nombra la empresa del agente | `LaVersion420` en `tests/docs/test_documentos.py` |
 | La Skill dice el tamaño total, o que no se sabe, antes de paginar o descargar | El mismo |
 | La Skill no nombra las herramientas nuevas | El mismo |
 
-Sin comprobar: el catálogo completo que sirve producción a una conexión con sesión,
-porque sigue sin haber credencial de lectura. Los nombres de los campos del tamaño de
-v2.293.1, que todavía no está en producción; el simulador los inventa. Una respuesta real «en preparación», un
-rechazo real fuera del paso y una descarga real, que no se pidieron al servidor de
-verdad.
+Sin comprobar el 20 de noviembre: el catálogo completo que sirve producción a una
+conexión con sesión, porque sigue sin haber credencial de lectura. Una respuesta real «en
+preparación», un rechazo real fuera del paso y una descarga real, que no se pidieron al
+servidor de verdad. Los nombres de los campos del tamaño se cotejaron el 24 de noviembre,
+arriba.
 
 ## Versión 4.1.0
 
