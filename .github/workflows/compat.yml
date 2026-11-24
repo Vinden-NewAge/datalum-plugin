@@ -67,6 +67,7 @@ jobs:
       base: ${{ steps.base.outputs.base }}
       accion: ${{ steps.evaluar.outputs.accion }}
       resultado: ${{ steps.evaluar.outputs.resultado }}
+      cotejo: ${{ steps.evaluar.outputs.cotejo }}
       pruebas: ${{ steps.pruebas.outputs.pruebas }}
       huella: ${{ steps.empaquetar.outputs.huella }}
     steps:
@@ -112,6 +113,9 @@ jobs:
             --sha "$SHA" --release "$RELEASE" --corrida "$CORRIDA" --actor "$ACTOR" \
             --contrato "$CONTRATO" --actores "$ACTORES" --salida "$RUNNER_TEMP/evento.json"
 
+      # Con la credencial de lectura saluda y lee el catálogo con ella. Sin credencial
+      # comprueba que el servidor la pide (401 con WWW-Authenticate y resource_metadata,
+      # desde Datalum v2.296.1) o que contesta el saludo, como los anteriores.
       - name: Confirmar el despliegue contra el servidor y comparar el contrato
         id: evaluar
         if: steps.turno.outputs.ceder != '1'
@@ -125,6 +129,8 @@ jobs:
           e = json.load(open(sys.argv[1]))
           print(f"accion={e['accion']}")
           print(f"resultado={e['resultado'] or ''}")
+          c = e["contrato"]
+          print(f"cotejo={' · '.join(x for x in (c.get('verificacion'), c.get('sin_credencial')) if x)}")
           PY
 
       - name: Probar el plugin con el contrato de ese despliegue
@@ -162,12 +168,14 @@ jobs:
         env:
           ACCION: ${{ steps.evaluar.outputs.accion }}
           RESULTADO: ${{ steps.evaluar.outputs.resultado }}
+          COTEJO: ${{ steps.evaluar.outputs.cotejo }}
           PRUEBAS: ${{ steps.pruebas.outputs.pruebas }}
         run: |
           {
             echo "### Compatibilidad con Datalum"
             echo "- Acción: \`${ACCION:-sin evaluar}\`"
             echo "- Resultado: \`${RESULTADO:-ninguno}\`"
+            echo "- Cotejo: \`${COTEJO:-sin cotejo}\`"
             echo "- Pruebas: \`${PRUEBAS:-no corrieron}\`"
           } >> "$GITHUB_STEP_SUMMARY"
 

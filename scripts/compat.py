@@ -120,6 +120,10 @@ def cmd_evaluar(args: argparse.Namespace) -> int:
         return 1
     Path(args.salida).write_text(json.dumps(evaluation, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"{evaluation['accion']}: {evaluation['resultado'] or 'sin cambios'} · {evaluation['detalle']}")
+    seen = evaluation["contrato"].get("sin_credencial")
+    if seen:
+        verification = evaluation["contrato"].get("verificacion")
+        print(f"Cotejo{f' {verification}' if verification else ''}: {production.describe({'conducta': seen})}.")
     return 0
 
 

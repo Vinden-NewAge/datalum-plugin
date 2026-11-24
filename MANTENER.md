@@ -29,8 +29,13 @@ hora por su cuenta y cuando una persona lo lanza. Hace siempre lo mismo:
    que el servidor no sirve, lo anota como no confirmado y termina.
 2. Consigue el contrato de ese commit: del aviso, de `compat/contratos/` si ese commit
    ya se había visto, o del propio servidor si hay credencial de lectura.
-3. Coteja ese contrato con lo que el servidor contesta sin sesión: las instrucciones y
-   el protocolo. Con credencial de lectura coteja el catálogo completo.
+3. Coteja ese contrato con lo que contesta el servidor. Sin credencial, el servidor
+   tiene que pedirla: 401 con `WWW-Authenticate` y un `resource_metadata` en este mismo
+   servidor, como hace Datalum desde la v2.296.1. Mientras dura ese despliegue también
+   vale la conducta anterior, el saludo sin credencial, y la línea del registro dice en
+   `contrato.sin_credencial` cuál vio (`pide_credencial` o `saludo_publico`). Con la
+   credencial de lectura saluda con ella y coteja las instrucciones, el protocolo y el
+   catálogo completo.
 4. Lo compara con `compat/requisitos.json` y con el último contrato comprobado.
 5. Si hace falta, regenera `client/contract-facts.json` y sube la versión.
 6. Corre `check.py`, las pruebas y el empaquetado sobre el resultado.
@@ -100,7 +105,7 @@ hora siguiente vuelve a intentarlo.
 | El paso de aviso y la sonda de contrato | Repositorio del servidor | Que el despliegue avise cuando termina, con su contrato | La lectura de cada hora ve el cambio de commit y anota `contrato_no_disponible` |
 | Secreto `DATALUM_PLUGIN_DISPATCH_TOKEN` | Repositorio del servidor | Disparar `compat.yml`. Permiso: Actions, lectura y escritura, sólo sobre este repositorio | No hay aviso |
 | Variable `COMPAT_ACTORES` | Este repositorio | Aceptar avisos sólo de esa cuenta | Se acepta el aviso de cualquiera que pueda lanzar el flujo. El servidor lo confirma igual |
-| Secreto `DATALUM_COMPAT_TOKEN` | Este repositorio | Leer el catálogo completo del servidor desplegado. Hoy no hay con qué: Datalum emite tokens de una hora, con renovación de 30 días que cambia en cada uso | El cotejo es parcial: commit, instrucciones y protocolo |
+| Secreto `DATALUM_COMPAT_TOKEN` | Este repositorio | Saludar y leer el catálogo completo del servidor desplegado. Hoy no hay con qué: Datalum emite tokens de una hora, con renovación de 30 días que cambia en cada uso. Una credencial que el servidor rechaza termina en `despliegue_no_confirmado` | Contra Datalum v2.296.1 o posterior el cotejo es mínimo: el commit y que el servidor pide la credencial. Las instrucciones no se cotejan ni se guardan. Contra uno anterior es parcial: commit, instrucciones y protocolo |
 | «Allow GitHub Actions to create and approve pull requests» | Ajustes de este repositorio | Abrir el PR cuando `main` no admita el empuje directo | Queda la rama `auto/compat-…` y el flujo lo dice; alguien abre el PR |
 
 Qué tiene que mandar el servidor está en `integracion-servidor/README.md`. GitHub apaga

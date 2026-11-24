@@ -8,6 +8,7 @@ de Datalum sin credencial:
                     `WWW-Authenticate: Bearer realm=…, resource_metadata=…`
   sin_cabecera      un 401 sin `WWW-Authenticate`
   sin_metadatos     un 401 con `WWW-Authenticate` sin `resource_metadata`
+  otro_servidor     un 401 cuyo `resource_metadata` apunta a otro servidor
 
 Con la credencial de prueba los cuatro sirven el saludo y el catálogo completo. Las
 peticiones viajan por urllib y por un socket de verdad; sólo cambia la dirección, que
@@ -22,7 +23,6 @@ import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit
 
-from . import support
 from .support import INSTRUCTIONS, SHA_B, Repo, base_tools, git, summary_of
 
 from compatlib import pipeline, production  # noqa: E402
@@ -73,6 +73,7 @@ class Servidor:
                         "pide_credencial": {"www-authenticate": f'Bearer realm="vinden-datahub", resource_metadata="{METADATA}"'},
                         "sin_cabecera": {},
                         "sin_metadatos": {"www-authenticate": 'Bearer realm="vinden-datahub"'},
+                        "otro_servidor": {"www-authenticate": 'Bearer realm="x", resource_metadata="https://otro.example.invalid/.well-known/oauth-protected-resource"'},
                     }[servidor.conducta]
                     return self._send(401, _error(), headers)
                 length = int(self.headers.get("content-length") or 0)
@@ -210,6 +211,20 @@ class Cotejo(unittest.TestCase):
         ev = self.evaluar(s, aviso(summary_of(base_tools())), token=False)
         self.assertEqual(ev["resultado"], "contrato_no_coincide", ev["detalle"])
         self.assertIn("resource_metadata", ev["detalle"])
+
+    def test_un_401_que_manda_a_iniciar_sesion_en_otro_servidor_es_un_fallo(self):
+        s = self.servidor("otro_servidor")
+        ev = self.evaluar(s, aviso(summary_of(base_tools())), token=True)
+        self.assertEqual(ev["resultado"], "contrato_no_coincide", ev["detalle"])
+        self.assertIn("resource_metadata", ev["detalle"])
+
+    def test_la_salida_dice_que_conducta_vio(self):
+        for conducta, frase in (("pide_credencial", "401"), ("anterior", "contesta el saludo")):
+            with self.subTest(conducta=conducta):
+                s = self.servidor(conducta)
+                ev = self.evaluar(s, aviso(summary_of(base_tools()), origin="aviso"), token=False)
+                ev = dict(ev, resultado="contrato_no_disponible", detalle="d")
+                self.assertIn(frase, pipeline.proposal(ev)["cuerpo"])
 
     def test_una_credencial_rechazada_es_un_fallo(self):
         s = self.servidor("pide_credencial")

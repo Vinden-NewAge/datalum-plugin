@@ -179,22 +179,30 @@ def evaluate(
     evaluation["contrato"]["origen"] = source
 
     try:
-        greeting = prod.greeting()
-        problems = production.cross_check(summary, greeting, prod.tools(auth=False))
+        seen = prod.observe()
     except production.ProductionError as e:
         return stop("despliegue_no_confirmado", "avisar", f"no se pudo cotejar el contrato: {e}")
+    # Mientras dura el despliegue de la v2.296.1 valen las dos conductas sin
+    # credencial; la salida dice cuál vio.
+    evaluation["contrato"]["sin_credencial"] = seen["conducta"]
+    problems = production.cross_check(summary, seen)
     if live is not None and live["huella"] != summary["huella"]:
         problems.append("el catálogo completo que sirve el despliegue no es el del contrato recibido")
     if problems:
         evaluation["motivos"] = problems
         return stop("contrato_no_coincide", "avisar", problems[0])
-    evaluation["contrato"]["verificacion"] = "completa" if live is not None else "parcial"
+    greeting = seen["saludo"]
+    # completa: el catálogo entero; parcial: instrucciones y protocolo; minima: sólo el
+    # commit y que el servidor pide la credencial, porque sin ella no hay saludo.
+    evaluation["contrato"]["verificacion"] = (
+        "completa" if live is not None else "parcial" if greeting is not None else "minima"
+    )
     # El contrato y las instrucciones cotejadas se guardan siempre: sirven para
     # reintentar, para comprobar un rollback y para que una persona lea lo que cambió.
     if not stored.exists():
         write_json(stored, summary)
     text = where["instructions"] / f"{summary['instrucciones_sha256'][:12]}.txt"
-    if not text.exists():
+    if greeting is not None and not text.exists():
         text.parent.mkdir(parents=True, exist_ok=True)
         text.write_text(greeting["instrucciones"], encoding="utf-8")
 
@@ -310,6 +318,8 @@ def proposal(evaluation: dict) -> dict:
     ]
     if evaluation.get("motivos"):
         lines += ["", "Motivos:"] + [f"- {m}" for m in evaluation["motivos"]]
+    if evaluation["contrato"].get("sin_credencial"):
+        lines += ["", f"Cotejo: {production.describe({'conducta': evaluation['contrato']['sin_credencial']})}."]
     if evaluation.get("notas"):
         lines += ["", "Cambios del catálogo:"] + [f"- {n}" for n in evaluation["notas"]]
     if result == "retirada_fallida":
@@ -332,4 +342,10 @@ def proposal(evaluation: dict) -> dict:
             "Quien revise lee el texto nuevo contra la Skill y, si no cambia nada, añade la "
             "huella a `compat/requisitos.json`. Los pasos están en `MANTENER.md`.",
         ]
+        if evaluation["contrato"].get("verificacion") == "minima":
+            lines += [
+                "",
+                "El texto de las instrucciones no quedó guardado: sin credencial de lectura el "
+                "servidor no lo entrega. Se lee en una conversación con el conector.",
+            ]
     return {"titulo": titles.get(result, f"Comprobación de compatibilidad: {result}"), "cuerpo": "\n".join(lines)}
