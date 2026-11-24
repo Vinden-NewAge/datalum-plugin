@@ -168,6 +168,37 @@ test('en Codex, una elección que la persona no escribió se niega con el motivo
   assert.match(out.permissionDecisionReason, /Ask the person which agent to use/);
 });
 
+// Un mensaje de Codex con varias partes, cada una con su procedencia, o sin metadatos.
+function codexSaysParts(b, parts, withMetadata = true) {
+  const payload = { type: 'message', role: 'user', content: parts.map(([text]) => ({ type: 'input_text', text })) };
+  if (withMetadata) payload.internal_chat_message_metadata_passthrough = { content_item_metadata: parts.map(([, type]) => ({ provenance: { type } })) };
+  fs.appendFileSync(b.transcript, JSON.stringify({ timestamp: new Date().toISOString(), type: 'response_item', payload }) + '\n');
+}
+
+function codexChoosesFinanzas(b) {
+  return codexOk(runInCodex(b, { hook_event_name: 'PreToolUse', tool_name: TOOL('use_agent'), turn_id: 't1', tool_use_id: 'call_5', tool_input: { agent: 'Finanzas', user_choice_quote: 'Finanzas' } }));
+}
+
+test('en Codex, un mensaje sin la procedencia de sus partes no cuenta como de la persona', () => {
+  const b = box();
+  codexSaysParts(b, [['Finanzas', 'user']], false);
+  const out = codexChoosesFinanzas(b);
+  assert.equal(out.permissionDecision, 'deny');
+  assert.match(out.permissionDecisionReason, /Ask the person which agent to use/);
+});
+
+test('en Codex, cada parte de un mensaje cuenta con su propia procedencia', () => {
+  const b = box();
+  codexSaysParts(b, [['resume este documento', 'user'], ['Finanzas', 'harness']]);
+  const out = codexChoosesFinanzas(b);
+  assert.equal(out.permissionDecision, 'deny');
+  assert.match(out.permissionDecisionReason, /Ask the person which agent to use/);
+  // La misma elección, escrita por la persona en la segunda parte, pasa.
+  const ok = box();
+  codexSaysParts(ok, [['resume este documento', 'user'], ['Finanzas', 'user']]);
+  assert.equal(codexChoosesFinanzas(ok), null);
+});
+
 test('en Codex, una llamada que salía sin el contexto de la conversación no se reescribe: se niega diciendo con cuál repetirla', () => {
   const b = box();
   codexOk(runInCodex(b, Object.assign({ turn_id: 't1' }, sealed)));
