@@ -837,12 +837,10 @@ class ElArranquePorPartes(unittest.TestCase):
     def load(self, relative: str) -> dict:
         return json.loads((self.ROOT / relative).read_text(encoding="utf-8"))
 
-    def test_produccion_es_v2_266_0_y_sus_textos_estan_revisados(self):
-        summary = contract.validate(self.load("compat/contrato-produccion.json"))
-        self.assertEqual(summary, self.load(self.V2_266_0))
-        comparison = contract.compare(summary, self.load("compat/requisitos.json"), current_facts=self.load("client/contract-facts.json"))
+    def test_un_rollback_a_v2_266_0_no_pide_revision(self):
+        summary = contract.validate(self.load(self.V2_266_0))
+        comparison = contract.compare(summary, self.load("compat/requisitos.json"))
         self.assertEqual(comparison["incompatible"] + comparison["revision"], [])
-        self.assertFalse(comparison["derivados_cambian"])
 
     def test_un_rollback_a_v2_265_0_o_a_v2_259_4_no_pide_revision(self):
         requirements = self.load("compat/requisitos.json")
@@ -880,6 +878,145 @@ class ElArranquePorPartes(unittest.TestCase):
         facts = self.load("client/contract-facts.json")
         self.assertNotIn("open_agent_card", facts["destinos"])
         self.assertNotIn("open_agent_card", facts["sin_selection_context"])
+
+
+class LaEntregaDespues(unittest.TestCase):
+    """Producción pasó de v2.266.0 a v2.292.2 por 25 versiones sin contrato. Ninguna quita
+    algo que el plugin usa: cambian las instrucciones y el texto de las ocho herramientas,
+    y desde v2.289.0 todas aceptan `run_id`, opcional. v2.292.2 suma la descarga del
+    conjunto. Lo que el plugin pide vale con v2.292.2 y con un rollback a v2.292.1 o
+    v2.292.0, y los textos están leídos."""
+
+    ROOT = Path(__file__).resolve().parents[2]
+    V2_292_2 = "compat/contratos/6f24d473aef7.json"
+    V2_292_1 = "compat/contratos/b6c40a9617a6.json"
+    V2_292_0 = "compat/contratos/b8918c5e61dc.json"
+    V2_266_0 = "compat/contratos/35bad1406854.json"
+    USA = ElArranquePorPartes.USA
+
+    def load(self, relative: str) -> dict:
+        return json.loads((self.ROOT / relative).read_text(encoding="utf-8"))
+
+    def test_un_rollback_a_v2_292_2_no_pide_revision_ni_cambia_los_derivados(self):
+        summary = contract.validate(self.load(self.V2_292_2))
+        comparison = contract.compare(summary, self.load("compat/requisitos.json"), current_facts=self.load("client/contract-facts.json"))
+        self.assertEqual(comparison["incompatible"] + comparison["revision"], [])
+        self.assertFalse(comparison["derivados_cambian"])
+
+    def test_un_rollback_a_v2_292_1_o_a_v2_292_0_no_pide_revision(self):
+        requirements = self.load("compat/requisitos.json")
+        for stored in (self.V2_292_1, self.V2_292_0):
+            comparison = contract.compare(contract.validate(self.load(stored)), requirements)
+            self.assertEqual(comparison["incompatible"] + comparison["revision"], [], stored)
+
+    def test_las_herramientas_que_usa_solo_suman_run_id(self):
+        nuevo = contract.by_name(self.load(self.V2_292_2))
+        anterior = contract.by_name(self.load(self.V2_266_0))
+        for name in self.USA:
+            self.assertEqual(sorted(set(nuevo[name]["p"]) - set(anterior[name]["p"])), ["run_id"], name)
+            self.assertEqual(set(anterior[name]["p"]) - set(nuevo[name]["p"]), set(), name)
+            self.assertEqual(nuevo[name]["r"], anterior[name]["r"], name)
+
+    def test_las_instrucciones_nuevas_estan_guardadas_y_revisadas(self):
+        reviewed = self.load("compat/requisitos.json")["instrucciones_revisadas"]
+        for prefix in ("1106dd42f780", "f02ab59763ef", "6a3181a6053b"):
+            text = (self.ROOT / "compat/instrucciones" / f"{prefix}.txt").read_text(encoding="utf-8")
+            digest = contract.sha256_text(text)
+            self.assertTrue(digest.startswith(prefix), prefix)
+            self.assertIn(digest, reviewed, prefix)
+        self.assertEqual(self.load(self.V2_292_2)["instrucciones_sha256"][:12], "6a3181a6053b")
+
+    def test_la_descarga_entra_y_los_controles_la_nombran(self):
+        names = set(contract.by_name(self.load(self.V2_292_2)))
+        self.assertTrue({"export_dataset_csv", "complete_run", "cancel_run"} <= names)
+        self.assertNotIn("export_dataset_csv", contract.by_name(self.load(self.V2_292_1)))
+        facts = self.load("client/contract-facts.json")
+        self.assertEqual(facts["destinos"]["export_dataset_csv"], "dataset")
+        self.assertNotIn("render_chart", facts["destinos"])
+
+
+class LaVersion297(unittest.TestCase):
+    """Producción pasó de v2.292.2 a v2.297.0 por ocho versiones sin contrato. Ninguna
+    cambia las instrucciones ni los argumentos de lo que el plugin usa. v2.293.0 suma
+    `run_workflow`; v2.293.1 dice el tamaño de lo entregado en el texto de las lecturas
+    de conjuntos; v2.295.0 cambia la definición de `use_agent`, que cuenta los objetos de
+    cada conector, y v2.297.0 la de los tableros. Desde v2.296.1 el servidor pide la
+    credencial antes del saludo, y el contrato con sesión no cambia por eso."""
+
+    ROOT = Path(__file__).resolve().parents[2]
+    VERSIONES = (
+        ("v2.293.0", "f325234b96cf"),
+        ("v2.293.1", "12e67bb95093"),
+        ("v2.293.2", "5df1953f092a"),
+        ("v2.294.0", "c5f7957224d0"),
+        ("v2.295.0", "b252076b9e36"),
+        ("v2.296.0", "31e5506cd27d"),
+        ("v2.296.1", "cd6982d20052"),
+        ("v2.297.0", "6cfe471036cc"),
+    )
+    USA = ElArranquePorPartes.USA
+
+    def load(self, relative: str) -> dict:
+        return json.loads((self.ROOT / relative).read_text(encoding="utf-8"))
+
+    def stored(self, commit: str) -> dict:
+        return contract.validate(self.load(f"compat/contratos/{commit}.json"))
+
+    def test_produccion_es_v2_297_0_y_sus_textos_estan_revisados(self):
+        summary = contract.validate(self.load("compat/contrato-produccion.json"))
+        self.assertEqual(summary, self.stored("6cfe471036cc"))
+        comparison = contract.compare(summary, self.load("compat/requisitos.json"), current_facts=self.load("client/contract-facts.json"))
+        self.assertEqual(comparison["incompatible"] + comparison["revision"], [])
+        self.assertFalse(comparison["derivados_cambian"])
+
+    def test_un_rollback_a_cualquiera_de_las_ocho_no_pide_revision(self):
+        requirements = self.load("compat/requisitos.json")
+        facts = self.load("client/contract-facts.json")
+        for version, commit in self.VERSIONES:
+            comparison = contract.compare(self.stored(commit), requirements, current_facts=facts)
+            self.assertEqual(comparison["incompatible"] + comparison["revision"], [], version)
+            self.assertFalse(comparison["derivados_cambian"], version)
+
+    def test_sin_la_lectura_de_use_agent_v2_295_0_pide_revision(self):
+        """Sin la huella leída de `use_agent`, el flujo para en v2.295.0 y las siguientes."""
+        old = self.load("compat/requisitos.json")
+        old["definiciones_revisadas"] = {
+            name: hashes[:-1] if name == "use_agent" else hashes
+            for name, hashes in old["definiciones_revisadas"].items()
+        }
+        self.assertEqual(
+            contract.compare(self.stored("b252076b9e36"), old)["revision"],
+            ["la definición de `use_agent` cambió y nadie la ha leído contra la Skill"],
+        )
+
+    def test_las_instrucciones_son_las_de_v2_281_0_en_las_ocho(self):
+        for version, commit in self.VERSIONES:
+            self.assertEqual(self.stored(commit)["instrucciones_sha256"][:12], "6a3181a6053b", version)
+
+    def test_las_herramientas_que_usa_no_cambian_de_argumentos(self):
+        anterior = contract.by_name(self.load("compat/contratos/6f24d473aef7.json"))
+        for version, commit in self.VERSIONES:
+            nuevo = contract.by_name(self.stored(commit))
+            for name in self.USA:
+                self.assertEqual(nuevo[name]["p"], anterior[name]["p"], f"{version} {name}")
+                self.assertEqual(nuevo[name]["r"], anterior[name]["r"], f"{version} {name}")
+
+    def test_use_agent_cambia_solo_en_v2_295_0(self):
+        hashes = [contract.by_name(self.stored(commit))["use_agent"]["h"] for _, commit in self.VERSIONES]
+        self.assertEqual(len(set(hashes[:4])), 1)
+        self.assertEqual(len(set(hashes[4:])), 1)
+        self.assertNotEqual(hashes[3], hashes[4])
+        self.assertIn(hashes[4], self.load("compat/requisitos.json")["definiciones_revisadas"]["use_agent"])
+
+    def test_run_workflow_entra_en_v2_293_0(self):
+        self.assertNotIn("run_workflow", contract.by_name(self.load("compat/contratos/6f24d473aef7.json")))
+        for version, commit in self.VERSIONES:
+            names = contract.by_name(self.stored(commit))
+            self.assertIn("run_workflow", names, version)
+            self.assertEqual(len(names), 100, version)
+
+    def test_v2_296_1_sirve_el_contrato_de_v2_296_0(self):
+        self.assertEqual(self.stored("cd6982d20052")["huella"], self.stored("31e5506cd27d")["huella"])
 
 
 class Events(unittest.TestCase):

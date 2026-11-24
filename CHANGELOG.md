@@ -4,6 +4,80 @@ Cada versión del plugin de Datalum dice qué cambia para quien usa la Skill, co
 versión del servidor se comprobó y qué hay que hacer para recibirla. La más reciente va
 primero.
 
+## [4.2.0] - 2026-11-24
+
+Frente a la 4.1.1 cambia la Skill. Los controles del cliente y el cotejo de cada
+despliegue son los de la 4.1.1, con los ganchos en Codex y el 401 sin credencial.
+
+Desde v2.266.0, producción pasó por 33 versiones de Datalum sin que la comprobación
+tuviera su contrato: 25 hasta v2.292.2 y ocho más hasta v2.297.0. Ninguna quita una
+herramienta ni un argumento que el plugin usa, ni lo vuelve obligatorio. Sí cambian las
+instrucciones del servidor y el texto de las ocho herramientas que la Skill nombra, y
+llegan conductas que la Skill no sabía: un resultado que se entrega después, la descarga
+de un conjunto entero con su tamaño, el texto nuevo de un plazo agotado, los
+procedimientos que van paso a paso y un servidor que no lista nada sin sesión. Por eso
+sube el número menor.
+
+### Cambiado
+
+- Un resultado que tarda más que una llamada responde que está en preparación. El
+  asistente vuelve a pedirlo con los mismos argumentos y su `preparation_ref`, tras la
+  espera que dice, mientras siga en preparación. No cambia los argumentos ni cuenta
+  esas llamadas como fallos.
+- Un resultado que no cabe llega por páginas de hasta 1 000 filas o unos 40 000
+  caracteres. El asistente sigue sólo con el `next_cursor` que devolvió la página
+  anterior, nunca arma uno, y no presenta como completo un resultado parcial.
+- Antes de seguir paginando o de descargar, el asistente le dice a la persona cuánto
+  mide el resultado entero, con las filas, el tamaño y las páginas que la página da en
+  `continuacion.total`, o que no se sabe. Si es grande, no recorre sus páginas: propone
+  la descarga del conjunto como archivo cuando el conector la ofrece, dice las filas y
+  el tamaño del archivo y da el enlace en cuanto lo tiene, porque dura unos minutos.
+- Cuando la fuente de datos no termina a tiempo, el asistente lee `retryable`. Con
+  verdadero reintenta una vez; con falso no repite la llamada tal cual: pide un periodo
+  más corto o menos desgloses, o le dice a la persona que la consulta no cabe en una
+  llamada. Antes la Skill mandaba reintentar todo tiempo agotado.
+- Un workflow o una skill del agente pueden guiar el trabajo paso a paso. El asistente
+  usa sólo las herramientas del paso en curso. Si Datalum rechaza una llamada fuera del
+  paso, hace la llamada que el rechazo propone o una de las que nombra, sin volver a un
+  paso anterior ni buscar otro camino.
+- Si Datalum rechaza una llamada y propone otra en `next_call`, el asistente hace esa
+  llamada primero, con las reglas de siempre para los cambios. Al cambiar de agente, si
+  Datalum pide cerrar el trabajo abierto antes de soltar el agente, el asistente hace la
+  llamada que propone y después lo suelta. Desde v2.297.0 todo agente trabaja con reglas
+  de control, y sin esto el cambio de agente se quedaba en el rechazo.
+- Ante un error del servidor, el asistente lee `retryable`. Con falso no repite la
+  llamada tal cual y le dice a la persona que avise a su administrador de Datalum; si no,
+  reintenta una vez como antes.
+- La lista de agentes trae los de todas las empresas de la persona, cada uno con su
+  empresa. El asistente dice de qué empresa es cada uno y, si dos se llaman igual, elige
+  por su id.
+- Si un conector dice que la lectura de sus tablas no terminó, el asistente lo dice
+  cuando la petición depende de lo que falta.
+- Sin sesión, Datalum no lista ninguna herramienta. Cuando no hay ninguna de Datalum en
+  la conversación, el asistente le dice a la persona que agregue el conector o, si ya lo
+  tiene, que inicie sesión desde el panel de conectores de la aplicación.
+
+### Servidor
+
+- Comprobada con Datalum v2.297.0, commit `6cfe471036cc`, que producción sirve el 24 de
+  noviembre. La lista pasa de 96 a 100 herramientas: entran `complete_run`, `cancel_run`,
+  `export_dataset_csv` y `run_workflow`. La Skill no nombra las nuevas: describe la
+  conducta, y así vale con los contratos de antes.
+- Las ocho versiones de v2.293.0 a v2.297.0 salen `compatible` o `sin_cambios` con esta
+  versión. Con la 4.1.1 todas piden revisión. `compat/contratos/` guarda sus contratos.
+- Desde v2.296.1 el servidor contesta 401 a todo mensaje sin credencial. El contrato que
+  sirve con sesión no cambia por eso.
+- El código de los controles del cliente es el de la 4.1.1. `client/contract-facts.json`,
+  derivado del contrato de producción, suma `complete_run` y `export_dataset_csv` y deja
+  de nombrar `render_chart`, que ya no tiene un argumento obligatorio.
+- El detalle, versión por versión, está en `COMPATIBILIDAD.md`.
+
+### Para recibirla
+
+Lo de siempre, según la aplicación: `ACTUALIZAR.md`. En Codex, Codex vuelve a pedir que
+la persona confíe en los hooks en `/hooks`. Una conversación abierta sigue con la Skill
+que cargó hasta que se recarga.
+
 ## [4.1.1] - 2026-11-24
 
 Los controles del cliente corren en Codex. Hasta la 4.1.0, Codex CLI y la app de Codex

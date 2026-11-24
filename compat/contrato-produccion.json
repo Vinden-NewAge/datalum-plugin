@@ -2,13 +2,14 @@
   "esquema": 1,
   "herramientas": [
     {
-      "h": "01b621052409a8173ae6aa2aa9d30b4d46af55f14acfaae85c1f32099e52bf13",
+      "h": "27983409c46d256bf72e8b3d399b2ad2b743ebea7c6c2323b23b9a67732de40a",
       "n": "add_agent_document",
       "p": [
         "agentId",
         "body",
         "description",
         "kind",
+        "run_id",
         "selection_context",
         "title",
         "user_request_quote"
@@ -23,7 +24,7 @@
       ]
     },
     {
-      "h": "81db200103d751280308507506d7f33927b4bec0c71133451aef4f7f6e4b16c3",
+      "h": "4297dba8127d1d9d6c70db1c46e376c989d8793b44be6f2dcbe028ed25c09de3",
       "n": "apply_batch",
       "p": [
         "change_note",
@@ -33,6 +34,7 @@
         "document",
         "format",
         "operations",
+        "run_id",
         "selection_context",
         "user_request_quote"
       ],
@@ -41,10 +43,11 @@
       ]
     },
     {
-      "h": "c6a181eb79e04e56acf3058713519a4e03c7133690d3070ef96ec565d9d016c1",
+      "h": "4b1b9155c8806b6168dea5f9854f46141dab24615ebe955ef69696f1f1a7599e",
       "n": "apply_solution_update",
       "p": [
         "confirm",
+        "run_id",
         "selection_context",
         "solution",
         "user_request_quote"
@@ -54,11 +57,12 @@
       ]
     },
     {
-      "h": "0447b5436cfc686b1a184ecba1e5f44f468455fea718ad5fa615dcc006aad09c",
+      "h": "ef4cf18d383ac8dee34134c44f5a43ec197c0b4ce8dc23320ff447cbdc9fddba",
       "n": "attach_agent_document",
       "p": [
         "agentId",
         "documentId",
+        "run_id",
         "selection_context",
         "sort",
         "user_request_quote"
@@ -70,11 +74,12 @@
       ]
     },
     {
-      "h": "259edb296919f50ca014f8b21a48945723eb9afda629995f4f01dfa28e72d109",
+      "h": "11eb0051145375c6b11f294fd63c45d84f0eae0e9a66a6c754f42c70480dc21f",
       "n": "attach_draft_connector",
       "p": [
         "agentId",
         "connector",
+        "run_id",
         "selection_context",
         "user_request_quote"
       ],
@@ -85,11 +90,12 @@
       ]
     },
     {
-      "h": "0a04518407167889fadee24c98ba790f7e8fe56d8cf85f812b18979569e51765",
+      "h": "f8742903e1a378037245673253e04ff6af7f809dc1ce029cfe2a4d210bcd448d",
       "n": "attach_draft_document",
       "p": [
         "agentId",
         "documentId",
+        "run_id",
         "segment",
         "selection_context",
         "sort",
@@ -103,17 +109,18 @@
       ]
     },
     {
-      "h": "55c47af7557bddfc3e9d941d41f846c4412fdafcb9e669a05dda563372720360",
+      "h": "3b3d3ba0b065894ce6c320f98b3ed6b4de54a44300538004af8c35de75c8cb69",
       "n": "brain_import",
       "p": [
-        "files"
+        "files",
+        "run_id"
       ],
       "r": [
         "files"
       ]
     },
     {
-      "h": "b801f8d5b774975a0db69fd77bdaef09553224cc1c6800267f0ca23559dd481d",
+      "h": "b96466781b8a737e1df8a5db28f4edf4bf108a67a634b8b95bc5490691362be0",
       "n": "brain_index",
       "p": [
         "connector",
@@ -123,6 +130,7 @@
         "locale",
         "mode",
         "path",
+        "run_id",
         "selection_context",
         "unit",
         "version"
@@ -130,13 +138,14 @@
       "r": []
     },
     {
-      "h": "26efb48b23881de15f94209508e25179697ed3e6ede1881409d26d4d5e6bae8c",
+      "h": "ac49b7f1e35e1646c416c70f4545b6ed4b38c0a1ba62904159921681d377609b",
       "n": "brain_manifest",
       "p": [
         "connector",
         "include_drafts",
         "locale",
         "mode",
+        "run_id",
         "selection_context",
         "unit",
         "version"
@@ -146,7 +155,7 @@
       ]
     },
     {
-      "h": "d9ce649c5d02b1e20fb1fe854f013a5a4be9045d96567fcae289064b96a6d1b4",
+      "h": "d365e952a7d831432f57408b994026d7c469d7d57f565e209edabad99d573f4b",
       "n": "brain_read",
       "p": [
         "concept_id",
@@ -156,6 +165,7 @@
         "max_bytes",
         "mode",
         "offset",
+        "run_id",
         "selection_context",
         "unit",
         "version"
@@ -165,7 +175,7 @@
       ]
     },
     {
-      "h": "0daa3cab67630faf10af136b3e1979d730e39523eee42b5a00832de146cdd01b",
+      "h": "496abfd2d59865ce65097a66967f84bbc81d4c95b448853f1196ce5a194ab07c",
       "n": "brain_search",
       "p": [
         "connector",
@@ -174,6 +184,7 @@
         "locale",
         "mode",
         "q",
+        "run_id",
         "selection_context",
         "tag",
         "type",
@@ -185,13 +196,14 @@
       ]
     },
     {
-      "h": "1788cebb3bc0f96c7009c586f0d41f1034904de8b744ac5ad1dfba43765ba48b",
+      "h": "a84b0c0a4ac31b79557b4e887abc3e2593af7c3aff5d0308115808bad919a3e7",
       "n": "brain_write",
       "p": [
         "body_md",
         "concept_id",
         "documents",
         "kind",
+        "run_id",
         "scope",
         "selection_context",
         "tagline",
@@ -205,10 +217,21 @@
       ]
     },
     {
-      "h": "4db9ec40bf4ac123738430022d573e9ae6bcb241b3afeb9a30a3b2e9ee037338",
+      "h": "fc2399079774a48a0199e60616e9da4ceccc2c3bb9d83ba9653c50746d75b1a0",
+      "n": "cancel_run",
+      "p": [
+        "reason",
+        "run_id",
+        "selection_context"
+      ],
+      "r": []
+    },
+    {
+      "h": "bdd53c2c4ba63b2707d94dd7dda4936e017eff974fba698fcd1a10fdc28ab78a",
       "n": "clone_agent",
       "p": [
         "name",
+        "run_id",
         "selection_context",
         "templateAgentId",
         "user_request_quote"
@@ -219,10 +242,11 @@
       ]
     },
     {
-      "h": "8dea89fb93f6ea3c5a8db081af1bff3e8c89117f1820fa6385a5259796545f20",
+      "h": "df60df4ec51fbc2b89735c9b5b54312ef173f3875fec391fb94c7686bda6e446",
       "n": "compare_template",
       "p": [
         "connector",
+        "run_id",
         "selection_context",
         "template_id",
         "version"
@@ -233,12 +257,28 @@
       ]
     },
     {
-      "h": "22e0bcfda19fe606515fccf16d912c668049620bf518f68299db8e79a0af9b6b",
+      "h": "63faf04d5c951c246e4bc99f478f5b955f373b6593ddf371e9b76c67fbb1e9b5",
+      "n": "complete_run",
+      "p": [
+        "evidence",
+        "memory",
+        "run_id",
+        "selection_context",
+        "status",
+        "user_request_quote"
+      ],
+      "r": [
+        "status"
+      ]
+    },
+    {
+      "h": "305697685c5f810c052d8d928ef6b94e386d618fb5ff17a1e40be74ead67dea6",
       "n": "curate_table",
       "p": [
         "compact",
         "confirm",
         "connector",
+        "run_id",
         "selection_context",
         "tables",
         "user_request_quote"
@@ -249,10 +289,11 @@
       ]
     },
     {
-      "h": "5ebe8b73f2844a9296d8e75d89d71b1b05cc5ae51a06d9ba99e83995f91791de",
+      "h": "bf753eb0f444c259d4da5e78836cd0b8b2ce2aa3cdc1c412a74902df525d432c",
       "n": "delete_my_memories",
       "p": [
         "confirm",
+        "run_id",
         "selection_context",
         "user_request_quote"
       ],
@@ -262,12 +303,13 @@
       ]
     },
     {
-      "h": "2dcaf4543885535e128bff93fd20cc17a17610d1299f152a9cf321cf178bca19",
+      "h": "4c29778a710b0d12f65c9d5074d38cee6b6a2af85a2fd42c1d0115acf18ad6f6",
       "n": "describe_connector",
       "p": [
         "confirm",
         "connector",
         "description",
+        "run_id",
         "selection_context",
         "time_zone",
         "user_request_quote"
@@ -277,13 +319,14 @@
       ]
     },
     {
-      "h": "9d1ff1b796d3922d6ba2dd53e107a87ea7b7a02a5b0046e713c823d0ad7a801d",
+      "h": "363e28fc169b43d754975abf16a13aeb63b2e9eb4bc91798856a5f76f8faf5e6",
       "n": "describe_dataset_fields",
       "p": [
         "confirm",
         "connector",
         "dataset",
         "fields",
+        "run_id",
         "selection_context",
         "user_request_quote"
       ],
@@ -293,10 +336,11 @@
       ]
     },
     {
-      "h": "2541a4b6172c7eb3b1296b19f414e93e89cf36712f879b825d3694339fdb49ee",
+      "h": "44257f976951bf94522d421d13e2ae0bfc978e236b4232c15cd671d114468918",
       "n": "describe_table",
       "p": [
         "connector",
+        "run_id",
         "selection_context",
         "table"
       ],
@@ -306,11 +350,12 @@
       ]
     },
     {
-      "h": "c976a77423861803d27907504e881b94236ebe6cb0395981d7b27e6030316b83",
+      "h": "97f23873d762d410a28d532e98a6aa703f1fd6c972a7166733ec1feda8fb710a",
       "n": "detach_agent_document",
       "p": [
         "agentId",
         "documentId",
+        "run_id",
         "selection_context",
         "user_request_quote"
       ],
@@ -321,11 +366,12 @@
       ]
     },
     {
-      "h": "f54513d27b2d5be734801e2ecb2bee93ae05e65975932f0e4657e05bd57b8aec",
+      "h": "ef94d577d43edbb5b11c59af0d2180ff5597320e1aecd7e9c5542c96b836416b",
       "n": "detach_draft_connector",
       "p": [
         "agentId",
         "connector",
+        "run_id",
         "selection_context",
         "user_request_quote"
       ],
@@ -336,11 +382,12 @@
       ]
     },
     {
-      "h": "7af5081d323b28eff0c358eb544e82895e9c993d963c32ac1ecd365881eddc0c",
+      "h": "81ac2b75923b56e92888ce1152c1217e6ff76d7d23b34ba0d71fddec0fac0ab6",
       "n": "detach_draft_document",
       "p": [
         "agentId",
         "documentId",
+        "run_id",
         "selection_context",
         "user_request_quote"
       ],
@@ -351,15 +398,17 @@
       ]
     },
     {
-      "h": "2ffed2c2a75b74d5b05b2cc620ee4c3768b9134d77e9b2455371eb4b65931725",
+      "h": "440c66d33d9e0ec82113eb18761ab9edeec18124c9d57949197008cb2782e95d",
       "n": "edit_agent_profile",
       "p": [
         "agentId",
         "herramientasRetiradas",
         "icon",
         "name",
+        "orchestrationMode",
         "proposalsEnabled",
         "recommendedModel",
+        "run_id",
         "selection_context",
         "tagline",
         "user_request_quote"
@@ -370,13 +419,14 @@
       ]
     },
     {
-      "h": "c7395097c047625c888aec8bced951f1c7c9307b75c42e778cde56ebc186c368",
+      "h": "0dfa97964ae3edf322874d3f18ec9349d9e75108252d0b9fc29757f833e0e11c",
       "n": "edit_draft_agent",
       "p": [
         "agentId",
         "icon",
         "name",
         "proposalsEnabled",
+        "run_id",
         "selection_context",
         "tagline",
         "user_request_quote"
@@ -387,7 +437,7 @@
       ]
     },
     {
-      "h": "8a506901bdb9013942f718ed4ba43e894d363e4bec473d6b4db8cba58a6182e1",
+      "h": "22c265119fdaa5a1a33a4bb6010ce40f50a6f6ce353fcd99f2d56409cc505682",
       "n": "export_brain",
       "p": [
         "connector",
@@ -396,6 +446,7 @@
         "include_drafts",
         "locale",
         "mode",
+        "run_id",
         "scope",
         "selection_context",
         "version"
@@ -405,7 +456,7 @@
       ]
     },
     {
-      "h": "77c6d5bbd2b4fb0487ea8f50a1fd7c23fa25c03ef4c57c432e9397aab4797cfa",
+      "h": "8598799395f439f28499c8ebc79c0177797380ce6db59744285cede88026776e",
       "n": "export_chart_csv",
       "p": [
         "chart",
@@ -414,6 +465,7 @@
         "filters",
         "params",
         "preparation_ref",
+        "run_id",
         "selection_context",
         "time_grain",
         "version_id"
@@ -424,10 +476,28 @@
       ]
     },
     {
-      "h": "71a1ce280057f1f3ebff5335b7e79a37e95dd09aeb2f990fb3745c6380e4cd98",
+      "h": "762332a06ffc9477e1a7004564da6db762872e2b1aeba0dc438afd4c0da357ad",
+      "n": "export_dataset_csv",
+      "p": [
+        "connector",
+        "dataset",
+        "params",
+        "preparation_ref",
+        "run_id",
+        "selection_context",
+        "version"
+      ],
+      "r": [
+        "connector",
+        "dataset"
+      ]
+    },
+    {
+      "h": "eee8e9a80d77bca38f1e62b07757d7f3385700320018caeaa8bd66f77817dda5",
       "n": "forget",
       "p": [
         "memory",
+        "run_id",
         "selection_context",
         "user_request_quote"
       ],
@@ -437,21 +507,24 @@
       ]
     },
     {
-      "h": "4d957ec487c9b4cc0fdbea68cb4190bc6bfb003a4af4f6572a14848f7048bfb9",
+      "h": "15cce61f1dd0dca89eddc446cac4a84cd83bfac8a8e6c7458573eefb2108ddfb",
       "n": "get_catalog_state",
       "p": [
         "connector",
+        "cursor",
+        "run_id",
         "selection_context"
       ],
       "r": []
     },
     {
-      "h": "22ac5555f9362c9732126ce62863492d97b1e432221b9715ad87adb54cba133d",
+      "h": "2467ac2b967166a8b1da6cf0fef41625ab57ba8618ee4c363d85ae852d372576",
       "n": "get_chart",
       "p": [
         "chart",
         "connector",
         "mode",
+        "run_id",
         "selection_context",
         "version"
       ],
@@ -461,13 +534,14 @@
       ]
     },
     {
-      "h": "af763b5f528cabecc0ba68e8810eff7f292ee1d031310571a24fa0da12af8f23",
+      "h": "e3d0e473dfafaf52d83e18ab682c9269d695d187e911e653a88e471ca54f70ab",
       "n": "get_custom_dashboard",
       "p": [
         "connector",
         "custom_dashboard",
         "list_after",
         "queries_from",
+        "run_id",
         "selection_context",
         "template_max_bytes",
         "template_offset",
@@ -478,12 +552,13 @@
       ]
     },
     {
-      "h": "40c83a565f2b82525f71a84b70e3b511cd25173e5af3f31aee8a2db060567467",
+      "h": "48d0fc55ef52612f586cc852bc30b1d499e99c8a9293b3a45707e77d75847694",
       "n": "get_dashboard",
       "p": [
         "connector",
         "dashboard",
         "mode",
+        "run_id",
         "selection_context",
         "version"
       ],
@@ -493,11 +568,12 @@
       ]
     },
     {
-      "h": "a1049e81c66c878c2207d25373654310409286dc2cc9fc899aabc190b775e35d",
+      "h": "1d5433f4ff956d09e5f401991034a9b61ce9836c04beaaddb82e911f7b680ffb",
       "n": "get_execution_sql",
       "p": [
         "connector",
         "execution_ref",
+        "run_id",
         "selection_context"
       ],
       "r": [
@@ -506,11 +582,12 @@
       ]
     },
     {
-      "h": "aaf30ebb2b2c996550044b2ecbdee1a56edd13fb525cbc2eed2d8d02e5d6a206",
+      "h": "77128d7ec1ac98a4e1b74648236d084eb47e0173a0db2750cf63db6a06cd6115",
       "n": "get_filter_set",
       "p": [
         "connector",
         "filter_set",
+        "run_id",
         "selection_context",
         "version"
       ],
@@ -520,12 +597,13 @@
       ]
     },
     {
-      "h": "3b1c00e8e9bcda0b6ededaa504929fb94b20414742bf2552bb827d87303a59d5",
+      "h": "88fb7f5901846b7374edc8bbc1081a6d789e994cd24cdf59218246f83dc46858",
       "n": "get_model",
       "p": [
         "connector",
         "include_drafts",
         "locale",
+        "run_id",
         "selection_context",
         "version"
       ],
@@ -534,10 +612,11 @@
       ]
     },
     {
-      "h": "e06ae532ea6f10fe14d9e2324272d3ee7ec8c5ec706010a8729c92b04ce6bdb9",
+      "h": "c7570acb78f2333339a4d0997380250822b5c7a345e7cd46b7d26dbedbf5b95c",
       "n": "install_solution",
       "p": [
         "acuerdoRef",
+        "run_id",
         "selection_context",
         "solutionVersionId",
         "user_request_quote"
@@ -548,10 +627,11 @@
       ]
     },
     {
-      "h": "d3e7e171b354c763e6068c4a6fff7fe72286731d4427a8959ea75e4d5a1a7afc",
+      "h": "85d0d5b67caebdf36905e37788563ee224943eff60df919a4b19340285d54176",
       "n": "list_agent_documents",
       "p": [
         "agentId",
+        "run_id",
         "selection_context"
       ],
       "r": [
@@ -559,13 +639,15 @@
       ]
     },
     {
-      "h": "e6e1bf07e4589562bc749428b7bc0ab51aec34cbd649879537ce14bdfdde6e2f",
+      "h": "cf183ec01a86b09c93be523216d385725cfac2f30c5ae7248191b3725cc011e8",
       "n": "list_agents",
-      "p": [],
+      "p": [
+        "run_id"
+      ],
       "r": []
     },
     {
-      "h": "04dc2073432626c03e32e6dc002e2425ac6dee0e26b3fc6ace356fc61b9825a6",
+      "h": "603ec8c468e4d9fea8a86a1380a270f0bdf85a716d9b8cd2473b92abc45c34ba",
       "n": "list_dimension_values",
       "p": [
         "cap",
@@ -573,6 +655,7 @@
         "cursor",
         "dimension",
         "preparation_ref",
+        "run_id",
         "search",
         "selection_context"
       ],
@@ -582,10 +665,11 @@
       ]
     },
     {
-      "h": "370e64b00600273f07d0e69936d47c26275b5eb4bd856844fbd13993880cbc46",
+      "h": "f104968bc492350e3aeb52f19a1505fc78c563129222a9f70b4d9442c246c4ac",
       "n": "list_filter_sets",
       "p": [
         "connector",
+        "run_id",
         "selection_context"
       ],
       "r": [
@@ -593,72 +677,79 @@
       ]
     },
     {
-      "h": "e0789681dd67b3cffe46745ae93529358255f8c1eeed27a031a30f24f6f3d57b",
+      "h": "e5e757e5e16525ca9bbcbfb1f40cddd6cb4bc4f890edd4d1d1f92dc9f2a0302f",
       "n": "list_memories",
       "p": [
         "cursor",
         "kind",
         "memory",
+        "run_id",
         "selection_context"
       ],
       "r": []
     },
     {
-      "h": "11249d1bea4537a12b168b63f24f353c3056755d7f2f88a6015b3c0a2f81274c",
+      "h": "311b392a4ba395f339db85128deb6058de60202888d329b094c10c015544478b",
       "n": "list_my_attempts",
       "p": [
         "limit",
         "only_failed",
+        "run_id",
         "selection_context"
       ],
       "r": []
     },
     {
-      "h": "cf1c9a2765b72b664069ad3592107e06247b7c5913eeba40f1d4290042b2ffe3",
+      "h": "40a27bbc79885405acd6cfea6c08e7f93e34ccfc04cbfe8cde18eb66a7f8dc37",
       "n": "list_my_curations",
       "p": [
+        "run_id",
         "selection_context"
       ],
       "r": []
     },
     {
-      "h": "ba0b6433bdffae31b4eff515d95a5d0f5ffaa69ae9bb6e4734153383c052fc1d",
+      "h": "738374abf69f16568516d69834aad4ec78b31a4328f91bbea7178e5298595782",
       "n": "list_my_proposals",
       "p": [
+        "run_id",
         "selection_context"
       ],
       "r": []
     },
     {
-      "h": "58bdbe04f0101be5823d84c5ddc00c807fdba8bca5b31bfff47fe02bc15d0857",
+      "h": "b0e0368823f1bc531e8ee2378baaa330b0fd62af23253d1bef2b4a7f5a53bf3b",
       "n": "list_organization_agents",
       "p": [
+        "run_id",
         "selection_context"
       ],
       "r": []
     },
     {
-      "h": "717f60de7ebd3ba07c6309cbc3c86b7c32492247a3aa628977c86aec6074bf56",
+      "h": "975c3fc74b3310161274bfa97237f19674c6f7112d7439f9023650c19b62fc93",
       "n": "list_proposals",
       "p": [
         "limit",
         "offset",
         "owner_id",
+        "run_id",
         "selection_context",
         "state"
       ],
       "r": []
     },
     {
-      "h": "300a4d4522da4665c75001e346f454db56da9e510e3a8d44c2cdba56d1db8427",
+      "h": "93d1d12452bca17eef9e478f06c381a1c212e14cd9128185970f83fffec4e4b2",
       "n": "list_solutions",
       "p": [
+        "run_id",
         "selection_context"
       ],
       "r": []
     },
     {
-      "h": "5d792f0d2b68068b59604fc6f903395c1b1ce248b47ab2189ebb75959e752669",
+      "h": "1e420dcf0cd6bbe8043b67170f19317f07cdec9d22d1284e710d05d4173f18c4",
       "n": "list_tables",
       "p": [
         "compact",
@@ -666,6 +757,7 @@
         "cursor",
         "page_size",
         "prefix",
+        "run_id",
         "selection_context"
       ],
       "r": [
@@ -673,10 +765,11 @@
       ]
     },
     {
-      "h": "10438cc7589a2e8c32fa721b2ef15a929f772b9104ef60a4adc91e7aeabb526f",
+      "h": "9856dc087ed7bf98b1f172061068a5e49248d571a0d56a3e308088126ab863de",
       "n": "list_templates",
       "p": [
         "connector",
+        "run_id",
         "selection_context"
       ],
       "r": [
@@ -684,11 +777,12 @@
       ]
     },
     {
-      "h": "a3437a0778460ba2bd6ea91e81571ac19307273fc245c1eae88d8bf7511cf883",
+      "h": "03c53d55ed929b49093bb09245afc4336b4103821cf371d4f21c878c818f54b8",
       "n": "profile_table",
       "p": [
         "connector",
         "refresh",
+        "run_id",
         "selection_context",
         "table"
       ],
@@ -698,7 +792,7 @@
       ]
     },
     {
-      "h": "12ddefad22b5b6d7cb030fefe3a27698c89f0afa091bba833709b73d67658869",
+      "h": "f6d1d30d0f79bf8474e08d5482e629c5283df8b353df5003a8c1dd4b6765a7d4",
       "n": "propose_agent",
       "p": [
         "connectors",
@@ -706,7 +800,9 @@
         "family",
         "herramientas_retiradas",
         "name",
+        "orchestration_mode",
         "proposals_enabled",
+        "run_id",
         "selection_context",
         "tagline",
         "user_request_quote"
@@ -717,13 +813,14 @@
       ]
     },
     {
-      "h": "eb115670a2dd64a50791ce0b75036de4a9e06a134ca29bbf48f4c3ba964a8176",
+      "h": "bae1f68d4d95ebb3cf7780699041f3208a8c2d3fb9daae6abd9939fa733f5355",
       "n": "propose_column_rename",
       "p": [
         "confirm",
         "connector",
         "new_name",
         "old_name",
+        "run_id",
         "selection_context",
         "table",
         "user_request_quote"
@@ -736,7 +833,7 @@
       ]
     },
     {
-      "h": "7c31c1584e6730b9331bc8798f6ee19f956f9ae86c64135dc837478613def24a",
+      "h": "d91cb7ade2720504b7bf1c5634c6fec4ba3b99c52d9c4f5977cced12de9315d8",
       "n": "propose_dataset",
       "p": [
         "business_definition",
@@ -746,6 +843,7 @@
         "default_params",
         "if_match",
         "name",
+        "run_id",
         "selection_context",
         "sql",
         "tier",
@@ -758,7 +856,7 @@
       ]
     },
     {
-      "h": "bd005b812dfb1177c9f1103996263adaba789545a4698545ea71c4f7687d89f6",
+      "h": "3892b803dd28f7ede11b0aff97905be98a53c7016143a0a66bc93a35980be234",
       "n": "propose_dimension",
       "p": [
         "aliases",
@@ -775,6 +873,7 @@
         "name",
         "new_name",
         "rolls_up_to",
+        "run_id",
         "selection_context",
         "source_column",
         "source_table",
@@ -788,7 +887,7 @@
       ]
     },
     {
-      "h": "e666313115fc008e6f67eb7c7afb3e16730f0dbb8b3db2e868642d771253b054",
+      "h": "a022705575b87e3360544d8e9641c1386a1efd65f9aa469641ec2d80f2acfcd7",
       "n": "propose_metric",
       "p": [
         "aggregation",
@@ -816,6 +915,7 @@
         "percentile_value",
         "period_date_column",
         "period_sum",
+        "run_id",
         "selection_context",
         "source_table",
         "unit",
@@ -829,12 +929,13 @@
       ]
     },
     {
-      "h": "ec76515bae959ce253077e78b58013da5ca213ff75672c860c0c23b14c8e8277",
+      "h": "1baabee880413a4f160cfeda6bd7daa1bbcb6fbfa0863fa6ab96b5dc6bda9e26",
       "n": "propose_solution_install",
       "p": [
         "column_mappings",
         "confirm",
         "connector",
+        "run_id",
         "selection_context",
         "suggest_by_type",
         "template_id",
@@ -847,7 +948,7 @@
       ]
     },
     {
-      "h": "e01906ee1bf67d49f1b0a8e3b14cfda37391737a600198ce1cae45b5f6670b47",
+      "h": "6d5e5c5aa194871625db5340872f26dcee2bfecfc32e07aa34c4477107804fd0",
       "n": "propose_template",
       "p": [
         "change_note",
@@ -855,6 +956,7 @@
         "connector",
         "description",
         "name",
+        "run_id",
         "selection_context",
         "slug",
         "user_request_quote"
@@ -865,12 +967,13 @@
       ]
     },
     {
-      "h": "8796b02dd4c4da6bb58618015f83b631217830bab2309f8ae261cead4f1ff2f6",
+      "h": "e5879e94d7d607e2d45ecd7e9aafdc8f93ee277a8815f00b1141f4b986a1ad5c",
       "n": "read_library_document",
       "p": [
         "documentId",
         "max_bytes",
         "offset",
+        "run_id",
         "selection_context"
       ],
       "r": [
@@ -878,9 +981,10 @@
       ]
     },
     {
-      "h": "b8c5319c5134152a248dbdf0b394eba2ab527b15d41ff4dca689eda59d96a86e",
+      "h": "acc46a25ba8010fd3de33fce319edbf7edf8c9d0dab35b0f84e808da7c09bdae",
       "n": "release_agent",
       "p": [
+        "run_id",
         "selection_context",
         "user_request_quote"
       ],
@@ -889,11 +993,12 @@
       ]
     },
     {
-      "h": "77a5ec35f227d5c5ee1533a314d5dd445052a5c7a6d7e9b6d2b908b165ebaa58",
+      "h": "72f94096c65c3948402e588bd085a4158275976c870f26ab8735c88027f80e8b",
       "n": "remember",
       "p": [
         "body_md",
         "kind",
+        "run_id",
         "scope",
         "selection_context",
         "slug",
@@ -908,33 +1013,36 @@
       ]
     },
     {
-      "h": "641001677636d7131cea8ee387250b99245a86f9558360e66629bcfe4e096ac1",
+      "h": "b62b3779bea62473a1132df1737b05d8a1cea0836598dd6f5744c388c0f5df88",
       "n": "render_chart",
       "p": [
         "chart",
         "connector",
         "drill",
         "filters",
+        "group_by",
         "height",
+        "metric",
         "params",
         "pixel_ratio",
         "preparation_ref",
+        "run_id",
         "selection_context",
         "time_grain",
         "version_id",
         "width"
       ],
       "r": [
-        "chart",
         "connector"
       ]
     },
     {
-      "h": "99bc9f6e5954bd867ef21aee46c7e3f4fc8b7610c1da39fdeb7d6497c5008ed4",
+      "h": "0fcebc87053b881a5c9e55921e7852170420ef1f3098cc205d2317854bdcc9e1",
       "n": "reorder_agent_documents",
       "p": [
         "agentId",
         "order",
+        "run_id",
         "selection_context",
         "user_request_quote"
       ],
@@ -945,11 +1053,12 @@
       ]
     },
     {
-      "h": "f287317ff2a793528b164b76909a1a9dd650821c0e0be0ec53a97a5f93b04a67",
+      "h": "fed414e26f7ea4908be7b1b31127342aab3248dcf48198f506f1822f6c0b275b",
       "n": "reorder_draft_documents",
       "p": [
         "agentId",
         "order",
+        "run_id",
         "segment",
         "selection_context",
         "user_request_quote"
@@ -962,12 +1071,13 @@
       ]
     },
     {
-      "h": "f7931b23738f081be2fea75707ade32caa4b978d2392cc5c8febf6e9b744be8d",
+      "h": "6467739b33a6aa6626469e51b87e60dfb29817ab50d2adca4b189bc5ef7a94b2",
       "n": "request_dataset_activation",
       "p": [
         "confirm",
         "connector",
         "dataset",
+        "run_id",
         "selection_context",
         "user_request_quote"
       ],
@@ -977,13 +1087,17 @@
       ]
     },
     {
-      "h": "20e8565df5ce23158d89321b2c52e8bf4a750f62c2d3795e332eca06a9e62ddc",
+      "h": "ea411f5ba59a4fe6dd57d527f268d7e440eb4ef1b5ac443b59258d799701c116",
       "n": "run_dashboard",
       "p": [
+        "active_version",
         "connector",
         "dashboard",
+        "filters",
         "params",
-        "selection_context"
+        "run_id",
+        "selection_context",
+        "tile"
       ],
       "r": [
         "connector",
@@ -991,7 +1105,7 @@
       ]
     },
     {
-      "h": "c53f06c10f63a3543c11dd246d254175b7862df2fdecb7b57834079d70e940bd",
+      "h": "1425cdce84b8add382963025eaab799546c718c229da89ab66826a6b02bec211",
       "n": "run_dataset",
       "p": [
         "connector",
@@ -1000,6 +1114,7 @@
         "params",
         "preparation_ref",
         "row_format",
+        "run_id",
         "selection_context",
         "version"
       ],
@@ -1009,7 +1124,7 @@
       ]
     },
     {
-      "h": "47ac09a3a215e16ad15deb1179222153344aec47dee4f86e4f5d8182941e6d28",
+      "h": "bd909e06a6f6f41546da8655dceaf88249320cdb552c69d6e3c7af6b7953ac91",
       "n": "run_metric",
       "p": [
         "calendar_axis",
@@ -1025,6 +1140,7 @@
         "params",
         "preparation_ref",
         "row_format",
+        "run_id",
         "selection_context",
         "share_of_total",
         "time_grain",
@@ -1035,7 +1151,7 @@
       ]
     },
     {
-      "h": "a3aaf86b4062ec1fffe21d1351b344ea6322f223dd4406d4fc14410834f375ab",
+      "h": "0d394ea11c874f4fbe82f118d5050ea3c211985ad3ed4207094caea6c7a94a84",
       "n": "run_query",
       "p": [
         "connector",
@@ -1044,6 +1160,7 @@
         "page_size",
         "projection",
         "row_format",
+        "run_id",
         "sample",
         "selection_context",
         "sql"
@@ -1054,7 +1171,19 @@
       ]
     },
     {
-      "h": "86521a5a7cf28a4c4007ec26d8ead6466c6a2d68670df4529dc41ecb944bb207",
+      "h": "e6dc0fa7f13a68ea9867ba233aafefb8f66fec42734f6fcb288433c2b79425dc",
+      "n": "run_workflow",
+      "p": [
+        "inputs",
+        "run_id",
+        "selection_context",
+        "test_case",
+        "workflow"
+      ],
+      "r": []
+    },
+    {
+      "h": "5cc7d0b0feac44402aa87a71b57e093cbb7dd9695259d560b87f5e824f7166a0",
       "n": "save_chart_edit",
       "p": [
         "change_note",
@@ -1062,6 +1191,7 @@
         "chart",
         "confirm",
         "connector",
+        "run_id",
         "selection_context",
         "user_request_quote"
       ],
@@ -1071,7 +1201,7 @@
       ]
     },
     {
-      "h": "5fa0dbbd2b2dc4a5603e6da997ce71f1187bb73d5d0abbd109d6a9fc13e78364",
+      "h": "beaa719bf49d0c521b18cb05ef35e03e4d281f7500c742fa111de8af97e36229",
       "n": "save_dashboard_edit",
       "p": [
         "change_note",
@@ -1079,6 +1209,7 @@
         "confirm",
         "connector",
         "dashboard",
+        "run_id",
         "selection_context",
         "user_request_quote"
       ],
@@ -1088,12 +1219,13 @@
       ]
     },
     {
-      "h": "5e0ae3063069ac0df0b2bc32608ec75c813b19d3d60f85875f6a2615f9bec710",
+      "h": "1d62b54c9a160b24d4f72e94b1a75a1bfbd5e2e3728726ab078bde39780f6855",
       "n": "search_model",
       "p": [
         "connector",
         "limit",
         "query",
+        "run_id",
         "selection_context"
       ],
       "r": [
@@ -1102,7 +1234,7 @@
       ]
     },
     {
-      "h": "ff78bb4c76bfcf03f5ba253943fd411636076e537a65e0050fa4c9e32e94734d",
+      "h": "0734d037f23e436b6ba6560bcd67e0d47ab656a55c9779d2058143280f965864",
       "n": "set_chart_options",
       "p": [
         "chart",
@@ -1110,6 +1242,7 @@
         "confirm",
         "connector",
         "options",
+        "run_id",
         "selection_context",
         "user_request_quote"
       ],
@@ -1119,12 +1252,13 @@
       ]
     },
     {
-      "h": "ca95e4feb49e3f36b0975115cc2aaa816e4b8d50ce514f3ff8c5dadc3d181005",
+      "h": "6655978dcd2e81b01246f65f271ff64b9a9647f985de9f64ad8431f4ed03d1c0",
       "n": "set_connector_links",
       "p": [
         "confirm",
         "connector",
         "links",
+        "run_id",
         "selection_context",
         "user_request_quote"
       ],
@@ -1134,7 +1268,7 @@
       ]
     },
     {
-      "h": "deb2367f0f9eb9ee24a425af4dbcd249cab7b0fb1657d68952d9c39b26750972",
+      "h": "8bd2b3f2c0dd29a50bf1b526a1e29a58d74c42a49fc03bb7d5692e961833398b",
       "n": "set_proposal_state",
       "p": [
         "action",
@@ -1144,6 +1278,7 @@
         "priority_reason",
         "proposal_id",
         "resolution",
+        "run_id",
         "selection_context",
         "state",
         "user_request_quote"
@@ -1156,12 +1291,13 @@
       ]
     },
     {
-      "h": "0bf466d280800f920bb5f14fc1d470da6310198cfe61260f4fa17399b13ee612",
+      "h": "89d3928ca1b1360f0ac41f9d88141e16623679cdbbe865bb35d7f385090c4faf",
       "n": "set_relations",
       "p": [
         "confirm",
         "connector",
         "relations",
+        "run_id",
         "selection_context",
         "user_request_quote"
       ],
@@ -1171,13 +1307,14 @@
       ]
     },
     {
-      "h": "39d38e6c1fbf7e9cce3b5d93f180d52243da8c579d1925706960e27aa8797d56",
+      "h": "6f2f754314b7339e23f57d69bbe8acecfaaca8a1628cb391000709da35101d15",
       "n": "submit_proposal",
       "p": [
         "body",
         "context",
         "how_to_verify",
         "kind",
+        "run_id",
         "selection_context",
         "title",
         "user_request_quote",
@@ -1191,7 +1328,7 @@
       ]
     },
     {
-      "h": "b419f86208eb301a92fd9786c27d6fb7724da73095d35c0f74bad07b219afdf4",
+      "h": "acfb924c686578f83abcee220e91d43f2f563fe7ab5d8272a3c03ab66f1267b8",
       "n": "test_chart",
       "p": [
         "chart",
@@ -1200,6 +1337,7 @@
         "if_match",
         "params",
         "preparation_ref",
+        "run_id",
         "selection_context",
         "user_request_quote",
         "version_id"
@@ -1210,13 +1348,14 @@
       ]
     },
     {
-      "h": "e0eb113238883419fb21e30a8ed0f0eecad6a44d1f7bc60a8d08c8bfe7ae902a",
+      "h": "fbb3b97bec21e8f29ee56633e067334a5b24a745c6196865da4ebaa2976edfad",
       "n": "test_custom_dashboard",
       "p": [
         "confirm",
         "connector",
         "custom_dashboard",
         "if_match",
+        "run_id",
         "selection_context",
         "user_request_quote",
         "version_id"
@@ -1227,13 +1366,14 @@
       ]
     },
     {
-      "h": "fa8bc579a82a86695f0877c6b72f5effa07bb088052760147b94009037343566",
+      "h": "2cbd72eb86c74047fde776a6cc87a0375df87a1b65815131ada665642a5ea4ff",
       "n": "test_dashboard",
       "p": [
         "confirm",
         "connector",
         "dashboard",
         "if_match",
+        "run_id",
         "selection_context",
         "user_request_quote",
         "version_id"
@@ -1244,7 +1384,7 @@
       ]
     },
     {
-      "h": "f5e2978872a7003e3bf41da787564a8af3816c12bbdf6281bbdd457c4e8a17a3",
+      "h": "743296b47fe9ada469bb76a5d3ec30024027cb9b7d94017f7424867afa3a645a",
       "n": "test_dimension",
       "p": [
         "confirm",
@@ -1253,6 +1393,7 @@
         "if_match",
         "params",
         "preparation_ref",
+        "run_id",
         "selection_context",
         "user_request_quote"
       ],
@@ -1262,12 +1403,13 @@
       ]
     },
     {
-      "h": "25006289b6e966fb106a8b4ca70de95f7eb3213049748669415958af46ef2eaf",
+      "h": "2837688f40e2d17b8686b3115d96a490616d24f1036de53aa721d4e9712c8380",
       "n": "test_filter_set",
       "p": [
         "confirm",
         "connector",
         "filter_set",
+        "run_id",
         "selection_context",
         "user_request_quote"
       ],
@@ -1277,7 +1419,7 @@
       ]
     },
     {
-      "h": "c989e285bb5f346f2915ee1b50bb9f447c0f8787e1ed406d588bf00daee6358e",
+      "h": "7fe78fe4c4145ad7e1766fb3a42c11a7377bc37b81769fd94ff6864efeb6ad21",
       "n": "test_metric",
       "p": [
         "confirm",
@@ -1288,6 +1430,7 @@
         "metric",
         "params",
         "preparation_ref",
+        "run_id",
         "selection_context",
         "share_of_total",
         "time_grain",
@@ -1299,12 +1442,13 @@
       ]
     },
     {
-      "h": "c07dd138013aac91015de72777c836de6b3c331cfea3192078120cdd3af32ffc",
+      "h": "da848d782c0d34faf8f80c4f3aa7e6accd7f25dd8b3927fc9760529759144092",
       "n": "toggle_agent_document",
       "p": [
         "agentId",
         "documentId",
         "enabled",
+        "run_id",
         "selection_context",
         "user_request_quote"
       ],
@@ -1316,7 +1460,7 @@
       ]
     },
     {
-      "h": "810847f3743ecfdbba29c866363b777dfe6932e6c40573a411737ed8e207c356",
+      "h": "2fe846456d890a3972ee61a4d3c9d23019fc23d5255e637213e3f8c2ffe601b1",
       "n": "upsert_chart",
       "p": [
         "business_definition",
@@ -1326,6 +1470,7 @@
         "connector",
         "if_match",
         "name",
+        "run_id",
         "selection_context",
         "spec",
         "user_request_quote"
@@ -1338,7 +1483,7 @@
       ]
     },
     {
-      "h": "97073648babd7f6c78d10697a6bd642ecdf37fc39f2f3c5bcc58465cf1687826",
+      "h": "367327338d11a782b71987787b8a43f89f182d4a343032b86bec384065bbf337",
       "n": "upsert_custom_dashboard",
       "p": [
         "business_definition",
@@ -1348,9 +1493,10 @@
         "contract_version",
         "datasets_refs",
         "if_match",
+        "metrics",
         "name",
         "projection",
-        "queries",
+        "run_id",
         "selection_context",
         "template",
         "user_request_quote"
@@ -1362,7 +1508,7 @@
       ]
     },
     {
-      "h": "9d4e1ca1d6c6152f470624d8942e3e03c420ff1b1737d9b6b9a4d336992f4b31",
+      "h": "cb359738e8da2942311a953c14d00a7e0f9b7f97a36681d76545a1a6dd00812d",
       "n": "upsert_dashboard",
       "p": [
         "business_definition",
@@ -1371,6 +1517,7 @@
         "connector",
         "if_match",
         "name",
+        "run_id",
         "selection_context",
         "spec",
         "user_request_quote"
@@ -1382,7 +1529,7 @@
       ]
     },
     {
-      "h": "93e5e020b44c6935133998cbaf48c494e17e3d7b8ea27c6f5edf9f04099b317d",
+      "h": "823f64d5b29e594f4ef3ffcefd986993d611a9888a16736daf7dd9d00291ac9d",
       "n": "upsert_filter_set",
       "p": [
         "business_definition",
@@ -1392,6 +1539,7 @@
         "filters",
         "if_match",
         "name",
+        "run_id",
         "selection_context",
         "user_request_quote"
       ],
@@ -1402,12 +1550,13 @@
       ]
     },
     {
-      "h": "845e2ae658309c7b6680d19e318446570dd99335acba9d4fa81fdf1cc5428565",
+      "h": "582cb248f37721feb3b90ea81fdb2504ba13f624c3445501f6d33c1af976a832",
       "n": "use_agent",
       "p": [
         "agent",
         "model",
         "provider",
+        "run_id",
         "selection_context",
         "user_choice_quote"
       ],
@@ -1417,10 +1566,11 @@
       ]
     },
     {
-      "h": "6c3b3fd929275526e6f4db4aaec9288a936ccebbad47665a080dd857d6575c50",
+      "h": "58f87c762cb46ceaff30124fa07e28260a683d9fbbc18107f96ec5d6cd629b81",
       "n": "workspace_migrate",
       "p": [
         "nombre",
+        "run_id",
         "selection_context",
         "sql",
         "user_request_quote"
@@ -1432,9 +1582,10 @@
       ]
     },
     {
-      "h": "9d252281dd8f5ef3441bdafbe9aa6f156b7d18a883fd6a2fe7ed14405bb3d45a",
+      "h": "2fe298946c774cd23e34d348c433c53a54715c6573d490fce19f270de5d509a1",
       "n": "workspace_purge",
       "p": [
+        "run_id",
         "selection_context",
         "user_request_quote"
       ],
@@ -1443,9 +1594,10 @@
       ]
     },
     {
-      "h": "1b5bde95c0ce4aef2b8c7c140f9e546f9313202636bb4d18fd6b55e52eb9fed5",
+      "h": "b4bb69c95994b252f887a9eb05fd478cfdb3de86018c27f5ecffc0bc3214b92b",
       "n": "workspace_query",
       "p": [
+        "run_id",
         "selection_context",
         "sql"
       ],
@@ -1454,10 +1606,11 @@
       ]
     },
     {
-      "h": "1cc9a3d037fb4166d40db4129ea09e256849c983fb6131598b6de58a8336d6ae",
+      "h": "534b90e57d4c1139cb134ad3300d704b5a7f67dd61ad5f622c421aae39572284",
       "n": "workspace_restore",
       "p": [
         "checkpoint",
+        "run_id",
         "selection_context",
         "user_request_quote"
       ],
@@ -1467,18 +1620,20 @@
       ]
     },
     {
-      "h": "529ee9771cb24cd33d48b549cd5258304a4fa7ac61b35db1f298643d1c6b6f2b",
+      "h": "a27d91cc93dc5fd8101431c1e4f49e568183acd8e5b1db35d57951f5dfc884ff",
       "n": "workspace_schema",
       "p": [
+        "run_id",
         "selection_context"
       ],
       "r": []
     },
     {
-      "h": "1a61ab6dbd9b981a35f0a347599ddaeb687a2296082e166579c3383257c7b451",
+      "h": "6b870c304663105d8ff8b584912d1a594a98222f5ba7290889af93fec7c3732a",
       "n": "workspace_undelete",
       "p": [
         "ids",
+        "run_id",
         "selection_context",
         "user_request_quote"
       ],
@@ -1488,18 +1643,20 @@
       ]
     },
     {
-      "h": "6d57e4099a3e0836a572e2f863484752183cc82f7cad9d7f6263fa3aae005b19",
+      "h": "1f3caf6b60597c20d14938b13243f1d66ff8da5cfe1360dcb8531401744621f6",
       "n": "workspace_undo",
       "p": [
+        "run_id",
         "selection_context",
         "tabla"
       ],
       "r": []
     },
     {
-      "h": "4611071fd993e5ce71ecaccd52b724352e830e824858e9e2810963bc86f93cb3",
+      "h": "a5efe43db21fb937cef16bdcd8b1d1b4506191edce0e5987c7977f2342aa3df8",
       "n": "workspace_write",
       "p": [
+        "run_id",
         "selection_context",
         "sql",
         "user_request_quote"
@@ -1510,13 +1667,14 @@
       ]
     },
     {
-      "h": "1a945fb385dc5bb41abf3db736ffd4369077cd18ded171a526b268a82ca99ead",
+      "h": "29db109501a08482cd1bd2924b1e7f6718047db8c38f6c5741221453f389f815",
       "n": "write_agent_document",
       "p": [
         "body",
         "description",
         "documentId",
         "name",
+        "run_id",
         "selection_context",
         "user_request_quote"
       ],
@@ -1526,7 +1684,7 @@
       ]
     }
   ],
-  "huella": "770acd3ec907fe59aeaea8a310773c58132aeea94ef14db3334c75b09011f52f",
-  "instrucciones_sha256": "9e6139bbc98b395f84a753948103afe410e92a3cbb3efe651cd088da8949da9d",
+  "huella": "33e83205c5ba5e9fdde1fe63d436a28fe89e472c402208158b8bada47f18258a",
+  "instrucciones_sha256": "6a3181a6053b97e9966c6fdaaf8920886f490f302f27f8e4833d65d9987678dc",
   "protocolo": "2025-06-18"
 }

@@ -1,2418 +1,2529 @@
 {
- "tools": [
-  {
-   "name": "list_agents",
-   "description": "Devuelve los agentes que el administrador otorgó a esta persona y que están en servicio. Si hay varios, pregunta a la persona con cuál quiere trabajar antes de llamar use_agent; si hay uno solo, dile cuál es y úsalo. Si la lista viene vacía, `message` explica por qué. Sólo lectura.",
-   "inputSchema": {
-    "type": "object",
-    "properties": {},
-    "additionalProperties": false
-   },
-   "annotations": {
-    "readOnlyHint": true,
-    "destructiveHint": false,
-    "idempotentHint": true,
-    "openWorldHint": false
-   }
-  },
-  {
-   "name": "use_agent",
-   "description": "Pone a esta conversación a trabajar con un agente de la lista. Llámalo cuando la persona haya dicho con cuál trabaja y pasa sus palabras tal cual en `user_choice_quote`. Devuelve la misión del agente (límites, reglas y persona, enteros hasta donde cabe la respuesta; lo que no cabe lo nombran `leelo_antes_de_actuar` y `fuera_de_la_respuesta`), el índice de su cerebro, los conectores que alcanza, las herramientas retiradas para él y `selection_context`, que hay que mandar en cada llamada siguiente. Volver a llamarlo con el mismo agente es volver a elegirlo y toma su última versión guardada: hazlo sólo cuando la persona lo pida. Para cambiar de agente, primero release_agent.",
-   "inputSchema": {
-    "type": "object",
-    "properties": {
-     "agent": {
-      "type": "string",
-      "description": "Id o nombre del agente, tal como lo devolvió list_agents."
-     },
-     "user_choice_quote": {
-      "type": "string",
-      "description": "Las palabras textuales con las que la persona eligió el agente."
-     },
-     "model": {
-      "type": "string",
-      "maxLength": 128,
-      "description": "El modelo con el que trabaja el asistente, si lo sabe con certeza. Opcional."
-     },
-     "provider": {
-      "type": "string",
-      "maxLength": 128,
-      "description": "Quién ofrece ese modelo. Opcional."
-     },
-     "selection_context": {
-      "type": "string",
-      "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
-     }
-    },
-    "required": [
-     "agent",
-     "user_choice_quote"
-    ],
-    "additionalProperties": false
-   },
-   "annotations": {
-    "readOnlyHint": false,
-    "destructiveHint": true,
-    "idempotentHint": true,
-    "openWorldHint": false
-   }
-  },
-  {
-   "name": "release_agent",
-   "description": "Deja a esta conversación sin agente, para cambiar de agente o para terminar. Lleva la orden textual de la persona en `user_request_quote`.",
-   "inputSchema": {
-    "type": "object",
-    "properties": {
-     "selection_context": {
-      "type": "string",
-      "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
-     },
-     "user_request_quote": {
-      "type": "string",
-      "description": "La orden de la persona para este cambio, con sus palabras textuales copiadas de la conversación."
-     }
-    },
-    "additionalProperties": false,
-    "required": [
-     "user_request_quote"
-    ]
-   },
-   "annotations": {
-    "readOnlyHint": false,
-    "destructiveHint": true,
-    "idempotentHint": true,
-    "openWorldHint": false
-   }
-  },
-  {
-   "name": "brain_index",
-   "description": "Lista un nivel del cerebro del agente o del modelo de un conector: una línea por documento con su `concept_id`. Si no cabe entero trae `next_cursor` para seguir. No devuelve cuerpos.",
-   "inputSchema": {
-    "type": "object",
-    "properties": {
-     "connector": {
-      "type": "string",
-      "description": "Slug del conector."
-     },
-     "path": {
-      "type": "string",
-      "description": "Rama a listar."
-     },
-     "cursor": {
-      "type": "string",
-      "description": "Continuación: usa el `next_cursor` que devolvió la llamada anterior."
-     },
-     "limit": {
-      "type": "integer"
-     },
-     "mode": {
-      "type": "string",
-      "enum": [
-       "full",
-       "light"
-      ]
-     },
-     "version": {
-      "type": "integer"
-     },
-     "unit": {
-      "type": "string"
-     },
-     "locale": {
-      "type": "string",
-      "enum": [
-       "es",
-       "en"
-      ]
-     },
-     "include_drafts": {
-      "type": "boolean"
-     },
-     "selection_context": {
-      "type": "string",
-      "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
-     }
-    },
-    "required": [],
-    "additionalProperties": false
-   },
-   "annotations": {
-    "readOnlyHint": true,
-    "destructiveHint": false,
-    "idempotentHint": true,
-    "openWorldHint": false
-   }
-  },
-  {
-   "name": "brain_read",
-   "description": "Abre un documento por su `concept_id`. El cuerpo tiene tope de tamaño: si no cabe, la respuesta trae `next_offset` para continuar. Un documento por llamada.",
-   "inputSchema": {
-    "type": "object",
-    "properties": {
-     "connector": {
-      "type": "string",
-      "description": "Slug del conector."
-     },
-     "concept_id": {
-      "type": "string",
-      "description": "Identificador del documento, copiado de brain_index."
-     },
-     "offset": {
-      "type": "integer",
-      "description": "Continuación: usa el `next_offset` que devolvió la lectura anterior."
-     },
-     "max_bytes": {
-      "type": "integer",
-      "description": "Tope de bytes del cuerpo en esta lectura (por defecto 8192, máximo 32768)."
-     },
-     "mode": {
-      "type": "string",
-      "enum": [
-       "full",
-       "light"
-      ]
-     },
-     "version": {
-      "type": "integer"
-     },
-     "unit": {
-      "type": "string"
-     },
-     "locale": {
-      "type": "string",
-      "enum": [
-       "es",
-       "en"
-      ]
-     },
-     "include_drafts": {
-      "type": "boolean"
-     },
-     "selection_context": {
-      "type": "string",
-      "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
-     }
-    },
-    "required": [
-     "concept_id"
-    ],
-    "additionalProperties": false
-   },
-   "annotations": {
-    "readOnlyHint": true,
-    "destructiveHint": false,
-    "idempotentHint": true,
-    "openWorldHint": false
-   }
-  },
-  {
-   "name": "list_memories",
-   "description": "Índice de las memorias de esta persona con el agente activo, una línea por memoria. Si no cabe trae `next_cursor`. Con `memory` devuelve una memoria entera.",
-   "inputSchema": {
-    "type": "object",
-    "properties": {
-     "kind": {
-      "type": "string",
-      "enum": [
-       "preferencia",
-       "hecho",
-       "avance",
-       "episodio"
-      ]
-     },
-     "cursor": {
-      "type": "string",
-      "description": "Continuación: usa el `next_cursor` que devolvió la llamada anterior."
-     },
-     "memory": {
-      "type": "string",
-      "description": "Id o nombre de una memoria."
-     },
-     "selection_context": {
-      "type": "string",
-      "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
-     }
-    },
-    "additionalProperties": false
-   },
-   "annotations": {
-    "readOnlyHint": true,
-    "destructiveHint": false,
-    "idempotentHint": true,
-    "openWorldHint": false
-   }
-  },
-  {
-   "name": "remember",
-   "description": "Guarda una memoria personal sobre el agente activo. `kind` es preferencia, hecho, avance o episodio. Un avance lleva su lista de pasos bajo '# Pasos'. Escribir con el `slug` de una memoria existente la reemplaza. Con `scope: compartida` no se guarda: queda como propuesta para que una persona la apruebe. Lleva la orden textual de la persona en `user_request_quote`.",
-   "inputSchema": {
-    "type": "object",
-    "properties": {
-     "kind": {
-      "type": "string",
-      "enum": [
-       "preferencia",
-       "hecho",
-       "avance",
-       "episodio"
-      ]
-     },
-     "title": {
-      "type": "string"
-     },
-     "body_md": {
-      "type": "string"
-     },
-     "slug": {
-      "type": "string",
-      "description": "Nombre de la memoria. Reusar un nombre reemplaza la memoria que lo tenía."
-     },
-     "scope": {
-      "type": "string",
-      "enum": [
-       "personal",
-       "compartida"
-      ],
-      "description": "'personal' (por defecto) o 'compartida'."
-     },
-     "selection_context": {
-      "type": "string",
-      "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
-     },
-     "user_request_quote": {
-      "type": "string",
-      "description": "La orden de la persona para este cambio, con sus palabras textuales copiadas de la conversación."
-     }
-    },
-    "required": [
-     "kind",
-     "title",
-     "body_md",
-     "user_request_quote"
-    ],
-    "additionalProperties": false
-   },
-   "annotations": {
-    "readOnlyHint": false,
-    "destructiveHint": true,
-    "idempotentHint": false,
-    "openWorldHint": false
-   }
-  },
-  {
-   "name": "forget",
-   "description": "Retira una memoria de esta persona. Su archivo se conserva marcado como retirado. Lleva la orden textual de la persona en `user_request_quote`.",
-   "inputSchema": {
-    "type": "object",
-    "properties": {
-     "memory": {
-      "type": "string",
-      "description": "Id o nombre de una memoria."
-     },
-     "selection_context": {
-      "type": "string",
-      "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
-     },
-     "user_request_quote": {
-      "type": "string",
-      "description": "La orden de la persona para este cambio, con sus palabras textuales copiadas de la conversación."
-     }
-    },
-    "required": [
-     "memory",
-     "user_request_quote"
-    ],
-    "additionalProperties": false
-   },
-   "annotations": {
-    "readOnlyHint": false,
-    "destructiveHint": true,
-    "idempotentHint": true,
-    "openWorldHint": false
-   }
-  },
-  {
-   "name": "delete_my_memories",
-   "description": "Borra para siempre todas las memorias de esta persona con el agente activo. Exige `confirm: true` y las palabras textuales de la persona en `user_request_quote`.",
-   "inputSchema": {
-    "type": "object",
-    "properties": {
-     "confirm": {
-      "type": "boolean",
-      "description": "Con true aplica; sin él sólo previsualiza."
-     },
-     "user_request_quote": {
-      "type": "string",
-      "description": "Las palabras textuales con las que la persona pidió el borrado."
-     },
-     "selection_context": {
-      "type": "string",
-      "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
-     }
-    },
-    "required": [
-     "confirm",
-     "user_request_quote"
-    ],
-    "additionalProperties": false
-   },
-   "annotations": {
-    "readOnlyHint": false,
-    "destructiveHint": true,
-    "idempotentHint": true,
-    "openWorldHint": false
-   }
-  },
-  {
-   "name": "brain_write",
-   "description": "Crea una memoria por su ruta en el cerebro del agente, o un agente nuevo en propuesto. Lleva la orden textual de la persona en `user_request_quote`.",
-   "inputSchema": {
-    "type": "object",
-    "properties": {
-     "concept_id": {
-      "type": "string",
-      "description": "Identificador del documento, copiado de brain_index."
-     },
-     "title": {
-      "type": "string"
-     },
-     "body_md": {
-      "type": "string"
-     },
-     "kind": {
-      "type": "string",
-      "enum": [
-       "preferencia",
-       "hecho",
-       "avance",
-       "episodio"
-      ]
-     },
-     "scope": {
-      "type": "string",
-      "enum": [
-       "personal",
-       "compartida"
-      ],
-      "description": "'personal' (por defecto) o 'compartida'."
-     },
-     "tagline": {
-      "type": "string"
-     },
-     "documents": {
-      "type": "array",
-      "items": {
-       "type": "object",
-       "properties": {
-        "kind": {
-         "type": "string",
-         "enum": [
-          "persona",
-          "scope",
-          "rules",
-          "format",
-          "guardrails",
-          "starters",
-          "superpower"
-         ]
-        },
-        "title": {
-         "type": "string"
-        },
-        "body_md": {
-         "type": "string"
-        }
-       },
-       "required": [
-        "kind",
-        "title"
-       ],
-       "additionalProperties": false
-      }
-     },
-     "selection_context": {
-      "type": "string",
-      "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
-     },
-     "user_request_quote": {
-      "type": "string",
-      "description": "La orden de la persona para este cambio, con sus palabras textuales copiadas de la conversación."
-     }
-    },
-    "required": [
-     "concept_id",
-     "title",
-     "user_request_quote"
-    ],
-    "additionalProperties": false
-   },
-   "annotations": {
-    "readOnlyHint": false,
-    "destructiveHint": true,
-    "idempotentHint": false,
-    "openWorldHint": false
-   }
-  },
-  {
-   "name": "get_model",
-   "description": "Índice del modelo de datos de un conector: qué indicadores, conjuntos de datos, gráficas y tableros existen.",
-   "inputSchema": {
-    "type": "object",
-    "properties": {
-     "connector": {
-      "type": "string",
-      "description": "Slug del conector."
-     },
-     "version": {
-      "type": "integer"
-     },
-     "include_drafts": {
-      "type": "boolean"
-     },
-     "locale": {
-      "type": "string",
-      "enum": [
-       "es",
-       "en"
-      ]
-     },
-     "selection_context": {
-      "type": "string",
-      "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
-     }
-    },
-    "required": [
-     "connector"
-    ],
-    "additionalProperties": false
-   },
-   "annotations": {
-    "readOnlyHint": true,
-    "destructiveHint": false,
-    "idempotentHint": true,
-    "openWorldHint": false
-   }
-  },
-  {
-   "name": "run_metric",
-   "description": "[Lee] Calcula un indicador del modelo publicado, por periodo o desglosado.",
-   "inputSchema": {
-    "type": "object",
-    "properties": {
-     "connector": {
-      "type": "string",
-      "description": "Slug del conector."
-     },
-     "metric": {
-      "type": "string"
-     },
-     "metrics": {
-      "type": "array",
-      "items": {
-       "type": "string"
-      },
-      "minItems": 1,
-      "maxItems": 16
-     },
-     "group_by": {
-      "type": "array",
-      "items": {
-       "type": "string"
-      }
-     },
-     "filters": {
-      "type": [
-       "object",
-       "array"
-      ]
-     },
-     "window": {
-      "type": "object",
-      "properties": {
-       "from": {
-        "type": "string"
-       },
-       "to": {
-        "type": "string"
-       },
-       "preset": {
-        "type": "string",
-        "enum": [
-         "last_7_days",
-         "last_30_days",
-         "last_90_days",
-         "month_to_date",
-         "year_to_date",
-         "prev_month",
-         "prev_year",
-         "year_start_to_last_closed_month"
-        ]
-       }
-      },
-      "additionalProperties": false
-     },
-     "params": {
-      "type": "object",
-      "description": "Los parámetros que declara el indicador, { nombre: valor }. Opcional."
-     },
-     "time_grain": {
-      "type": "string",
-      "enum": [
-       "minute",
-       "hour",
-       "day",
-       "week",
-       "month",
-       "quarter",
-       "semester",
-       "year"
-      ]
-     },
-     "order_by": {
-      "type": "array",
-      "items": {
-       "type": "object",
-       "properties": {
-        "column": {
-         "type": "string"
-        },
-        "direction": {
-         "type": "string",
-         "enum": [
-          "asc",
-          "desc"
-         ]
-        }
-       },
-       "required": [
-        "column",
-        "direction"
-       ],
-       "additionalProperties": false
-      }
-     },
-     "limit": {
-      "type": "integer",
-      "minimum": 1
-     },
-     "cursor": {
-      "type": "string",
-      "description": "Continuación: usa el `next_cursor` que devolvió la llamada anterior."
-     },
-     "calendar_axis": {
-      "type": "boolean"
-     },
-     "share_of_total": {
-      "type": "boolean"
-     },
-     "compare": {
-      "type": "string",
-      "enum": [
-       "previous_period",
-       "same_period_previous_year"
-      ]
-     },
-     "selection_context": {
-      "type": "string",
-      "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
-     }
-    },
-    "required": [
-     "connector"
-    ],
-    "additionalProperties": false
-   },
-   "annotations": {
-    "readOnlyHint": true,
-    "destructiveHint": false,
-    "idempotentHint": true,
-    "openWorldHint": false
-   }
-  },
-  {
-   "name": "run_dataset",
-   "description": "[Lee] Devuelve filas de un conjunto de datos gobernado.",
-   "inputSchema": {
-    "type": "object",
-    "properties": {
-     "connector": {
-      "type": "string",
-      "description": "Slug del conector."
-     },
-     "dataset": {
-      "type": "string"
-     },
-     "params": {
-      "type": "object",
-      "description": "Los parámetros que declara el indicador, { nombre: valor }. Opcional."
-     },
-     "cursor": {
-      "type": "string",
-      "description": "Continuación: usa el `next_cursor` que devolvió la llamada anterior."
-     },
-     "version": {
-      "type": "string",
-      "enum": [
-       "activa",
-       "pendiente"
-      ]
-     },
-     "selection_context": {
-      "type": "string",
-      "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
-     }
-    },
-    "required": [
-     "connector",
-     "dataset"
-    ],
-    "additionalProperties": false
-   },
-   "annotations": {
-    "readOnlyHint": true,
-    "destructiveHint": false,
-    "idempotentHint": true,
-    "openWorldHint": false
-   }
-  },
-  {
-   "name": "run_query",
-   "description": "[Lee] Corre una consulta de sólo lectura sobre las tablas del conector. Sólo agentes creativos.",
-   "inputSchema": {
-    "type": "object",
-    "properties": {
-     "connector": {
-      "type": "string",
-      "description": "Slug del conector."
-     },
-     "sql": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 20000
-     },
-     "limit": {
-      "type": "integer",
-      "minimum": 1,
-      "maximum": 10000
-     },
-     "sample": {
-      "type": "boolean"
-     },
-     "page_size": {
-      "type": "integer",
-      "minimum": 1,
-      "maximum": 10000
-     },
-     "cursor": {
-      "type": "string",
-      "description": "Continuación: usa el `next_cursor` que devolvió la llamada anterior."
-     },
-     "projection": {
-      "type": "array",
-      "items": {
-       "type": "string"
-      }
-     },
-     "selection_context": {
-      "type": "string",
-      "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
-     }
-    },
-    "required": [
-     "connector",
-     "sql"
-    ],
-    "additionalProperties": false
-   },
-   "annotations": {
-    "readOnlyHint": true,
-    "destructiveHint": false,
-    "idempotentHint": true,
-    "openWorldHint": false
-   }
-  },
-  {
-   "name": "render_chart",
-   "description": "[Lee] Devuelve la imagen de una gráfica del catálogo de Datalum.",
-   "inputSchema": {
-    "type": "object",
-    "properties": {
-     "connector": {
-      "type": "string",
-      "description": "Slug del conector."
-     },
-     "chart": {
-      "type": "string"
-     },
-     "version_id": {
-      "type": "string"
-     },
-     "params": {
-      "type": "object",
-      "description": "Los parámetros que declara el indicador, { nombre: valor }. Opcional."
-     },
-     "width": {
-      "type": "number"
-     },
-     "height": {
-      "type": "number"
-     },
-     "pixel_ratio": {
-      "type": "number"
-     },
-     "time_grain": {
-      "type": "string"
-     },
-     "filters": {
-      "type": "object"
-     },
-     "drill": {
-      "type": "array",
-      "items": {
-       "type": "object",
-       "properties": {
-        "dimension": {
-         "type": "string"
-        },
-        "value": {
-         "type": "string"
-        }
-       },
-       "required": [
-        "dimension"
-       ],
-       "additionalProperties": false
-      }
-     },
-     "selection_context": {
-      "type": "string",
-      "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
-     }
-    },
-    "required": [
-     "connector",
-     "chart"
-    ],
-    "additionalProperties": false
-   },
-   "annotations": {
-    "readOnlyHint": true,
-    "destructiveHint": false,
-    "idempotentHint": true,
-    "openWorldHint": false
-   }
-  },
-  {
-   "name": "run_dashboard",
-   "description": "[Lee] Corre un tablero del catálogo de Datalum.",
-   "inputSchema": {
-    "type": "object",
-    "properties": {
-     "connector": {
-      "type": "string",
-      "description": "Slug del conector."
-     },
-     "dashboard": {
-      "type": "string"
-     },
-     "params": {
-      "type": "object",
-      "description": "Los parámetros que declara el indicador, { nombre: valor }. Opcional."
-     },
-     "selection_context": {
-      "type": "string",
-      "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
-     }
-    },
-    "required": [
-     "connector",
-     "dashboard"
-    ],
-    "additionalProperties": false
-   },
-   "annotations": {
-    "readOnlyHint": true,
-    "destructiveHint": false,
-    "idempotentHint": true,
-    "openWorldHint": false
-   }
-  },
-  {
-   "name": "upsert_chart",
-   "description": "[Escribe] Crea o edita una gráfica en el catálogo de Datalum. Nace en propuesto y la activa una persona. Sin `confirm: true` sólo previsualiza. Lleva la orden textual de la persona en `user_request_quote`.",
-   "inputSchema": {
-    "type": "object",
-    "properties": {
-     "connector": {
-      "type": "string",
-      "description": "Slug del conector."
-     },
-     "name": {
-      "type": "string"
-     },
-     "chart_type": {
-      "type": "string"
-     },
-     "business_definition": {
-      "type": "string"
-     },
-     "spec": {
-      "type": "object",
-      "properties": {
-       "measures": {
-        "type": "array",
-        "maxItems": 16,
-        "items": {
-         "type": "object",
-         "properties": {
-          "kind": {
-           "type": "string",
-           "enum": [
-            "metric",
-            "indicator"
-           ]
-          },
-          "ref_id": {
-           "type": "string"
-          },
-          "version_pin": {
-           "type": [
-            "string",
-            "null"
-           ]
-          },
-          "role": {
-           "type": "string"
-          }
-         },
-         "required": [
-          "ref_id"
-         ],
-         "additionalProperties": false
-        }
-       },
-       "dimensions": {
-        "type": "array",
-        "items": {
-         "type": "object",
-         "properties": {
-          "ref_id": {
-           "type": "string"
-          },
-          "version_pin": {
-           "type": [
-            "string",
-            "null"
-           ]
-          },
-          "role": {
-           "type": "string"
-          },
-          "time_grain": {
-           "type": [
-            "string",
-            "null"
-           ],
-           "enum": [
-            "minute",
-            "hour",
-            "day",
-            "week",
-            "month",
-            "quarter",
-            "semester",
-            "year",
-            null
-           ]
-          }
-         },
-         "required": [
-          "ref_id"
-         ],
-         "additionalProperties": false
-        }
-       },
-       "filters": {
-        "type": "array",
-        "items": {
-         "type": "object",
-         "properties": {
-          "dimension_ref_id": {
-           "type": "string"
-          },
-          "operator": {
-           "type": "string",
-           "enum": [
-            "in",
-            "not_in",
-            "=",
-            "!=",
-            ">",
-            ">=",
-            "<",
-            "<=",
-            "between",
-            "is_null",
-            "is_not_null",
-            "contains",
-            "temporal_range"
-           ]
-          },
-          "value": {}
-         },
-         "required": [
-          "operator"
-         ],
-         "additionalProperties": false
-        }
-       },
-       "query_opts": {
+  "tools": [
+    {
+      "name": "list_agents",
+      "description": "Devuelve los agentes que el administrador otorgó a esta persona y que están en servicio. Si hay varios, pregunta a la persona con cuál quiere trabajar antes de llamar use_agent; si hay uno solo, dile cuál es y úsalo. Si la lista viene vacía, `message` explica por qué. Sólo lectura.",
+      "inputSchema": {
         "type": "object",
-        "properties": {
-         "row_limit": {
-          "type": [
-           "integer",
-           "null"
-          ]
-         },
-         "order_by": {
-          "type": [
-           "object",
-           "null"
-          ],
-          "properties": {
-           "ref_id": {
-            "type": "string"
-           },
-           "desc": {
-            "type": "boolean"
-           }
-          },
-          "additionalProperties": false
-         },
-         "compare": {
-          "type": "string",
-          "enum": [
-           "previous_period",
-           "same_period_previous_year"
-          ]
-         },
-         "compare_previous_period": {
-          "type": "boolean"
-         },
-         "series_limit": {
-          "enum": [
-           null
-          ]
-         },
-         "null_policy": {
-          "enum": [
-           "show"
-          ]
-         },
-         "contribution_mode": {
-          "enum": [
-           "none"
-          ]
-         },
-         "detail_mode": {
-          "enum": [
-           false
-          ]
-         }
-        },
+        "properties": {},
         "additionalProperties": false
-       },
-       "options": {
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "use_agent",
+      "description": "Pone a esta conversación a trabajar con un agente de la lista. Llámalo cuando la persona haya dicho con cuál trabaja y pasa sus palabras tal cual en `user_choice_quote`. Devuelve la misión del agente (límites, reglas y persona, enteros hasta donde cabe la respuesta; lo que no cabe lo nombran `leelo_antes_de_actuar` y `fuera_de_la_respuesta`), el índice de su cerebro, los conectores que alcanza, las herramientas retiradas para él y `selection_context`, que hay que mandar en cada llamada siguiente. Volver a llamarlo con el mismo agente es volver a elegirlo y toma su última versión guardada: hazlo sólo cuando la persona lo pida. Para cambiar de agente, primero release_agent.",
+      "inputSchema": {
         "type": "object",
         "properties": {
-         "color_scheme": {
-          "type": "string",
-          "enum": [
-           "spectrum",
-           "cool",
-           "warm"
-          ]
-         },
-         "legend": {
-          "type": "object",
-          "properties": {
-           "show": {
-            "type": "boolean"
-           },
-           "position": {
+          "agent": {
             "type": "string",
-            "enum": [
-             "top",
-             "bottom",
-             "left",
-             "right"
-            ]
-           },
-           "orient": {
-            "type": "string",
-            "enum": [
-             "horizontal",
-             "vertical"
-            ]
-           },
-           "order": {
-            "type": "string",
-            "enum": [
-             "default",
-             "asc",
-             "desc"
-            ]
-           }
+            "description": "Id o nombre del agente, tal como lo devolvió list_agents."
           },
-          "additionalProperties": false
-         },
-         "axes": {
-          "type": "object",
-          "properties": {
-           "x": {
-            "type": "object",
-            "properties": {
-             "title": {
-              "type": [
-               "string",
-               "null"
-              ]
-             },
-             "rotate": {
-              "type": "number"
-             },
-             "label_rotate": {
-              "type": "number"
-             },
-             "time_format": {
-              "type": "string",
-              "enum": [
-               "",
-               "YYYY-MM",
-               "MMM",
-               "YYYY",
-               "DD/MM",
-               "HH:mm"
-              ]
-             },
-             "number_format": {
-              "type": "string",
-              "enum": [
-               "",
-               "0,0",
-               "0,0.00",
-               "0%",
-               "$0,0",
-               "0a"
-              ]
-             }
-            },
-            "additionalProperties": false
-           },
-           "y": {
-            "type": "object",
-            "properties": {
-             "title": {
-              "type": [
-               "string",
-               "null"
-              ]
-             },
-             "number_format": {
-              "type": "string",
-              "enum": [
-               "",
-               "0,0",
-               "0,0.00",
-               "0%",
-               "$0,0",
-               "0a"
-              ]
-             },
-             "min": {
-              "type": [
-               "number",
-               "null"
-              ]
-             },
-             "max": {
-              "type": [
-               "number",
-               "null"
-              ]
-             },
-             "log_scale": {
-              "type": "boolean"
-             }
-            },
-            "additionalProperties": false
-           },
-           "label_rotate": {
-            "type": "number"
-           },
-           "label_size": {
-            "type": "number"
-           }
+          "user_choice_quote": {
+            "type": "string",
+            "description": "Las palabras textuales con las que la persona eligió el agente."
           },
-          "additionalProperties": false
-         },
-         "labels": {
-          "type": "object",
-          "properties": {
-           "show": {
-            "type": "boolean"
-           },
-           "number_format": {
+          "model": {
             "type": "string",
-            "enum": [
-             "",
-             "0,0",
-             "0,0.00",
-             "0%",
-             "$0,0",
-             "0a"
-            ]
-           },
-           "date_format": {
-            "type": "string",
-            "enum": [
-             "auto",
-             "day",
-             "month",
-             "year"
-            ]
-           }
+            "maxLength": 128,
+            "description": "El modelo con el que trabaja el asistente, si lo sabe con certeza. Opcional."
           },
-          "additionalProperties": false
-         },
-         "shape": {
-          "type": "object",
-          "properties": {
-           "stacked": {
-            "type": "boolean"
-           },
-           "normalize": {
-            "type": "boolean"
-           },
-           "contribution": {
-            "type": "boolean"
-           },
-           "horizontal": {
-            "type": "boolean"
-           },
-           "inner_radius": {
-            "type": "number"
-           },
-           "smooth": {
-            "type": "boolean"
-           },
-           "cell_radius": {
-            "type": "number"
-           },
-           "show_label": {
-            "type": "boolean"
-           },
-           "show_labels": {
-            "type": "boolean"
-           },
-           "show_breadcrumb": {
-            "type": "boolean"
-           },
-           "roam": {
-            "type": "boolean"
-           },
-           "gap_color": {
-            "type": "string"
-           },
-           "gap_width": {
-            "type": "number"
-           },
-           "label_color": {
-            "type": "string"
-           },
-           "border_color": {
-            "type": "string"
-           },
-           "border_width": {
-            "type": "number"
-           },
-           "border_radius": {
-            "type": "number"
-           },
-           "radius": {
+          "provider": {
             "type": "string",
-            "enum": [
-             "",
-             "0,95%",
-             "20%,95%",
-             "40%,95%",
-             "55%,90%"
-            ]
-           },
-           "label_rotate": {
-            "type": "string",
-            "enum": [
-             "radial",
-             "tangential"
-            ]
-           },
-           "label_min_angle": {
-            "type": "number"
-           },
-           "label_min_radius": {
-            "type": "number"
-           },
-           "label_size": {
-            "type": "number"
-           },
-           "orient": {
-            "type": "string",
-            "enum": [
-             "LR",
-             "RL",
-             "TB",
-             "BT",
-             "horizontal",
-             "vertical"
-            ]
-           },
-           "symbol_size": {
-            "type": "number"
-           },
-           "label_position": {
-            "type": "string",
-            "enum": [
-             "left",
-             "right",
-             "top",
-             "bottom",
-             "inside"
-            ]
-           },
-           "initial_tree_depth": {
-            "type": "number"
-           },
-           "padding": {
-            "type": "number"
-           },
-           "node_width": {
-            "type": "number"
-           },
-           "node_gap": {
-            "type": "number"
-           },
-           "node_align": {
-            "type": "string",
-            "enum": [
-             "justify",
-             "left",
-             "right"
-            ]
-           },
-           "pad_angle": {
-            "type": "number"
-           },
-           "min_angle": {
-            "type": "number"
-           },
-           "clockwise": {
-            "type": "boolean"
-           },
-           "start_angle": {
-            "type": "number"
-           },
-           "ring": {
-            "type": "string",
-            "enum": [
-             "",
-             "70%,80%",
-             "60%,80%",
-             "50%,75%",
-             "65%,90%"
-            ]
-           },
-           "label_rotate_on": {
-            "type": "boolean"
-           },
-           "up_color": {
-            "type": "string"
-           },
-           "down_color": {
-            "type": "string"
-           },
-           "box_color": {
-            "type": "string"
-           },
-           "outlier_color": {
-            "type": "string"
-           },
-           "show_symbol": {
-            "type": "boolean"
-           },
-           "line_width": {
-            "type": "number"
-           },
-           "show_end_label": {
-            "type": "boolean"
-           },
-           "max_rank": {
-            "type": [
-             "number",
-             "null"
-            ]
-           },
-           "scale": {
-            "type": "string",
-            "enum": [
-             "shared",
-             "row"
-            ]
-           },
-           "tone": {
-            "type": "boolean"
-           },
-           "show_values": {
-            "type": "boolean"
-           },
-           "show_target": {
-            "type": "boolean"
-           },
-           "show_attainment": {
-            "type": "boolean"
-           },
-           "show_value_axis": {
-            "type": "boolean"
-           },
-           "bar_width": {
-            "type": "number"
-           },
-           "track_width": {
-            "type": "number"
-           },
-           "increase_color": {
-            "type": "string"
-           },
-           "decrease_color": {
-            "type": "string"
-           },
-           "total_color": {
-            "type": "string"
-           },
-           "connectors": {
-            "type": "boolean"
-           },
-           "show_total": {
-            "type": "boolean"
-           }
+            "maxLength": 128,
+            "description": "Quién ofrece ese modelo. Opcional."
           },
-          "additionalProperties": false
-         },
-         "label": {
-          "type": "object",
-          "properties": {
-           "show": {
-            "type": "boolean"
-           }
-          },
-          "additionalProperties": false
-         },
-         "visual_map": {
-          "type": "object",
-          "properties": {
-           "show": {
-            "type": "boolean"
-           },
-           "min": {
-            "type": [
-             "number",
-             "null"
-            ]
-           },
-           "max": {
-            "type": [
-             "number",
-             "null"
-            ]
-           },
-           "piecewise": {
-            "type": "boolean"
-           },
-           "pieces": {
-            "type": [
-             "integer",
-             "null"
-            ]
-           }
-          },
-          "additionalProperties": false
-         },
-         "calendar": {
-          "type": "object",
-          "properties": {
-           "year": {
-            "type": [
-             "integer",
-             "null"
-            ]
-           },
-           "orient": {
+          "selection_context": {
             "type": "string",
-            "enum": [
-             "horizontal",
-             "vertical"
-            ]
-           },
-           "cell_size": {
-            "type": [
-             "integer",
-             "null"
-            ]
-           },
-           "show_month_label": {
-            "type": "boolean"
-           },
-           "show_day_label": {
-            "type": "boolean"
-           }
-          },
-          "additionalProperties": false
-         },
-         "color": {
-          "type": "object",
-          "properties": {
-           "shallow_color": {
-            "type": "string"
-           },
-           "deep_color": {
-            "type": "string"
-           },
-           "level_colors": {
-            "type": "array",
-            "items": {
-             "type": "string"
-            }
-           }
-          },
-          "additionalProperties": false
-         },
-         "category_colors": {
-          "type": "object",
-          "additionalProperties": {
-           "type": "string"
+            "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
           }
-         },
-         "measure_axes": {
-          "type": "object",
-          "additionalProperties": {
-           "type": "string",
-           "enum": [
-            "left",
-            "right"
-           ]
-          }
-         },
-         "link": {
-          "type": "object",
-          "properties": {
-           "color": {
-            "type": "string",
-            "enum": [
-             "gradient",
-             "source",
-             "target"
-            ]
-           },
-           "opacity": {
-            "type": "number"
-           },
-           "curveness": {
-            "type": "number"
-           },
-           "width": {
-            "type": "number"
-           }
-          },
-          "additionalProperties": false
-         },
-         "interaction": {
-          "type": "object",
-          "properties": {
-           "focus_adjacency": {
-            "type": "boolean"
-           }
-          },
-          "additionalProperties": false
-         },
-         "gauge": {
-          "type": "object",
-          "properties": {
-           "max": {
-            "type": [
-             "number",
-             "null"
-            ]
-           },
-           "unit": {
-            "type": "string"
-           },
-           "precision": {
-            "type": [
-             "number",
-             "null"
-            ]
-           },
-           "show_pointer": {
-            "type": "boolean"
-           },
-           "start_angle": {
-            "type": [
-             "number",
-             "null"
-            ]
-           },
-           "end_angle": {
-            "type": [
-             "number",
-             "null"
-            ]
-           },
-           "progress_color": {
-            "type": "string"
-           },
-           "track_color": {
-            "type": "string"
-           },
-           "value_color": {
-            "type": "string"
-           }
-          },
-          "additionalProperties": false
-         },
-         "kpi": {
-          "type": "object",
-          "properties": {
-           "number_format": {
-            "type": "string",
-            "enum": [
-             "",
-             "0,0",
-             "0,0.00",
-             "0%",
-             "$0,0",
-             "0a"
-            ]
-           }
-          },
-          "additionalProperties": false
-         },
-         "symbol_size": {
-          "type": [
-           "number",
-           "null"
-          ]
-         },
-         "number_format": {
-          "type": "string",
-          "enum": [
-           "",
-           "0,0",
-           "0,0.00",
-           "0%",
-           "$0,0",
-           "0a"
-          ]
-         },
-         "truncate": {
-          "type": "object",
-          "properties": {
-           "precision": {
-            "type": [
-             "number",
-             "null"
-            ]
-           }
-          },
-          "additionalProperties": false
-         },
-         "conditional_format": {
-          "type": "object",
-          "properties": {
-           "rules": {
-            "type": "array",
-            "maxItems": 20,
-            "items": {
-             "type": "object",
-             "properties": {
-              "id": {
-               "type": "string"
-              },
-              "operator": {
-               "type": "string",
-               "enum": [
-                "gt",
-                "gte",
-                "lt",
-                "lte",
-                "eq",
-                "neq",
-                "between"
-               ]
-              },
-              "value": {
-               "type": "number"
-              },
-              "value2": {
-               "type": "number"
-              },
-              "tone": {
-               "type": "string",
-               "enum": [
-                "success",
-                "warning",
-                "danger",
-                "neutral"
-               ]
-              },
-              "column": {
-               "type": "string",
-               "maxLength": 200
-              }
-             },
-             "required": [
-              "operator",
-              "value",
-              "tone"
-             ],
-             "additionalProperties": false
-            }
-           }
-          },
-          "additionalProperties": false
-         },
-         "annotations": {
-          "type": "array",
-          "maxItems": 20,
-          "items": {
-           "type": "object",
-           "properties": {
-            "axis": {
-             "type": "string",
-             "enum": [
-              "x",
-              "y"
-             ]
-            },
-            "value": {},
-            "label": {
-             "type": "string",
-             "maxLength": 80
-            },
-            "color": {
-             "type": "string"
-            }
-           },
-           "required": [
-            "axis",
-            "value"
-           ],
-           "additionalProperties": false
-          }
-         },
-         "data_zoom": {
-          "type": "object",
-          "properties": {
-           "enabled": {
-            "type": "boolean"
-           }
-          },
-          "additionalProperties": false
-         },
-         "tooltip": {
-          "type": "object",
-          "properties": {
-           "show_total": {
-            "type": "boolean"
-           },
-           "percentage": {
-            "type": "boolean"
-           },
-           "show": {
-            "type": "boolean"
-           }
-          },
-          "additionalProperties": false
-         }
-        },
-        "additionalProperties": false
-       },
-       "title": {
-        "type": [
-         "string",
-         "null"
-        ]
-       },
-       "subtitle": {
-        "type": [
-         "string",
-         "null"
-        ]
-       },
-       "chart_type": {
-        "type": "string"
-       },
-       "encoding": {
-        "type": "object",
-        "additionalProperties": {
-         "type": "string"
-        }
-       },
-       "matrixify": {
-        "type": "null"
-       },
-       "map_spec": {
-        "type": [
-         "object",
-         "null"
-        ],
-        "properties": {
-         "basemap_style": {
-          "type": "string",
-          "enum": [
-           "dark",
-           "light",
-           "streets",
-           "satellite",
-           "outdoors"
-          ]
-         },
-         "layers": {
-          "type": "array",
-          "items": {
-           "type": "object",
-           "properties": {
-            "id": {
-             "type": "string"
-            },
-            "type": {
-             "type": "string",
-             "enum": [
-              "point",
-              "arc",
-              "hexagon",
-              "heatmap",
-              "grid",
-              "path",
-              "polygon",
-              "geojson"
-             ]
-            },
-            "dataset_ref": {
-             "type": "string"
-            },
-            "geo_roles": {
-             "type": "object",
-             "properties": {
-              "lat": {
-               "type": "string"
-              },
-              "lng": {
-               "type": "string"
-              },
-              "geojson": {
-               "type": "string"
-              },
-              "arc": {
-               "type": "object",
-               "properties": {
-                "from": {
-                 "type": "string"
-                },
-                "to": {
-                 "type": "string"
-                }
-               },
-               "additionalProperties": false
-              }
-             },
-             "additionalProperties": false
-            },
-            "color_by": {
-             "type": "string"
-            },
-            "size_by": {
-             "type": "string"
-            },
-            "elevation_by": {
-             "type": "string"
-            },
-            "filter": {
-             "type": [
-              "object",
-              "null"
-             ],
-             "properties": {
-              "column": {
-               "type": "string"
-              },
-              "operator": {
-               "type": "string",
-               "enum": [
-                "in",
-                "=",
-                "!=",
-                ">",
-                ">=",
-                "<",
-                "<=",
-                "between",
-                "is_null",
-                "is_not_null"
-               ]
-              },
-              "value": {
-               "type": [
-                "string",
-                "number",
-                "boolean",
-                "null"
-               ]
-              }
-             },
-             "additionalProperties": false
-            }
-           },
-           "required": [
-            "type",
-            "dataset_ref",
-            "geo_roles"
-           ],
-           "additionalProperties": false
-          }
-         },
-         "viewport": {
-          "type": [
-           "object",
-           "null"
-          ],
-          "properties": {
-           "center": {
-            "type": "array",
-            "items": {
-             "type": "number"
-            }
-           },
-           "zoom": {
-            "type": "number"
-           },
-           "pitch": {
-            "type": "number"
-           },
-           "bearing": {
-            "type": "number"
-           }
-          },
-          "additionalProperties": false
-         },
-         "legend": {
-          "type": [
-           "object",
-           "null"
-          ],
-          "properties": {
-           "show": {
-            "type": "boolean"
-           },
-           "position": {
-            "type": "string",
-            "enum": [
-             "top-left",
-             "top-right",
-             "bottom-left",
-             "bottom-right"
-            ]
-           }
-          },
-          "additionalProperties": false
-         }
         },
         "required": [
-         "basemap_style",
-         "layers"
+          "agent",
+          "user_choice_quote"
         ],
         "additionalProperties": false
-       }
       },
-      "additionalProperties": false
-     },
-     "if_match": {
-      "type": "string"
-     },
-     "confirm": {
-      "type": "boolean",
-      "description": "Con true aplica; sin él sólo previsualiza."
-     },
-     "selection_context": {
-      "type": "string",
-      "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
-     },
-     "user_request_quote": {
-      "type": "string",
-      "description": "La orden de la persona para este cambio, con sus palabras textuales copiadas de la conversación."
-     }
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
     },
-    "required": [
-     "connector",
-     "name",
-     "chart_type",
-     "spec"
-    ],
-    "additionalProperties": false
-   },
-   "annotations": {
-    "readOnlyHint": false,
-    "destructiveHint": true,
-    "idempotentHint": false,
-    "openWorldHint": false
-   }
-  },
-  {
-   "name": "upsert_dashboard",
-   "description": "[Escribe] Crea o edita un tablero en el catálogo de Datalum. Nace en propuesto y lo activa una persona. Sin `confirm: true` sólo previsualiza. Lleva la orden textual de la persona en `user_request_quote`.",
-   "inputSchema": {
-    "type": "object",
-    "properties": {
-     "connector": {
-      "type": "string",
-      "description": "Slug del conector."
-     },
-     "name": {
-      "type": "string"
-     },
-     "business_definition": {
-      "type": "string"
-     },
-     "spec": {
-      "type": "object",
-      "properties": {
-       "layout": {
+    {
+      "name": "release_agent",
+      "description": "Deja a esta conversación sin agente, para cambiar de agente o para terminar. Lleva la orden textual de la persona en `user_request_quote`.",
+      "inputSchema": {
         "type": "object",
         "properties": {
-         "columns": {
-          "type": "number"
-         },
-         "tiles": {
-          "type": "array",
-          "items": {
-           "type": "object",
-           "properties": {
-            "chart_ref_id": {
-             "type": "string"
-            },
-            "version_pin": {
-             "type": [
-              "string",
-              "null"
-             ]
-            },
-            "x": {
-             "type": "number"
-            },
-            "y": {
-             "type": "number"
-            },
-            "w": {
-             "type": "number"
-            },
-            "h": {
-             "type": "number"
-            },
-            "tab_id": {
-             "type": [
-              "string",
-              "null"
-             ]
-            },
-            "element": {
-             "type": "object",
-             "properties": {
-              "kind": {
-               "type": "string",
-               "enum": [
-                "heading",
-                "text",
-                "divider"
-               ]
-              },
-              "text": {
-               "type": "string"
-              }
-             },
-             "additionalProperties": false
-            },
-            "title": {
-             "type": [
-              "string",
-              "null"
-             ]
-            },
-            "title_style": {
-             "type": [
-              "object",
-              "null"
-             ],
-             "properties": {
-              "font_size": {
-               "type": "number"
-              },
-              "color": {
-               "type": "string"
-              }
-             },
-             "additionalProperties": false
-            }
-           },
-           "additionalProperties": false
+          "selection_context": {
+            "type": "string",
+            "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
+          },
+          "user_request_quote": {
+            "type": "string",
+            "description": "La orden de la persona para este cambio, con sus palabras textuales copiadas de la conversación."
           }
-         },
-         "tabs": {
-          "type": "array",
-          "items": {
-           "type": "object",
-           "properties": {
-            "id": {
-             "type": "string"
-            },
-            "label": {
-             "type": "string"
-            }
-           },
-           "additionalProperties": false
+        },
+        "additionalProperties": false,
+        "required": [
+          "user_request_quote"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "brain_index",
+      "description": "Lista un nivel del cerebro del agente o del modelo de un conector: una línea por documento con su `concept_id`. Si no cabe entero trae `next_cursor` para seguir. No devuelve cuerpos.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "connector": {
+            "type": "string",
+            "description": "Slug del conector."
+          },
+          "path": {
+            "type": "string",
+            "description": "Rama a listar."
+          },
+          "cursor": {
+            "type": "string",
+            "description": "Continuación: usa el `next_cursor` que devolvió la llamada anterior."
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "full",
+              "light"
+            ]
+          },
+          "version": {
+            "type": "integer"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "es",
+              "en"
+            ]
+          },
+          "include_drafts": {
+            "type": "boolean"
+          },
+          "selection_context": {
+            "type": "string",
+            "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
           }
-         }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "brain_read",
+      "description": "Abre un documento por su `concept_id`. El cuerpo tiene tope de tamaño: si no cabe, la respuesta trae `next_offset` para continuar. Un documento por llamada.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "connector": {
+            "type": "string",
+            "description": "Slug del conector."
+          },
+          "concept_id": {
+            "type": "string",
+            "description": "Identificador del documento, copiado de brain_index."
+          },
+          "offset": {
+            "type": "integer",
+            "description": "Continuación: usa el `next_offset` que devolvió la lectura anterior."
+          },
+          "max_bytes": {
+            "type": "integer",
+            "description": "Tope de bytes del cuerpo en esta lectura (por defecto 8192, máximo 32768)."
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "full",
+              "light"
+            ]
+          },
+          "version": {
+            "type": "integer"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "es",
+              "en"
+            ]
+          },
+          "include_drafts": {
+            "type": "boolean"
+          },
+          "selection_context": {
+            "type": "string",
+            "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
+          }
+        },
+        "required": [
+          "concept_id"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "list_memories",
+      "description": "Índice de las memorias de esta persona con el agente activo, una línea por memoria. Si no cabe trae `next_cursor`. Con `memory` devuelve una memoria entera.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "preferencia",
+              "hecho",
+              "avance",
+              "episodio"
+            ]
+          },
+          "cursor": {
+            "type": "string",
+            "description": "Continuación: usa el `next_cursor` que devolvió la llamada anterior."
+          },
+          "memory": {
+            "type": "string",
+            "description": "Id o nombre de una memoria."
+          },
+          "selection_context": {
+            "type": "string",
+            "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
+          }
         },
         "additionalProperties": false
-       },
-       "tiles": {
-        "type": "array",
-        "items": {
-         "type": "object",
-         "properties": {
-          "chart_ref_id": {
-           "type": "string"
-          },
-          "version_pin": {
-           "type": [
-            "string",
-            "null"
-           ]
-          },
-          "x": {
-           "type": "number"
-          },
-          "y": {
-           "type": "number"
-          },
-          "w": {
-           "type": "number"
-          },
-          "h": {
-           "type": "number"
-          },
-          "tab_id": {
-           "type": [
-            "string",
-            "null"
-           ]
-          },
-          "element": {
-           "type": "object",
-           "properties": {
-            "kind": {
-             "type": "string",
-             "enum": [
-              "heading",
-              "text",
-              "divider"
-             ]
-            },
-            "text": {
-             "type": "string"
-            }
-           },
-           "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "remember",
+      "description": "Guarda una memoria personal sobre el agente activo. `kind` es preferencia, hecho, avance o episodio. Un avance lleva su lista de pasos bajo '# Pasos'. Escribir con el `slug` de una memoria existente la reemplaza. Con `scope: compartida` no se guarda: queda como propuesta para que una persona la apruebe. Lleva la orden textual de la persona en `user_request_quote`.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "preferencia",
+              "hecho",
+              "avance",
+              "episodio"
+            ]
           },
           "title": {
-           "type": [
-            "string",
-            "null"
-           ]
+            "type": "string"
           },
-          "title_style": {
-           "type": [
-            "object",
-            "null"
-           ],
-           "properties": {
-            "font_size": {
-             "type": "number"
-            },
-            "color": {
-             "type": "string"
-            }
-           },
-           "additionalProperties": false
+          "body_md": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Nombre de la memoria. Reusar un nombre reemplaza la memoria que lo tenía."
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "personal",
+              "compartida"
+            ],
+            "description": "'personal' (por defecto) o 'compartida'."
+          },
+          "selection_context": {
+            "type": "string",
+            "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
+          },
+          "user_request_quote": {
+            "type": "string",
+            "description": "La orden de la persona para este cambio, con sus palabras textuales copiadas de la conversación."
           }
-         },
-         "additionalProperties": false
-        }
-       },
-       "tabs": {
-        "type": "array",
-        "items": {
-         "type": "object",
-         "properties": {
-          "id": {
-           "type": "string"
-          },
-          "label": {
-           "type": "string"
-          }
-         },
-         "additionalProperties": false
-        }
-       },
-       "global_filters": {
-        "type": "array",
-        "items": {
-         "type": "object",
-         "properties": {
-          "id": {
-           "type": "string"
-          },
-          "label": {
-           "type": "string"
-          },
-          "kind": {
-           "type": "string",
-           "enum": [
-            "date_range",
-            "dimension"
-           ]
-          },
-          "dimension_ref_id": {
-           "type": [
-            "string",
-            "null"
-           ]
-          },
-          "multi": {
-           "type": "boolean"
-          },
-          "default": {},
-          "applies_to": {},
-          "targets": {
-           "type": [
-            "array",
-            "null"
-           ]
-          },
-          "dataset_id": {},
-          "column": {}
-         },
-         "required": [
-          "id",
-          "kind"
-         ],
-         "additionalProperties": false
-        }
-       },
-       "filter_set_refs": {
-        "type": "array",
-        "items": {
-         "type": "string"
-        }
-       },
-       "theme": {
-        "type": [
-         "object",
-         "null"
-        ],
-        "properties": {
-         "preset": {
-          "type": "string"
-         },
-         "entrance": {
-          "type": "string",
-          "enum": [
-           "none",
-           "fade",
-           "rise"
-          ]
-         }
         },
+        "required": [
+          "kind",
+          "title",
+          "body_md",
+          "user_request_quote"
+        ],
         "additionalProperties": false
-       },
-       "shared_color_scales": {
-        "type": "object"
-       },
-       "cross_filter": {
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "forget",
+      "description": "Retira una memoria de esta persona. Su archivo se conserva marcado como retirado. Lleva la orden textual de la persona en `user_request_quote`.",
+      "inputSchema": {
         "type": "object",
         "properties": {
-         "enabled": {
-          "type": "boolean"
-         },
-         "mode": {
-          "type": "string",
-          "enum": [
-           "toggle",
-           "exclusive"
-          ]
-         },
-         "exclude_charts": {
-          "type": "array",
-          "items": {
-           "type": "string"
-          }
-         }
-        },
-        "additionalProperties": false
-       },
-       "param_controls": {
-        "type": "array",
-        "items": {
-         "type": "object",
-         "properties": {
-          "param": {
-           "type": "string"
+          "memory": {
+            "type": "string",
+            "description": "Id o nombre de una memoria."
           },
-          "label": {
-           "type": [
-            "string",
-            "null"
-           ]
+          "selection_context": {
+            "type": "string",
+            "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
+          },
+          "user_request_quote": {
+            "type": "string",
+            "description": "La orden de la persona para este cambio, con sus palabras textuales copiadas de la conversación."
+          }
+        },
+        "required": [
+          "memory",
+          "user_request_quote"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "delete_my_memories",
+      "description": "Borra para siempre todas las memorias de esta persona con el agente activo. Exige `confirm: true` y las palabras textuales de la persona en `user_request_quote`.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "confirm": {
+            "type": "boolean",
+            "description": "Con true aplica; sin él sólo previsualiza."
+          },
+          "user_request_quote": {
+            "type": "string",
+            "description": "Las palabras textuales con las que la persona pidió el borrado."
+          },
+          "selection_context": {
+            "type": "string",
+            "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
+          }
+        },
+        "required": [
+          "confirm",
+          "user_request_quote"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "brain_write",
+      "description": "Crea una memoria por su ruta en el cerebro del agente, o un agente nuevo en propuesto. Lleva la orden textual de la persona en `user_request_quote`.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "concept_id": {
+            "type": "string",
+            "description": "Identificador del documento, copiado de brain_index."
+          },
+          "title": {
+            "type": "string"
+          },
+          "body_md": {
+            "type": "string"
           },
           "kind": {
-           "type": "string",
-           "enum": [
-            "datetime",
-            "date",
-            "time"
-           ]
+            "type": "string",
+            "enum": [
+              "preferencia",
+              "hecho",
+              "avance",
+              "episodio"
+            ]
           },
-          "default": {
-           "type": [
-            "string",
-            "null"
-           ]
+          "scope": {
+            "type": "string",
+            "enum": [
+              "personal",
+              "compartida"
+            ],
+            "description": "'personal' (por defecto) o 'compartida'."
           },
-          "applies_to": {}
-         },
-         "additionalProperties": false
-        }
-       },
-       "title": {
-        "type": [
-         "string",
-         "null"
-        ]
-       },
-       "subtitle": {
-        "type": [
-         "string",
-         "null"
-        ]
-       }
+          "tagline": {
+            "type": "string"
+          },
+          "documents": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "persona",
+                    "scope",
+                    "rules",
+                    "format",
+                    "guardrails",
+                    "starters",
+                    "superpower"
+                  ]
+                },
+                "title": {
+                  "type": "string"
+                },
+                "body_md": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind",
+                "title"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "selection_context": {
+            "type": "string",
+            "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
+          },
+          "user_request_quote": {
+            "type": "string",
+            "description": "La orden de la persona para este cambio, con sus palabras textuales copiadas de la conversación."
+          }
+        },
+        "required": [
+          "concept_id",
+          "title",
+          "user_request_quote"
+        ],
+        "additionalProperties": false
       },
-      "additionalProperties": false
-     },
-     "if_match": {
-      "type": "string"
-     },
-     "confirm": {
-      "type": "boolean",
-      "description": "Con true aplica; sin él sólo previsualiza."
-     },
-     "selection_context": {
-      "type": "string",
-      "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
-     },
-     "user_request_quote": {
-      "type": "string",
-      "description": "La orden de la persona para este cambio, con sus palabras textuales copiadas de la conversación."
-     }
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
     },
-    "required": [
-     "connector",
-     "name",
-     "spec"
-    ],
-    "additionalProperties": false
-   },
-   "annotations": {
-    "readOnlyHint": false,
-    "destructiveHint": true,
-    "idempotentHint": false,
-    "openWorldHint": false
-   }
-  },
-  {
-   "name": "upsert_custom_dashboard",
-   "description": "[Escribe] Crea o edita un tablero en código (HTML) dentro del catálogo de Datalum. Nace en propuesto y lo activa una persona. Sin `confirm: true` sólo previsualiza. Lleva la orden textual de la persona en `user_request_quote`.",
-   "inputSchema": {
-    "type": "object",
-    "properties": {
-     "connector": {
-      "type": "string",
-      "description": "Slug del conector."
-     },
-     "name": {
-      "type": "string"
-     },
-     "template": {
-      "type": "string"
-     },
-     "datasets_refs": {
-      "type": "array"
-     },
-     "projection": {
-      "type": "array"
-     },
-     "queries": {
-      "type": "array"
-     },
-     "contract_version": {
-      "type": "string"
-     },
-     "if_match": {
-      "type": "string"
-     },
-     "confirm": {
-      "type": "boolean",
-      "description": "Con true aplica; sin él sólo previsualiza."
-     },
-     "selection_context": {
-      "type": "string",
-      "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
-     },
-     "user_request_quote": {
-      "type": "string",
-      "description": "La orden de la persona para este cambio, con sus palabras textuales copiadas de la conversación."
-     }
+    {
+      "name": "get_model",
+      "description": "Índice del modelo de datos de un conector: qué indicadores, conjuntos de datos, gráficas y tableros existen.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "connector": {
+            "type": "string",
+            "description": "Slug del conector."
+          },
+          "version": {
+            "type": "integer"
+          },
+          "include_drafts": {
+            "type": "boolean"
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "es",
+              "en"
+            ]
+          },
+          "selection_context": {
+            "type": "string",
+            "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
+          }
+        },
+        "required": [
+          "connector"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
     },
-    "required": [
-     "connector",
-     "name",
-     "template"
-    ],
-    "additionalProperties": false
-   },
-   "annotations": {
-    "readOnlyHint": false,
-    "destructiveHint": true,
-    "idempotentHint": false,
-    "openWorldHint": false
-   }
-  }
- ]
+    {
+      "name": "run_metric",
+      "description": "[Lee] Calcula un indicador del modelo publicado, por periodo o desglosado.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "connector": {
+            "type": "string",
+            "description": "Slug del conector."
+          },
+          "metric": {
+            "type": "string"
+          },
+          "metrics": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "maxItems": 16
+          },
+          "group_by": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "filters": {
+            "type": [
+              "object",
+              "array"
+            ]
+          },
+          "window": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              },
+              "preset": {
+                "type": "string",
+                "enum": [
+                  "last_7_days",
+                  "last_30_days",
+                  "last_90_days",
+                  "month_to_date",
+                  "year_to_date",
+                  "prev_month",
+                  "prev_year",
+                  "year_start_to_last_closed_month"
+                ]
+              }
+            },
+            "additionalProperties": false
+          },
+          "params": {
+            "type": "object",
+            "description": "Los parámetros que declara el indicador, { nombre: valor }. Opcional."
+          },
+          "time_grain": {
+            "type": "string",
+            "enum": [
+              "minute",
+              "hour",
+              "day",
+              "week",
+              "month",
+              "quarter",
+              "semester",
+              "year"
+            ]
+          },
+          "order_by": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "column": {
+                  "type": "string"
+                },
+                "direction": {
+                  "type": "string",
+                  "enum": [
+                    "asc",
+                    "desc"
+                  ]
+                }
+              },
+              "required": [
+                "column",
+                "direction"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "cursor": {
+            "type": "string",
+            "description": "Continuación: usa el `next_cursor` que devolvió la llamada anterior."
+          },
+          "calendar_axis": {
+            "type": "boolean"
+          },
+          "share_of_total": {
+            "type": "boolean"
+          },
+          "compare": {
+            "type": "string",
+            "enum": [
+              "previous_period",
+              "same_period_previous_year"
+            ]
+          },
+          "selection_context": {
+            "type": "string",
+            "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
+          },
+          "preparation_ref": {
+            "type": "string",
+            "description": "La referencia que trajo una respuesta «en preparación» de esta herramienta. Mándala al volver a pedirla con los mismos argumentos: recoge lo que se estaba preparando, sin calcularlo otra vez."
+          }
+        },
+        "required": [
+          "connector"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "run_dataset",
+      "description": "[Lee] Devuelve filas de un conjunto de datos gobernado.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "connector": {
+            "type": "string",
+            "description": "Slug del conector."
+          },
+          "dataset": {
+            "type": "string"
+          },
+          "params": {
+            "type": "object",
+            "description": "Los parámetros que declara el indicador, { nombre: valor }. Opcional."
+          },
+          "cursor": {
+            "type": "string",
+            "description": "Continuación: usa el `next_cursor` que devolvió la llamada anterior."
+          },
+          "version": {
+            "type": "string",
+            "enum": [
+              "activa",
+              "pendiente"
+            ]
+          },
+          "selection_context": {
+            "type": "string",
+            "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
+          },
+          "preparation_ref": {
+            "type": "string",
+            "description": "La referencia que trajo una respuesta «en preparación» de esta herramienta. Mándala al volver a pedirla con los mismos argumentos: recoge lo que se estaba preparando, sin calcularlo otra vez."
+          }
+        },
+        "required": [
+          "connector",
+          "dataset"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "export_dataset_csv",
+      "description": "[Lee] Devuelve el CSV de un conjunto de datos guardado en un enlace firmado, con todas sus filas: para un listado que no conviene recorrer por páginas con run_dataset. El enlace vive unos minutos. Si tarda más que la llamada responde 'en_preparacion': pídelo otra vez con su 'preparation_ref'.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "connector": {
+            "type": "string",
+            "description": "Slug del conector."
+          },
+          "dataset": {
+            "type": "string"
+          },
+          "params": {
+            "type": "object",
+            "description": "Los parámetros que declara el indicador, { nombre: valor }. Opcional."
+          },
+          "version": {
+            "type": "string",
+            "enum": [
+              "activa",
+              "pendiente"
+            ]
+          },
+          "selection_context": {
+            "type": "string",
+            "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
+          },
+          "preparation_ref": {
+            "type": "string",
+            "description": "La referencia que trajo una respuesta «en preparación» de esta herramienta. Mándala al volver a pedirla con los mismos argumentos: recoge lo que se estaba preparando, sin calcularlo otra vez."
+          }
+        },
+        "required": [
+          "connector",
+          "dataset"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "run_query",
+      "description": "[Lee] Corre una consulta de sólo lectura sobre las tablas del conector. Sólo agentes creativos.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "connector": {
+            "type": "string",
+            "description": "Slug del conector."
+          },
+          "sql": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000
+          },
+          "sample": {
+            "type": "boolean"
+          },
+          "page_size": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000
+          },
+          "cursor": {
+            "type": "string",
+            "description": "Continuación: usa el `next_cursor` que devolvió la llamada anterior."
+          },
+          "projection": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "selection_context": {
+            "type": "string",
+            "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
+          }
+        },
+        "required": [
+          "connector",
+          "sql"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "render_chart",
+      "description": "[Lee] Devuelve la imagen de una gráfica del catálogo de Datalum.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "connector": {
+            "type": "string",
+            "description": "Slug del conector."
+          },
+          "chart": {
+            "type": "string"
+          },
+          "version_id": {
+            "type": "string"
+          },
+          "params": {
+            "type": "object",
+            "description": "Los parámetros que declara el indicador, { nombre: valor }. Opcional."
+          },
+          "width": {
+            "type": "number"
+          },
+          "height": {
+            "type": "number"
+          },
+          "pixel_ratio": {
+            "type": "number"
+          },
+          "time_grain": {
+            "type": "string"
+          },
+          "filters": {
+            "type": "object"
+          },
+          "drill": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "dimension": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "dimension"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "selection_context": {
+            "type": "string",
+            "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
+          }
+        },
+        "required": [
+          "connector",
+          "chart"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "run_dashboard",
+      "description": "[Lee] Corre un tablero del catálogo de Datalum.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "connector": {
+            "type": "string",
+            "description": "Slug del conector."
+          },
+          "dashboard": {
+            "type": "string"
+          },
+          "params": {
+            "type": "object",
+            "description": "Los parámetros que declara el indicador, { nombre: valor }. Opcional."
+          },
+          "selection_context": {
+            "type": "string",
+            "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
+          }
+        },
+        "required": [
+          "connector",
+          "dashboard"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "upsert_chart",
+      "description": "[Escribe] Crea o edita una gráfica en el catálogo de Datalum. Nace en propuesto y la activa una persona. Sin `confirm: true` sólo previsualiza. Lleva la orden textual de la persona en `user_request_quote`.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "connector": {
+            "type": "string",
+            "description": "Slug del conector."
+          },
+          "name": {
+            "type": "string"
+          },
+          "chart_type": {
+            "type": "string"
+          },
+          "business_definition": {
+            "type": "string"
+          },
+          "spec": {
+            "type": "object",
+            "properties": {
+              "measures": {
+                "type": "array",
+                "maxItems": 16,
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "metric",
+                        "indicator"
+                      ]
+                    },
+                    "ref_id": {
+                      "type": "string"
+                    },
+                    "version_pin": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "role": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "ref_id"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "dimensions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "ref_id": {
+                      "type": "string"
+                    },
+                    "version_pin": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "role": {
+                      "type": "string"
+                    },
+                    "time_grain": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "enum": [
+                        "minute",
+                        "hour",
+                        "day",
+                        "week",
+                        "month",
+                        "quarter",
+                        "semester",
+                        "year",
+                        null
+                      ]
+                    }
+                  },
+                  "required": [
+                    "ref_id"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "filters": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "dimension_ref_id": {
+                      "type": "string"
+                    },
+                    "operator": {
+                      "type": "string",
+                      "enum": [
+                        "in",
+                        "not_in",
+                        "=",
+                        "!=",
+                        ">",
+                        ">=",
+                        "<",
+                        "<=",
+                        "between",
+                        "is_null",
+                        "is_not_null",
+                        "contains",
+                        "temporal_range"
+                      ]
+                    },
+                    "value": {}
+                  },
+                  "required": [
+                    "operator"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "query_opts": {
+                "type": "object",
+                "properties": {
+                  "row_limit": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "order_by": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "properties": {
+                      "ref_id": {
+                        "type": "string"
+                      },
+                      "desc": {
+                        "type": "boolean"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "compare": {
+                    "type": "string",
+                    "enum": [
+                      "previous_period",
+                      "same_period_previous_year"
+                    ]
+                  },
+                  "compare_previous_period": {
+                    "type": "boolean"
+                  },
+                  "series_limit": {
+                    "enum": [
+                      null
+                    ]
+                  },
+                  "null_policy": {
+                    "enum": [
+                      "show"
+                    ]
+                  },
+                  "contribution_mode": {
+                    "enum": [
+                      "none"
+                    ]
+                  },
+                  "detail_mode": {
+                    "enum": [
+                      false
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              },
+              "options": {
+                "type": "object",
+                "properties": {
+                  "color_scheme": {
+                    "type": "string",
+                    "enum": [
+                      "spectrum",
+                      "cool",
+                      "warm"
+                    ]
+                  },
+                  "legend": {
+                    "type": "object",
+                    "properties": {
+                      "show": {
+                        "type": "boolean"
+                      },
+                      "position": {
+                        "type": "string",
+                        "enum": [
+                          "top",
+                          "bottom",
+                          "left",
+                          "right"
+                        ]
+                      },
+                      "orient": {
+                        "type": "string",
+                        "enum": [
+                          "horizontal",
+                          "vertical"
+                        ]
+                      },
+                      "order": {
+                        "type": "string",
+                        "enum": [
+                          "default",
+                          "asc",
+                          "desc"
+                        ]
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "axes": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "object",
+                        "properties": {
+                          "title": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "rotate": {
+                            "type": "number"
+                          },
+                          "label_rotate": {
+                            "type": "number"
+                          },
+                          "time_format": {
+                            "type": "string",
+                            "enum": [
+                              "",
+                              "YYYY-MM",
+                              "MMM",
+                              "YYYY",
+                              "DD/MM",
+                              "HH:mm"
+                            ]
+                          },
+                          "number_format": {
+                            "type": "string",
+                            "enum": [
+                              "",
+                              "0,0",
+                              "0,0.00",
+                              "0%",
+                              "$0,0",
+                              "0a"
+                            ]
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "y": {
+                        "type": "object",
+                        "properties": {
+                          "title": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "number_format": {
+                            "type": "string",
+                            "enum": [
+                              "",
+                              "0,0",
+                              "0,0.00",
+                              "0%",
+                              "$0,0",
+                              "0a"
+                            ]
+                          },
+                          "min": {
+                            "type": [
+                              "number",
+                              "null"
+                            ]
+                          },
+                          "max": {
+                            "type": [
+                              "number",
+                              "null"
+                            ]
+                          },
+                          "log_scale": {
+                            "type": "boolean"
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "label_rotate": {
+                        "type": "number"
+                      },
+                      "label_size": {
+                        "type": "number"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "labels": {
+                    "type": "object",
+                    "properties": {
+                      "show": {
+                        "type": "boolean"
+                      },
+                      "number_format": {
+                        "type": "string",
+                        "enum": [
+                          "",
+                          "0,0",
+                          "0,0.00",
+                          "0%",
+                          "$0,0",
+                          "0a"
+                        ]
+                      },
+                      "date_format": {
+                        "type": "string",
+                        "enum": [
+                          "auto",
+                          "day",
+                          "month",
+                          "year"
+                        ]
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "shape": {
+                    "type": "object",
+                    "properties": {
+                      "stacked": {
+                        "type": "boolean"
+                      },
+                      "normalize": {
+                        "type": "boolean"
+                      },
+                      "contribution": {
+                        "type": "boolean"
+                      },
+                      "horizontal": {
+                        "type": "boolean"
+                      },
+                      "inner_radius": {
+                        "type": "number"
+                      },
+                      "smooth": {
+                        "type": "boolean"
+                      },
+                      "cell_radius": {
+                        "type": "number"
+                      },
+                      "show_label": {
+                        "type": "boolean"
+                      },
+                      "show_labels": {
+                        "type": "boolean"
+                      },
+                      "show_breadcrumb": {
+                        "type": "boolean"
+                      },
+                      "roam": {
+                        "type": "boolean"
+                      },
+                      "gap_color": {
+                        "type": "string"
+                      },
+                      "gap_width": {
+                        "type": "number"
+                      },
+                      "label_color": {
+                        "type": "string"
+                      },
+                      "border_color": {
+                        "type": "string"
+                      },
+                      "border_width": {
+                        "type": "number"
+                      },
+                      "border_radius": {
+                        "type": "number"
+                      },
+                      "radius": {
+                        "type": "string",
+                        "enum": [
+                          "",
+                          "0,95%",
+                          "20%,95%",
+                          "40%,95%",
+                          "55%,90%"
+                        ]
+                      },
+                      "label_rotate": {
+                        "type": "string",
+                        "enum": [
+                          "radial",
+                          "tangential"
+                        ]
+                      },
+                      "label_min_angle": {
+                        "type": "number"
+                      },
+                      "label_min_radius": {
+                        "type": "number"
+                      },
+                      "label_size": {
+                        "type": "number"
+                      },
+                      "orient": {
+                        "type": "string",
+                        "enum": [
+                          "LR",
+                          "RL",
+                          "TB",
+                          "BT",
+                          "horizontal",
+                          "vertical"
+                        ]
+                      },
+                      "symbol_size": {
+                        "type": "number"
+                      },
+                      "label_position": {
+                        "type": "string",
+                        "enum": [
+                          "left",
+                          "right",
+                          "top",
+                          "bottom",
+                          "inside"
+                        ]
+                      },
+                      "initial_tree_depth": {
+                        "type": "number"
+                      },
+                      "padding": {
+                        "type": "number"
+                      },
+                      "node_width": {
+                        "type": "number"
+                      },
+                      "node_gap": {
+                        "type": "number"
+                      },
+                      "node_align": {
+                        "type": "string",
+                        "enum": [
+                          "justify",
+                          "left",
+                          "right"
+                        ]
+                      },
+                      "pad_angle": {
+                        "type": "number"
+                      },
+                      "min_angle": {
+                        "type": "number"
+                      },
+                      "clockwise": {
+                        "type": "boolean"
+                      },
+                      "start_angle": {
+                        "type": "number"
+                      },
+                      "ring": {
+                        "type": "string",
+                        "enum": [
+                          "",
+                          "70%,80%",
+                          "60%,80%",
+                          "50%,75%",
+                          "65%,90%"
+                        ]
+                      },
+                      "label_rotate_on": {
+                        "type": "boolean"
+                      },
+                      "up_color": {
+                        "type": "string"
+                      },
+                      "down_color": {
+                        "type": "string"
+                      },
+                      "box_color": {
+                        "type": "string"
+                      },
+                      "outlier_color": {
+                        "type": "string"
+                      },
+                      "show_symbol": {
+                        "type": "boolean"
+                      },
+                      "line_width": {
+                        "type": "number"
+                      },
+                      "show_end_label": {
+                        "type": "boolean"
+                      },
+                      "max_rank": {
+                        "type": [
+                          "number",
+                          "null"
+                        ]
+                      },
+                      "scale": {
+                        "type": "string",
+                        "enum": [
+                          "shared",
+                          "row"
+                        ]
+                      },
+                      "tone": {
+                        "type": "boolean"
+                      },
+                      "show_values": {
+                        "type": "boolean"
+                      },
+                      "show_target": {
+                        "type": "boolean"
+                      },
+                      "show_attainment": {
+                        "type": "boolean"
+                      },
+                      "show_value_axis": {
+                        "type": "boolean"
+                      },
+                      "bar_width": {
+                        "type": "number"
+                      },
+                      "track_width": {
+                        "type": "number"
+                      },
+                      "increase_color": {
+                        "type": "string"
+                      },
+                      "decrease_color": {
+                        "type": "string"
+                      },
+                      "total_color": {
+                        "type": "string"
+                      },
+                      "connectors": {
+                        "type": "boolean"
+                      },
+                      "show_total": {
+                        "type": "boolean"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "label": {
+                    "type": "object",
+                    "properties": {
+                      "show": {
+                        "type": "boolean"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "visual_map": {
+                    "type": "object",
+                    "properties": {
+                      "show": {
+                        "type": "boolean"
+                      },
+                      "min": {
+                        "type": [
+                          "number",
+                          "null"
+                        ]
+                      },
+                      "max": {
+                        "type": [
+                          "number",
+                          "null"
+                        ]
+                      },
+                      "piecewise": {
+                        "type": "boolean"
+                      },
+                      "pieces": {
+                        "type": [
+                          "integer",
+                          "null"
+                        ]
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "calendar": {
+                    "type": "object",
+                    "properties": {
+                      "year": {
+                        "type": [
+                          "integer",
+                          "null"
+                        ]
+                      },
+                      "orient": {
+                        "type": "string",
+                        "enum": [
+                          "horizontal",
+                          "vertical"
+                        ]
+                      },
+                      "cell_size": {
+                        "type": [
+                          "integer",
+                          "null"
+                        ]
+                      },
+                      "show_month_label": {
+                        "type": "boolean"
+                      },
+                      "show_day_label": {
+                        "type": "boolean"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "color": {
+                    "type": "object",
+                    "properties": {
+                      "shallow_color": {
+                        "type": "string"
+                      },
+                      "deep_color": {
+                        "type": "string"
+                      },
+                      "level_colors": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "category_colors": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "measure_axes": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string",
+                      "enum": [
+                        "left",
+                        "right"
+                      ]
+                    }
+                  },
+                  "link": {
+                    "type": "object",
+                    "properties": {
+                      "color": {
+                        "type": "string",
+                        "enum": [
+                          "gradient",
+                          "source",
+                          "target"
+                        ]
+                      },
+                      "opacity": {
+                        "type": "number"
+                      },
+                      "curveness": {
+                        "type": "number"
+                      },
+                      "width": {
+                        "type": "number"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "interaction": {
+                    "type": "object",
+                    "properties": {
+                      "focus_adjacency": {
+                        "type": "boolean"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "gauge": {
+                    "type": "object",
+                    "properties": {
+                      "max": {
+                        "type": [
+                          "number",
+                          "null"
+                        ]
+                      },
+                      "unit": {
+                        "type": "string"
+                      },
+                      "precision": {
+                        "type": [
+                          "number",
+                          "null"
+                        ]
+                      },
+                      "show_pointer": {
+                        "type": "boolean"
+                      },
+                      "start_angle": {
+                        "type": [
+                          "number",
+                          "null"
+                        ]
+                      },
+                      "end_angle": {
+                        "type": [
+                          "number",
+                          "null"
+                        ]
+                      },
+                      "progress_color": {
+                        "type": "string"
+                      },
+                      "track_color": {
+                        "type": "string"
+                      },
+                      "value_color": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "kpi": {
+                    "type": "object",
+                    "properties": {
+                      "number_format": {
+                        "type": "string",
+                        "enum": [
+                          "",
+                          "0,0",
+                          "0,0.00",
+                          "0%",
+                          "$0,0",
+                          "0a"
+                        ]
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "symbol_size": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "number_format": {
+                    "type": "string",
+                    "enum": [
+                      "",
+                      "0,0",
+                      "0,0.00",
+                      "0%",
+                      "$0,0",
+                      "0a"
+                    ]
+                  },
+                  "truncate": {
+                    "type": "object",
+                    "properties": {
+                      "precision": {
+                        "type": [
+                          "number",
+                          "null"
+                        ]
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "conditional_format": {
+                    "type": "object",
+                    "properties": {
+                      "rules": {
+                        "type": "array",
+                        "maxItems": 20,
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "operator": {
+                              "type": "string",
+                              "enum": [
+                                "gt",
+                                "gte",
+                                "lt",
+                                "lte",
+                                "eq",
+                                "neq",
+                                "between"
+                              ]
+                            },
+                            "value": {
+                              "type": "number"
+                            },
+                            "value2": {
+                              "type": "number"
+                            },
+                            "tone": {
+                              "type": "string",
+                              "enum": [
+                                "success",
+                                "warning",
+                                "danger",
+                                "neutral"
+                              ]
+                            },
+                            "column": {
+                              "type": "string",
+                              "maxLength": 200
+                            }
+                          },
+                          "required": [
+                            "operator",
+                            "value",
+                            "tone"
+                          ],
+                          "additionalProperties": false
+                        }
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "annotations": {
+                    "type": "array",
+                    "maxItems": 20,
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "axis": {
+                          "type": "string",
+                          "enum": [
+                            "x",
+                            "y"
+                          ]
+                        },
+                        "value": {},
+                        "label": {
+                          "type": "string",
+                          "maxLength": 80
+                        },
+                        "color": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "axis",
+                        "value"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "data_zoom": {
+                    "type": "object",
+                    "properties": {
+                      "enabled": {
+                        "type": "boolean"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "tooltip": {
+                    "type": "object",
+                    "properties": {
+                      "show_total": {
+                        "type": "boolean"
+                      },
+                      "percentage": {
+                        "type": "boolean"
+                      },
+                      "show": {
+                        "type": "boolean"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "additionalProperties": false
+              },
+              "title": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "subtitle": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "chart_type": {
+                "type": "string"
+              },
+              "encoding": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "matrixify": {
+                "type": "null"
+              },
+              "map_spec": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "properties": {
+                  "basemap_style": {
+                    "type": "string",
+                    "enum": [
+                      "dark",
+                      "light",
+                      "streets",
+                      "satellite",
+                      "outdoors"
+                    ]
+                  },
+                  "layers": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "point",
+                            "arc",
+                            "hexagon",
+                            "heatmap",
+                            "grid",
+                            "path",
+                            "polygon",
+                            "geojson"
+                          ]
+                        },
+                        "dataset_ref": {
+                          "type": "string"
+                        },
+                        "geo_roles": {
+                          "type": "object",
+                          "properties": {
+                            "lat": {
+                              "type": "string"
+                            },
+                            "lng": {
+                              "type": "string"
+                            },
+                            "geojson": {
+                              "type": "string"
+                            },
+                            "arc": {
+                              "type": "object",
+                              "properties": {
+                                "from": {
+                                  "type": "string"
+                                },
+                                "to": {
+                                  "type": "string"
+                                }
+                              },
+                              "additionalProperties": false
+                            }
+                          },
+                          "additionalProperties": false
+                        },
+                        "color_by": {
+                          "type": "string"
+                        },
+                        "size_by": {
+                          "type": "string"
+                        },
+                        "elevation_by": {
+                          "type": "string"
+                        },
+                        "filter": {
+                          "type": [
+                            "object",
+                            "null"
+                          ],
+                          "properties": {
+                            "column": {
+                              "type": "string"
+                            },
+                            "operator": {
+                              "type": "string",
+                              "enum": [
+                                "in",
+                                "=",
+                                "!=",
+                                ">",
+                                ">=",
+                                "<",
+                                "<=",
+                                "between",
+                                "is_null",
+                                "is_not_null"
+                              ]
+                            },
+                            "value": {
+                              "type": [
+                                "string",
+                                "number",
+                                "boolean",
+                                "null"
+                              ]
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "dataset_ref",
+                        "geo_roles"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "viewport": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "properties": {
+                      "center": {
+                        "type": "array",
+                        "items": {
+                          "type": "number"
+                        }
+                      },
+                      "zoom": {
+                        "type": "number"
+                      },
+                      "pitch": {
+                        "type": "number"
+                      },
+                      "bearing": {
+                        "type": "number"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "legend": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "properties": {
+                      "show": {
+                        "type": "boolean"
+                      },
+                      "position": {
+                        "type": "string",
+                        "enum": [
+                          "top-left",
+                          "top-right",
+                          "bottom-left",
+                          "bottom-right"
+                        ]
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "basemap_style",
+                  "layers"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          },
+          "if_match": {
+            "type": "string"
+          },
+          "confirm": {
+            "type": "boolean",
+            "description": "Con true aplica; sin él sólo previsualiza."
+          },
+          "selection_context": {
+            "type": "string",
+            "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
+          },
+          "user_request_quote": {
+            "type": "string",
+            "description": "La orden de la persona para este cambio, con sus palabras textuales copiadas de la conversación."
+          }
+        },
+        "required": [
+          "connector",
+          "name",
+          "chart_type",
+          "spec"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "upsert_dashboard",
+      "description": "[Escribe] Crea o edita un tablero en el catálogo de Datalum. Nace en propuesto y lo activa una persona. Sin `confirm: true` sólo previsualiza. Lleva la orden textual de la persona en `user_request_quote`.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "connector": {
+            "type": "string",
+            "description": "Slug del conector."
+          },
+          "name": {
+            "type": "string"
+          },
+          "business_definition": {
+            "type": "string"
+          },
+          "spec": {
+            "type": "object",
+            "properties": {
+              "layout": {
+                "type": "object",
+                "properties": {
+                  "columns": {
+                    "type": "number"
+                  },
+                  "tiles": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "chart_ref_id": {
+                          "type": "string"
+                        },
+                        "version_pin": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "x": {
+                          "type": "number"
+                        },
+                        "y": {
+                          "type": "number"
+                        },
+                        "w": {
+                          "type": "number"
+                        },
+                        "h": {
+                          "type": "number"
+                        },
+                        "tab_id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "element": {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "heading",
+                                "text",
+                                "divider"
+                              ]
+                            },
+                            "text": {
+                              "type": "string"
+                            }
+                          },
+                          "additionalProperties": false
+                        },
+                        "title": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "title_style": {
+                          "type": [
+                            "object",
+                            "null"
+                          ],
+                          "properties": {
+                            "font_size": {
+                              "type": "number"
+                            },
+                            "color": {
+                              "type": "string"
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "tabs": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "label": {
+                          "type": "string"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "additionalProperties": false
+              },
+              "tiles": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "chart_ref_id": {
+                      "type": "string"
+                    },
+                    "version_pin": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "x": {
+                      "type": "number"
+                    },
+                    "y": {
+                      "type": "number"
+                    },
+                    "w": {
+                      "type": "number"
+                    },
+                    "h": {
+                      "type": "number"
+                    },
+                    "tab_id": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "element": {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "heading",
+                            "text",
+                            "divider"
+                          ]
+                        },
+                        "text": {
+                          "type": "string"
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "title": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "title_style": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "font_size": {
+                          "type": "number"
+                        },
+                        "color": {
+                          "type": "string"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "tabs": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "global_filters": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "date_range",
+                        "dimension"
+                      ]
+                    },
+                    "dimension_ref_id": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "multi": {
+                      "type": "boolean"
+                    },
+                    "default": {},
+                    "applies_to": {},
+                    "targets": {
+                      "type": [
+                        "array",
+                        "null"
+                      ]
+                    },
+                    "dataset_id": {},
+                    "column": {}
+                  },
+                  "required": [
+                    "id",
+                    "kind"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "filter_set_refs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "theme": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "properties": {
+                  "preset": {
+                    "type": "string"
+                  },
+                  "entrance": {
+                    "type": "string",
+                    "enum": [
+                      "none",
+                      "fade",
+                      "rise"
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              },
+              "shared_color_scales": {
+                "type": "object"
+              },
+              "cross_filter": {
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "toggle",
+                      "exclusive"
+                    ]
+                  },
+                  "exclude_charts": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "additionalProperties": false
+              },
+              "param_controls": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "param": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "datetime",
+                        "date",
+                        "time"
+                      ]
+                    },
+                    "default": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "applies_to": {}
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "title": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "subtitle": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "additionalProperties": false
+          },
+          "if_match": {
+            "type": "string"
+          },
+          "confirm": {
+            "type": "boolean",
+            "description": "Con true aplica; sin él sólo previsualiza."
+          },
+          "selection_context": {
+            "type": "string",
+            "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
+          },
+          "user_request_quote": {
+            "type": "string",
+            "description": "La orden de la persona para este cambio, con sus palabras textuales copiadas de la conversación."
+          }
+        },
+        "required": [
+          "connector",
+          "name",
+          "spec"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "upsert_custom_dashboard",
+      "description": "[Escribe] Crea o edita un tablero en código (HTML) dentro del catálogo de Datalum. Nace en propuesto y lo activa una persona. Sin `confirm: true` sólo previsualiza. Lleva la orden textual de la persona en `user_request_quote`.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "connector": {
+            "type": "string",
+            "description": "Slug del conector."
+          },
+          "name": {
+            "type": "string"
+          },
+          "template": {
+            "type": "string"
+          },
+          "datasets_refs": {
+            "type": "array"
+          },
+          "projection": {
+            "type": "array"
+          },
+          "queries": {
+            "type": "array"
+          },
+          "contract_version": {
+            "type": "string"
+          },
+          "if_match": {
+            "type": "string"
+          },
+          "confirm": {
+            "type": "boolean",
+            "description": "Con true aplica; sin él sólo previsualiza."
+          },
+          "selection_context": {
+            "type": "string",
+            "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
+          },
+          "user_request_quote": {
+            "type": "string",
+            "description": "La orden de la persona para este cambio, con sus palabras textuales copiadas de la conversación."
+          }
+        },
+        "required": [
+          "connector",
+          "name",
+          "template"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "complete_run",
+      "description": "Cierra la ejecución abierta de esta conversación con su estado, la evidencia y qué se hace con la memoria.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "selection_context": {
+            "type": "string",
+            "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
+          },
+          "run_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "verified",
+              "unverified",
+              "failed"
+            ]
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "memory": {
+            "type": "object",
+            "properties": {
+              "decision": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "save"
+                ]
+              }
+            },
+            "additionalProperties": false
+          },
+          "user_request_quote": {
+            "type": "string",
+            "description": "La orden de la persona, con sus palabras textuales, si la hay."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "status"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    }
+  ]
 }

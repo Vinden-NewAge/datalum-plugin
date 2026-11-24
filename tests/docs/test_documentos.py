@@ -64,8 +64,13 @@ class LaSkill(unittest.TestCase):
         # tenía 259 y la 3.1.0, con el modelo que se declara y el que recomienda el
         # agente, 261. La 4.0.0 quita el párrafo de la pausa de gráficas y tableros y
         # añade el de la orden de la persona en cada escritura: 266. La 4.1.0 añade el
-        # paso del arranque por partes: 274.
-        self.assertLess(len(SKILL.splitlines()), 280, "la Skill dejó de ser corta")
+        # paso del arranque por partes: 274. La 4.2.0 añade la entrega después, las páginas,
+        # la descarga del conjunto, el plazo agotado y los pasos de un workflow: 297. Puesta
+        # al día con v2.297.0, dice dónde viene el tamaño y que sin sesión no hay herramientas
+        # sin pasar de 299. La revisión suma dos líneas: hacer la llamada que propone un
+        # rechazo, también al soltar el agente, y decir lo que el conector no terminó de
+        # leer: 301, y el tope queda justo encima.
+        self.assertLess(len(SKILL.splitlines()), 302, "la Skill dejó de ser corta")
 
     def test_los_entregables_siguen_al_cerebro_del_agente(self):
         self.assertIn(flat("Deliverables follow the brain too"), flat(SKILL))
@@ -277,6 +282,101 @@ class LaVersion400(unittest.TestCase):
         self.assertIn(flat("`compat/requisitos.json` declara `user_request_quote` en `obligatorios` y no en `usa`"), section)
         self.assertIn("`c6f03b5854d9`", section)
         self.assertIn("Sin comprobar", section)
+
+
+class LaVersion420(unittest.TestCase):
+    """Datalum v2.292.2 entrega después lo que no cabe en una llamada, sirve por páginas lo
+    guardado, descarga el conjunto entero y dice si un plazo agotado se reintenta. Desde
+    v2.289.0 un paso de un workflow o de una skill acota las herramientas, y v2.293.0 suma
+    la herramienta que corre un workflow. La Skill dice la conducta sin nombrar las
+    herramientas nuevas, para que valga con los contratos de antes."""
+
+    def test_lo_que_esta_en_preparacion_se_recoge_con_los_mismos_argumentos(self):
+        for phrase in (
+            "Call the same tool again with the same arguments and its `preparation_ref`",
+            "while it stays in preparation",
+            "an answer in preparation is no failure",
+        ):
+            self.assertIn(flat(phrase), flat(SKILL))
+
+    def test_las_paginas_siguen_solo_el_cursor_devuelto(self):
+        self.assertIn(flat("pages of at most 1 000 rows or about\n40 000 characters"), flat(SKILL))
+        self.assertIn(flat("continue only with that\n`next_cursor`, never one you build or edit"), flat(SKILL))
+
+    def test_un_listado_entero_se_descarga(self):
+        self.assertIn(flat("offer the connector's download of the dataset as a file"), flat(SKILL))
+        self.assertIn(flat("give the link at once: it lasts minutes"), flat(SKILL))
+
+    def test_antes_de_paginar_o_descargar_dice_el_tamano(self):
+        """Desde v2.293.1 la página dice el total en `continuacion.total` (filas, bytes y
+        páginas, o que no se conoce) y la descarga, las filas y los bytes del archivo."""
+        self.assertIn(flat("Before reading more pages or downloading, tell the person how big the whole result is, in rows, size and pages as `continuacion.total` gives them, or that the total is not known"), flat(SKILL))
+        self.assertIn(flat("say the\nfile's rows and size"), flat(SKILL))
+
+    def test_lo_grande_se_descarga_sin_recorrer_paginas(self):
+        """Firma del 21-nov: un resultado grande se baja con el enlace, no por páginas."""
+        self.assertIn(flat("When it is large, such as hundreds of thousands of rows, do not walk its pages: offer the connector's download"), flat(SKILL))
+
+    def test_sin_sesion_datalum_no_lista_herramientas(self):
+        """Desde v2.296.1 el servidor contesta 401 a todo mensaje sin credencial: sin sesión
+        no hay ninguna herramienta de Datalum, ni siquiera `list_agents`."""
+        row = next(line for line in SKILL.splitlines() if "| Connector not set up |" in line)
+        self.assertIn("Datalum lists no tools until the person signs in", row)
+        self.assertIn("if it is there, they sign in from the host's connector panel", row)
+        row = next(line for line in SKILL.splitlines() if "| No session |" in line)
+        self.assertIn("waits for a sign-in", row)
+
+    def test_el_plazo_agotado_sigue_a_retryable(self):
+        self.assertIn(flat("follow the error's `retryable`: if true, retry\nonce; if false, do not repeat the call as it was"), flat(SKILL))
+        self.assertNotIn("server error or time out", SKILL)
+
+    def test_un_paso_acota_las_herramientas(self):
+        for phrase in ("(`allowed_tools`); use only those", "`tool_not_in_state`", "gives `next_call`",
+                       "never an earlier step or another route"):
+            self.assertIn(flat(phrase), flat(SKILL))
+
+    def test_no_nombra_las_herramientas_nuevas(self):
+        for name in ("export_dataset_csv", "run_workflow", "complete_run", "cancel_run", "run_dataset"):
+            self.assertNotIn(name, SKILL)
+
+    def test_el_changelog_pone_la_4_2_0_encima_de_la_4_1_1(self):
+        """La 4.2.0 sale después de la 4.1.1 y dice lo que trae frente a ella."""
+        text = read("CHANGELOG.md")
+        headings = re.findall(r"^## \[(\d+\.\d+\.\d+)\]", text, re.M)
+        self.assertEqual(headings[:3], ["4.2.0", "4.1.1", "4.1.0"])
+        section = flat(text.split("## [4.2.0]", 1)[1].split("\n## [4.1.1]", 1)[0])
+        self.assertIn("Frente a la 4.1.1 cambia la Skill", section)
+
+    def test_un_rechazo_con_next_call_se_sigue(self):
+        """Desde v2.297.0 todo agente nace con reglas de control: soltarlo con una ejecución
+        que operó y sigue abierta se rechaza con la llamada que la cierra en `next_call`.
+        Cualquier rechazo con `next_call` se sigue, no sólo el de fuera de paso."""
+        self.assertIn(flat("If the refusal gives `next_call`,\nthat is the step Datalum asks for first: make it, within the rules for changes"), flat(SKILL))
+        self.assertIn(flat("If Datalum asks to close the open work before releasing, make\nthe call it proposes, then release"), flat(SKILL))
+
+    def test_un_error_del_servidor_sigue_a_retryable(self):
+        """Desde v2.296.0 un fallo de Datalum que no se arregla repitiendo sale como error
+        interno con `retryable` falso: no se repite y se avisa al administrador."""
+        row = next(line for line in SKILL.splitlines() if "| Service unavailable |" in line)
+        self.assertIn("If the error's `retryable` is false, do not repeat the call as it was", row)
+        self.assertIn("let their company's Datalum administrator know", row)
+        self.assertLess(row.index("`retryable` is false"), row.index("Otherwise retry once"))
+
+    def test_lo_que_el_conector_no_termino_de_leer_se_dice(self):
+        self.assertIn(flat("what was not read is missing: tell the person when the request\ndepends on it"), flat(SKILL))
+
+    def test_compatibilidad_dice_que_la_skill_cambia_por_los_rechazos(self):
+        text = read("COMPATIBILIDAD.md")
+        rechazos = next(line for line in text.splitlines() if line.startswith("| Los rechazos | v2.296.0 |"))
+        self.assertIn("Sí, la Skill", rechazos)
+        self.assertNotIn("sigue el texto de Datalum", rechazos)
+        control = next(line for line in text.splitlines() if "| v2.297.0 | Formato único" in line)
+        self.assertIn("Sí, la Skill", control)
+        self.assertIn("`next_call`", control)
+
+    def test_los_agentes_llevan_su_empresa(self):
+        self.assertIn(flat("Each agent comes with its company"), flat(SKILL))
+        self.assertIn(flat("(its id if two\nshare a name)"), flat(SKILL))
 
 
 class LaVersion410(unittest.TestCase):

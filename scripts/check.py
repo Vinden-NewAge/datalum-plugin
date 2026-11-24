@@ -50,9 +50,11 @@ FRONTMATTER_KEYS = {"name", "description", "license", "compatibility", "metadata
 RESPONSE_NAMES = {
     "agent_context_conflict",
     "agent_not_selected",
+    "allowed_tools",
     "aviso_del_modelo",
     "fuera_de_la_respuesta",
     "leelo_antes_de_actuar",
+    "next_call",
     "next_cursor",
     "next_offset",
     "operating_as",
@@ -61,6 +63,7 @@ RESPONSE_NAMES = {
     "retry_after",
     "sello_posterior",
     "sin_listar",
+    "tool_not_in_state",
     "user_request_quote_required",
 }
 # La Skill arranca la sesión y carga el cerebro; el oficio lo trae el agente. Si nombra
