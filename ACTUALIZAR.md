@@ -15,10 +15,12 @@ versión por su cuenta.
 
 ## Por aplicación
 
-Lo que sigue sale de la documentación de cada producto, leída el 3 de octubre de 2026.
-En esta tarea no se instaló el plugin en ninguna aplicación, así que ningún camino de
-actualización se ejercitó de punta a punta. La columna «Automático» dice lo que ocurre
-sin que nadie haga nada después de la publicación.
+Lo que sigue sale de la documentación de cada producto, leída el 3 de octubre de 2026,
+salvo la fila de Codex. En las demás no se instaló el plugin, así que ningún camino de
+actualización se ejercitó de punta a punta. La fila de Codex se midió el 24 de noviembre
+de 2026 con Codex CLI 0.167.0, el que trae la app, sin cuenta y sin abrir una sesión: se
+ejercitaron el catálogo y la instalación, no la sesión. La columna «Automático» dice lo
+que ocurre sin que nadie haga nada después de la publicación.
 
 | Aplicación | Catálogo | Instalación existente | Sesión abierta | Automático |
 |---|---|---|---|---|
@@ -29,6 +31,7 @@ sin que nadie haga nada después de la publicación.
 | ChatGPT, Skill subida | No hay | La documentación no describe cómo se reemplaza una Skill suelta | Las skills se toman al empezar un chat nuevo | No |
 | ChatGPT, plugin importado por el administrador | Admin > Plugins > Import marketplace, desde GitHub | Se sincroniza una vez al día, o con «Sync now» | Chat nuevo | Sí, al día siguiente. Un plugin que declara su servidor en `.mcp.json` queda sólo para escritorio |
 | ChatGPT, conector | Aparte de la Skill | La lista de herramientas queda fija hasta que un administrador pulsa Refresh; lo nuevo llega desactivado. En Business hay que recrear la app | Chat nuevo | No |
+| Codex (CLI y app) | `codex plugin marketplace add Vinden-NewAge/datalum-plugin` deja este repositorio como catálogo Git | `codex plugin marketplace upgrade datalum` baja el catálogo y actualiza la copia instalada. Con un catálogo de carpeta local, la copia instalada no cambia hasta `codex plugin add datalum@datalum`. Con cada versión, aunque `hooks/hooks.json` no cambie, Codex marca los hooks del plugin como modificados y hay que volver a confiar en ellos en `/hooks`; su documentación dice que omite los que no tienen la confianza de la persona | Sin comprobar | No |
 | Grok Build | Un PR en el catálogo de xAI fija un commit. Un proceso diario abre el PR cuando cambia `version`; la revisión es manual | `grok plugin update` | Sin documentar | No: cada versión espera la revisión de xAI. La solicitud de alta sigue abierta y sin revisar |
 
 Fuentes: [Claude Code, instalar y actualizar plugins](https://code.claude.com/docs/en/plugins/install),
@@ -49,6 +52,7 @@ Fuentes: [Claude Code, instalar y actualizar plugins](https://code.claude.com/do
 | Claude con la Skill subida | Descarga el [zip nuevo](https://github.com/Vinden-NewAge/datalum-plugin/releases/latest/download/datalum-skill.zip), borra la Skill anterior en Personalizar > Skills y sube la nueva |
 | ChatGPT con la Skill subida | Descarga el zip nuevo y reemplaza la Skill en Plugins > Skills. En un espacio de trabajo lo hace el administrador |
 | ChatGPT cuando el asistente dice que una función de Datalum no existe | El administrador pulsa Refresh en Workspace settings > Apps |
+| Codex | `codex plugin marketplace upgrade datalum` y `codex plugin add datalum@datalum`. Después, en una sesión nueva, `/hooks` para volver a confiar en los hooks de Datalum |
 | Grok Build | `grok plugin update`, cuando xAI haya aceptado la versión |
 
 Para saber qué versión tienes, pregúntale al asistente «¿Qué versión de la Skill de

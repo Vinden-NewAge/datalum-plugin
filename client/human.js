@@ -1,6 +1,6 @@
 'use strict';
 // Lo que dijo y eligió la persona en esta conversación, leído de la transcripción que
-// entrega la aplicación. Sirve para reconocer cuándo eligió un agente. No se copia a
+// entrega la aplicación (la de Claude Code o la de Codex). Sirve para reconocer cuándo eligió un agente. No se copia a
 // ningún lado: se lee, se usa para la comprobación y se descarta.
 
 const fs = require('fs');
@@ -33,6 +33,10 @@ function read(transcriptPath) {
     try {
       entry = JSON.parse(line);
     } catch (_) {
+      continue;
+    }
+    if (entry.type === 'response_item') {
+      codexMessage(entry, human);
       continue;
     }
     if (entry.isSidechain) continue;
@@ -71,6 +75,23 @@ function read(transcriptPath) {
     }
   }
   return human;
+}
+
+// La transcripción de Codex guarda cada mensaje con la procedencia de cada parte. Sólo
+// cuenta la parte que escribió la persona (`user`): no el contexto que añade la
+// aplicación, ni lo que manda una herramienta u otro agente.
+function codexMessage(entry, human) {
+  const payload = entry.payload;
+  if (!payload || payload.type !== 'message' || payload.role !== 'user' || !Array.isArray(payload.content)) return;
+  const meta = payload.internal_chat_message_metadata_passthrough;
+  const provenance = (meta && Array.isArray(meta.content_item_metadata) && meta.content_item_metadata) || [];
+  payload.content.forEach((part, i) => {
+    const origin = provenance[i] && provenance[i].provenance;
+    if (!origin || origin.type !== 'user') return;
+    if (part && part.type === 'input_text' && typeof part.text === 'string') {
+      human.push({ text: part.text, at: entry.timestamp || null, kind: 'message' });
+    }
+  });
 }
 
 module.exports = { read };

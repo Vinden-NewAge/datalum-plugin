@@ -137,13 +137,21 @@ una clave de idempotencia.
 | Aplicación | ¿Corren los controles? | Cómo se sabe |
 |---|---|---|
 | Claude Code (terminal, pestaña Code del escritorio, VS Code) | Sí | Comprobado en la versión 2.1.286: corrieron dentro de las evaluaciones y dejaron su estado |
-| Codex (CLI, escritorio, ChatGPT Work local) | Sin comprobar | Su documentación dice que lee `hooks/hooks.json` de un plugin y que los omite hasta que la persona confía en ellos |
+| Codex (CLI, escritorio, ChatGPT Work local) | Al iniciar la sesión, sí; antes y después de cada herramienta, sin comprobar. Sin diálogos | Con Codex CLI 0.167.0, el que trae la app, `SessionStart` corrió y dejó su estado después de que la persona confió en los hooks en `/hooks`. `PreToolUse` y `PostToolUse` aparecen en `/hooks` y su salida cumple las reglas con que Codex la lee (`output_parser.rs`), pero no se han visto correr en Codex con una herramienta de Datalum, ni se midió cómo entrega Codex a `PostToolUse` la respuesta de una herramienta MCP, de donde el control saca el agente de la conversación. `PostToolUseFailure` y `PermissionDenied` no existen en Codex |
 | Grok Build | Sin comprobar | Su documentación dice que corre hooks de plugins, que sólo `PreToolUse` bloquea y que ignora la salida de los demás eventos. Ahí valdrían las negaciones y no los avisos al modelo |
 | Claude (chat web y de escritorio) | No | Los hooks de un plugin se ignoran en el chat |
 | ChatGPT (chat) | No | El chat no ejecuta hooks |
 
 Donde no corren, quedan la Skill y Datalum. Los controles necesitan Node 18 o posterior
 en la máquina. Si falta, la aplicación sigue sin ellos y no bloquea nada.
+
+En Codex los controles hacen lo mismo, con dos diferencias que pone Codex. Un hook de
+Codex no puede pedir que la aplicación le pregunte a la persona: lo que en Claude Code es
+un diálogo, en Codex se niega con el motivo, como en `bypassPermissions`. Y Codex sólo
+acepta cambiar los argumentos de una llamada si el hook la aprueba a la vez; los
+controles nunca aprueban, así que una llamada que saldría sin el contexto de la
+conversación se niega y el modelo la repite con él. En la transcripción de Codex sólo
+cuenta como de la persona lo que Codex marca como escrito por ella.
 
 Los controles nunca aprueban una llamada por la persona. Pueden negar, pedir que la
 aplicación le pregunte a la persona o completar un argumento; la decisión de permitir

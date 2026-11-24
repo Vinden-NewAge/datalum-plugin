@@ -4,6 +4,41 @@ Cada versión del plugin de Datalum dice qué cambia para quien usa la Skill, co
 versión del servidor se comprobó y qué hay que hacer para recibirla. La más reciente va
 primero.
 
+## [4.1.1] - 2026-11-24
+
+Los controles del cliente corren en Codex. Hasta la 4.1.0, Codex CLI y la app de Codex
+los marcaban como fallidos al iniciar la sesión y antes y después de cada herramienta de
+Datalum, y las llamadas seguían sin ellos. En Codex CLI 0.167.0 se vio correr el hook
+de inicio de sesión; los de herramienta se probaron lanzándolos como los lanza Codex,
+sin una sesión de Codex que llamara a Datalum.
+
+### Corregido
+
+- Cada hook es ahora un solo `command`: `node "${CLAUDE_PLUGIN_ROOT}/client/adapters/hook.js"`.
+  Codex no conoce `args`: corría `node` solo, que leía el evento como programa y salía
+  con código 1. Claude Code corre el mismo `command` en un shell, con la carpeta del
+  plugin entre comillas.
+- En Codex los controles no preguntan: Codex no admite que un hook pida preguntar a la
+  persona. Lo que en Claude Code es un diálogo (elegir un agente que la persona no
+  nombró, adoptar una versión nueva, borrar, proponer una memoria compartida, repetir
+  una escritura incierta) en Codex se niega con el motivo, como en Claude Code sin
+  permisos.
+- En Codex, una llamada que sale sin el contexto de la conversación no se reescribe:
+  se niega y el modelo la repite con `selection_context`. Codex sólo acepta una
+  reescritura junto a «allow», y los controles nunca mandan «allow».
+- Los controles leen la transcripción de Codex para reconocer cuándo la persona escribió
+  el nombre del agente. Sólo cuenta lo que Codex marca como escrito por la persona.
+
+### Servidor
+
+- No cambia lo que el plugin necesita de Datalum.
+
+### Cómo recibirla
+
+- Los pasos por aplicación están en `ACTUALIZAR.md`. En Codex, el comando de los hooks
+  cambia y Codex vuelve a pedir que la persona confíe en ellos en `/hooks` antes de
+  correrlos.
+
 ## [4.1.0] - 2026-11-02
 
 Datalum v2.266.0 entrega el arranque del agente por partes: la respuesta de `use_agent`
