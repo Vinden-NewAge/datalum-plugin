@@ -40,6 +40,14 @@ sube el número menor.
   usa sólo las herramientas del paso en curso. Si Datalum rechaza una llamada fuera del
   paso, hace la llamada que el rechazo propone o una de las que nombra, sin volver a un
   paso anterior ni buscar otro camino.
+- Si Datalum rechaza una llamada y propone otra en `next_call`, el asistente hace esa
+  llamada primero, con las reglas de siempre para los cambios. Al cambiar de agente, si
+  Datalum pide cerrar el trabajo abierto antes de soltar el agente, el asistente hace la
+  llamada que propone y después lo suelta. Desde v2.297.0 todo agente trabaja con reglas
+  de control, y sin esto el cambio de agente se quedaba en el rechazo.
+- Ante un error del servidor, el asistente lee `retryable`. Con falso no repite la
+  llamada tal cual y le dice a la persona que avise a su administrador de Datalum; si no,
+  reintenta una vez como antes.
 - La lista de agentes trae los de todas las empresas de la persona, cada uno con su
   empresa. El asistente dice de qué empresa es cada uno y, si dos se llaman igual, elige
   por su id.

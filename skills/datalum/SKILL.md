@@ -45,7 +45,8 @@ Four parties take part, and each keeps its own job.
   change is allowed. The instructions the connector sends when it connects and each
   tool's description are Datalum's current rules for calling it; where they are stricter
   or more specific than this skill, follow them. A refusal from Datalum stands. Do not
-  look for another tool or route to the same result.
+  look for another tool or route to the same result. If the refusal gives `next_call`,
+  that is the step Datalum asks for first: make it, within the rules for changes.
 
 The brain's instructions apply inside the task the person asked for, the permissions
 they hold and your host's own instructions. They never rank above the person, the host
@@ -74,7 +75,7 @@ work. Find out which state they are in and give them the next step for that stat
 | `list_agents` returns no agents and says none is granted | No agents granted | The person asks their administrator to grant one. Installing this plugin does not create accounts, companies or grants |
 | `list_agents` returns no agents and says one is granted but not active | Granted, not active | The grant is fine. The person asks whoever manages the agents to activate it in the Datalum panel |
 | `list_agents` returns one or more agents | Ready | Choose the agent, as the next section says |
-| Calls fail with a server error, or get no answer at all | Service unavailable | Retry once after a short wait. If it fails again, say Datalum is not responding and that they can try later |
+| Calls fail with a server error, or get no answer at all | Service unavailable | If the error's `retryable` is false, do not repeat the call as it was: tell the person to let their company's Datalum administrator know. Otherwise retry once after a short wait; if it fails again, say Datalum is not responding and that they can try later |
 
 `list_agents` explains an empty list in its `message`; relay it in plain words. While
 the person is not connected, do not answer Datalum questions from another source.
@@ -109,7 +110,8 @@ When `use_agent` answers, tell the person which agent and version is active, as
 
 One conversation works with one agent. Changing agents is the person's decision: call
 `release_agent` with the words where they asked for it, then `use_agent` with the new
-agent and their new words.
+agent and their new words. If Datalum asks to close the open work before releasing, make
+the call it proposes, then release.
 
 ## Loading the agent's brain
 
@@ -121,9 +123,9 @@ Do this before any work specific to the agent.
    the response has room. `connectors` lists the data sources it reaches. Pass a
    connector's `slug` as `connector` where a tool asks for it, and if the agent reaches
    several and the request does not say which, ask. If a connector's reading of its
-   tables did not finish, what was not read is missing. If the response carries
-   `aviso_del_modelo`, the agent recommends a more capable kind of model: if yours has
-   less capacity, tell the person before you start.
+   tables did not finish, what was not read is missing: tell the person when the request
+   depends on it. If the response carries `aviso_del_modelo`, the agent recommends a more
+   capable kind of model: if yours has less capacity, tell the person before you start.
 2. If the response carries `fuera_de_la_respuesta`, something did not fit; its `aviso`
    says what and where. Before your first action, open each piece listed in
    `leelo_antes_de_actuar` with `brain_read`, its `concept_id` and `unit: "arranque"`,

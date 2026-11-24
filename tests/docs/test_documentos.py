@@ -67,8 +67,10 @@ class LaSkill(unittest.TestCase):
         # paso del arranque por partes: 274. La 4.2.0 añade la entrega después, las páginas,
         # la descarga del conjunto, el plazo agotado y los pasos de un workflow: 297. Puesta
         # al día con v2.297.0, dice dónde viene el tamaño y que sin sesión no hay herramientas
-        # sin pasar de 299.
-        self.assertLess(len(SKILL.splitlines()), 300, "la Skill dejó de ser corta")
+        # sin pasar de 299. La revisión suma dos líneas: hacer la llamada que propone un
+        # rechazo, también al soltar el agente, y decir lo que el conector no terminó de
+        # leer: 301, y el tope queda justo encima.
+        self.assertLess(len(SKILL.splitlines()), 302, "la Skill dejó de ser corta")
 
     def test_los_entregables_siguen_al_cerebro_del_agente(self):
         self.assertIn(flat("Deliverables follow the brain too"), flat(SKILL))
@@ -344,6 +346,33 @@ class LaVersion420(unittest.TestCase):
         self.assertEqual(headings[:3], ["4.2.0", "4.1.1", "4.1.0"])
         section = flat(text.split("## [4.2.0]", 1)[1].split("\n## [4.1.1]", 1)[0])
         self.assertIn("Frente a la 4.1.1 cambia la Skill", section)
+
+    def test_un_rechazo_con_next_call_se_sigue(self):
+        """Desde v2.297.0 todo agente nace con reglas de control: soltarlo con una ejecución
+        que operó y sigue abierta se rechaza con la llamada que la cierra en `next_call`.
+        Cualquier rechazo con `next_call` se sigue, no sólo el de fuera de paso."""
+        self.assertIn(flat("If the refusal gives `next_call`,\nthat is the step Datalum asks for first: make it, within the rules for changes"), flat(SKILL))
+        self.assertIn(flat("If Datalum asks to close the open work before releasing, make\nthe call it proposes, then release"), flat(SKILL))
+
+    def test_un_error_del_servidor_sigue_a_retryable(self):
+        """Desde v2.296.0 un fallo de Datalum que no se arregla repitiendo sale como error
+        interno con `retryable` falso: no se repite y se avisa al administrador."""
+        row = next(line for line in SKILL.splitlines() if "| Service unavailable |" in line)
+        self.assertIn("If the error's `retryable` is false, do not repeat the call as it was", row)
+        self.assertIn("let their company's Datalum administrator know", row)
+        self.assertLess(row.index("`retryable` is false"), row.index("Otherwise retry once"))
+
+    def test_lo_que_el_conector_no_termino_de_leer_se_dice(self):
+        self.assertIn(flat("what was not read is missing: tell the person when the request\ndepends on it"), flat(SKILL))
+
+    def test_compatibilidad_dice_que_la_skill_cambia_por_los_rechazos(self):
+        text = read("COMPATIBILIDAD.md")
+        rechazos = next(line for line in text.splitlines() if line.startswith("| Los rechazos | v2.296.0 |"))
+        self.assertIn("Sí, la Skill", rechazos)
+        self.assertNotIn("sigue el texto de Datalum", rechazos)
+        control = next(line for line in text.splitlines() if "| v2.297.0 | Formato único" in line)
+        self.assertIn("Sí, la Skill", control)
+        self.assertIn("`next_call`", control)
 
     def test_los_agentes_llevan_su_empresa(self):
         self.assertIn(flat("Each agent comes with its company"), flat(SKILL))
