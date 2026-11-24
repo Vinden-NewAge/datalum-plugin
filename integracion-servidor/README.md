@@ -67,16 +67,18 @@ el mismo resumen.
 
 El aviso es un indicio. El plugin no toma de él la dirección del servidor: usa la de su
 `.mcp.json`. Antes de hacer nada le pregunta a producción qué commit sirve y si pasa su
-salud, y compara las instrucciones y el protocolo del aviso con los que producción
-contesta sin sesión. Un aviso de un commit que producción no sirve se anota como no
-confirmado y no cambia nada.
+salud. Sin credencial comprueba que producción la pide (401 con `WWW-Authenticate` y
+`resource_metadata`) o, en un servidor anterior a la v2.296.1, que contesta el saludo.
+Con la credencial de lectura compara las instrucciones, el protocolo y el catálogo del
+aviso con los que producción contesta. Un aviso de un commit que producción no sirve se
+anota como no confirmado y no cambia nada.
 
 ## Opcional, en este repositorio
 
 | Qué | Para qué |
 |---|---|
 | Variable `COMPAT_ACTORES` | Aceptar avisos de despliegue sólo de la cuenta dueña del token |
-| Secreto `DATALUM_COMPAT_TOKEN` | Una credencial de sólo lectura de una cuenta de Datalum sin agentes. Con ella el flujo lee el catálogo completo del servidor desplegado y lo coteja entero contra el aviso |
+| Secreto `DATALUM_COMPAT_TOKEN` | Una credencial de sólo lectura de una cuenta de Datalum sin agentes. Con ella el flujo saluda y lee el catálogo completo del servidor desplegado, y lo coteja entero contra el aviso. Desde la v2.296.1 es la única forma de cotejar las instrucciones. Se manda sólo a producción; QA lleva la suya en `DATALUM_COMPAT_TOKEN_QA`. Si el servidor la rechaza, el cotejo sigue sin ella y lo anota |
 
 ## Lo que el aviso no cubre
 
