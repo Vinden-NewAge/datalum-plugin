@@ -340,6 +340,20 @@ class LasGuias(unittest.TestCase):
             self.assertIn(app, text)
         self.assertIn("## Lo que una actualización del plugin no toca", text)
 
+    def test_actualizar_dice_como_llega_una_version_a_codex(self):
+        text = read("ACTUALIZAR.md")
+        rows = [line for line in text.splitlines() if line.startswith("| Codex")]
+        self.assertEqual(len(rows), 2, "Codex tiene su fila por aplicación y su paso mínimo")
+        for row in rows:
+            self.assertIn("codex plugin add datalum@datalum", row)
+            self.assertIn("`/hooks`", row)
+
+    def test_controles_no_da_por_comprobado_en_codex_lo_que_no_corrio(self):
+        row = next(line for line in read("CONTROLES.md").splitlines() if line.startswith("| Codex"))
+        self.assertIn("`SessionStart` corrió", row)
+        self.assertIn("no se han visto correr en Codex", row)
+        self.assertNotIn("corre `SessionStart`, `PreToolUse` y `PostToolUse`", row)
+
     def test_controles_dice_quien_sostiene_cada_regla(self):
         text = read("CONTROLES.md")
         self.assertIn("| Regla | Skill | Cliente | Datalum |", text)

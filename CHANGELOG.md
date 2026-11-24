@@ -8,7 +8,9 @@ primero.
 
 Los controles del cliente corren en Codex. Hasta la 4.1.0, Codex CLI y la app de Codex
 los marcaban como fallidos al iniciar la sesión y antes y después de cada herramienta de
-Datalum, y las llamadas seguían sin ellos.
+Datalum, y las llamadas seguían sin ellos. En Codex CLI 0.167.0 se vio correr el hook
+de inicio de sesión; los de herramienta se probaron lanzándolos como los lanza Codex,
+sin una sesión de Codex que llamara a Datalum.
 
 ### Corregido
 

@@ -137,7 +137,7 @@ una clave de idempotencia.
 | Aplicación | ¿Corren los controles? | Cómo se sabe |
 |---|---|---|
 | Claude Code (terminal, pestaña Code del escritorio, VS Code) | Sí | Comprobado en la versión 2.1.286: corrieron dentro de las evaluaciones y dejaron su estado |
-| Codex (CLI, escritorio, ChatGPT Work local) | Sí, sin diálogos | Comprobado con Codex CLI 0.167.0, el que trae la app: corre `SessionStart`, `PreToolUse` y `PostToolUse` de `hooks/hooks.json` después de que la persona confía en ellos en `/hooks`. `PostToolUseFailure` y `PermissionDenied` no existen en Codex |
+| Codex (CLI, escritorio, ChatGPT Work local) | Al iniciar la sesión, sí; antes y después de cada herramienta, sin comprobar. Sin diálogos | Con Codex CLI 0.167.0, el que trae la app, `SessionStart` corrió y dejó su estado después de que la persona confió en los hooks en `/hooks`. `PreToolUse` y `PostToolUse` aparecen en `/hooks` y su salida cumple las reglas con que Codex la lee (`output_parser.rs`), pero no se han visto correr en Codex con una herramienta de Datalum, ni se midió cómo entrega Codex a `PostToolUse` la respuesta de una herramienta MCP, de donde el control saca el agente de la conversación. `PostToolUseFailure` y `PermissionDenied` no existen en Codex |
 | Grok Build | Sin comprobar | Su documentación dice que corre hooks de plugins, que sólo `PreToolUse` bloquea y que ignora la salida de los demás eventos. Ahí valdrían las negaciones y no los avisos al modelo |
 | Claude (chat web y de escritorio) | No | Los hooks de un plugin se ignoran en el chat |
 | ChatGPT (chat) | No | El chat no ejecuta hooks |
