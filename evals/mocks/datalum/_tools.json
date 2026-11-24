@@ -2467,6 +2467,63 @@
         "idempotentHint": false,
         "openWorldHint": false
       }
+    },
+    {
+      "name": "complete_run",
+      "description": "Cierra la ejecución abierta de esta conversación con su estado, la evidencia y qué se hace con la memoria.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "selection_context": {
+            "type": "string",
+            "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
+          },
+          "run_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "verified",
+              "unverified",
+              "failed"
+            ]
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "memory": {
+            "type": "object",
+            "properties": {
+              "decision": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "save"
+                ]
+              }
+            },
+            "additionalProperties": false
+          },
+          "user_request_quote": {
+            "type": "string",
+            "description": "La orden de la persona, con sus palabras textuales, si la hay."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "status"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
     }
   ]
 }
