@@ -72,7 +72,9 @@ def requirements_for(summary: dict) -> dict:
 
 
 class FakeProduction:
-    """Un despliegue de mentira: contesta salud, saludo y catálogo."""
+    """Un despliegue de mentira: contesta salud, saludo y catálogo. Sin credencial se
+    porta como Datalum hasta la v2.296.0, con el saludo público. Las dos conductas por
+    HTTP las cubre `test_cotejo_por_http.py`."""
 
     def __init__(self, sha: str, tools: list, *, release: str = "v9.0.0", ok: bool = True,
                  instructions: str = INSTRUCTIONS, token: bool = False) -> None:
@@ -94,8 +96,8 @@ class FakeProduction:
             "instrucciones_sha256": contract.sha256_text(self.instructions),
         }
 
-    def tools(self, *, auth: bool) -> list:
-        return self.tools_list if auth else self.tools_list[:1]
+    def observe(self) -> dict:
+        return {"conducta": "saludo_publico", "saludo": self.greeting(), "mcp": "https://mcp.example.invalid/mcp"}
 
     def full_contract(self) -> dict:
         return summary_of(self.tools_list, self.instructions)

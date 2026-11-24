@@ -362,9 +362,10 @@ function selectionEvidence(state, agent, human) {
 }
 
 // Pide que la aplicación le pregunte a la persona y anota qué se preguntó, para
-// reconocer después su respuesta. En un modo sin diálogos niega: nadie vería la pregunta.
+// reconocer después su respuesta. En un modo sin diálogos, o en una aplicación que no
+// sabe preguntar desde un hook (`ctx.dialogs === false`), niega: nadie vería la pregunta.
 function askPerson(state, ctx, entry, reason, modelReason) {
-  if (ctx && ctx.mode === 'bypassPermissions') {
+  if (ctx && (ctx.mode === 'bypassPermissions' || ctx.dialogs === false)) {
     return { decision: 'deny', reason: modelReason };
   }
   expectOutcome(state, ctx, entry);

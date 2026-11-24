@@ -22,13 +22,14 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from compatlib import contract, ledger, versioning  # noqa: E402
+from compatlib import contract, ledger, pipeline, versioning  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 MANIFEST = ROOT / ".claude-plugin" / "plugin.json"
 MARKETPLACE = ROOT / ".claude-plugin" / "marketplace.json"
 MCP = ROOT / ".mcp.json"
 HOOKS = ROOT / "hooks" / "hooks.json"
+HOOK_COMMAND = re.compile(r'node "\$\{CLAUDE_PLUGIN_ROOT\}/([A-Za-z0-9_./-]+)"')
 SKILL_DIR = ROOT / "skills" / "datalum"
 SKILL = SKILL_DIR / "SKILL.md"
 OPENAI = SKILL_DIR / "agents" / "openai.yaml"
@@ -238,11 +239,9 @@ def check_contract() -> tuple[dict, dict]:
         fail(f"compat/requisitos.json contra el contrato de producción: {reason}")
     if comparison["derivados_cambian"]:
         fail("client/contract-facts.json no es el que se deriva del contrato de producción")
-    stored = ROOT / "compat" / "instrucciones" / f"{summary['instrucciones_sha256'][:12]}.txt"
-    if not stored.is_file():
-        fail("compat/instrucciones/ no guarda el texto de las instrucciones del contrato vigente")
-    elif contract.sha256_text(stored.read_text(encoding="utf-8")) != summary["instrucciones_sha256"]:
-        fail(f"{stored.relative_to(ROOT)}: el texto no corresponde a su huella")
+    # Cada huella aprobada y la del contrato vigente guardan su texto.
+    for problem in pipeline.instruction_texts(ROOT):
+        fail(problem)
     try:
         ledger.read(LEDGER)
     except ValueError as e:
@@ -257,12 +256,13 @@ def check_hooks() -> None:
     for event, groups in hooks.items():
         for group in groups:
             for hook in group.get("hooks", []):
-                if hook.get("type") != "command" or hook.get("command") != "node":
-                    fail(f"hooks.json: {event} tiene que correr `node` con `args`, sin shell")
-                for arg in hook.get("args", []):
-                    target = ROOT / arg.replace("${CLAUDE_PLUGIN_ROOT}/", "")
-                    if "${CLAUDE_PLUGIN_ROOT}" in arg and not target.is_file():
-                        fail(f"hooks.json: {event} apunta a {arg}, que no existe")
+                # Codex sólo lee `command` (no conoce `args`) y lo corre en un shell, igual
+                # que Claude Code sin `args`. La ruta va entre comillas por si lleva espacios.
+                match = HOOK_COMMAND.fullmatch(hook.get("command") or "")
+                if hook.get("type") != "command" or "args" in hook or not match:
+                    fail(f'hooks.json: {event} tiene que correr `node "${{CLAUDE_PLUGIN_ROOT}}/<archivo>"`, sin `args`')
+                elif not (ROOT / match.group(1)).is_file():
+                    fail(f"hooks.json: {event} apunta a {match.group(1)}, que no existe")
             matcher = group.get("matcher")
             if event != "SessionStart" and (not matcher or "mcp__" not in matcher):
                 fail(f"hooks.json: {event} tiene que limitarse a herramientas MCP con un matcher")

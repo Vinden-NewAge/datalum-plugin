@@ -22,6 +22,9 @@ from . import contract, ledger, production, versioning
 
 ORIGINS = {"aviso", "reconciliacion", "manual"}
 ENVIRONMENTS = {"prod", "qa"}
+# Cada entorno tiene su servidor de autorización: la credencial de lectura de uno no
+# vale en el otro y no se le manda.
+TOKEN_VARIABLES = {"prod": "DATALUM_COMPAT_TOKEN", "qa": "DATALUM_COMPAT_TOKEN_QA"}
 
 
 class EventError(ValueError):
@@ -61,6 +64,35 @@ def mcp_url(root: Path, environment: str) -> str:
     if not url:
         raise EventError(f"compat/entornos.json no tiene la dirección de «{environment}»")
     return url
+
+
+def read_token(environment: str, environ) -> Optional[str]:
+    """La credencial de lectura del entorno, o None si no tiene."""
+    name = TOKEN_VARIABLES.get(environment)
+    return (environ.get(name) or None) if name else None
+
+
+def instruction_texts(root: Path) -> list:
+    """Lo que falta en `compat/instrucciones/`: el texto de cada huella aprobada en
+    `instrucciones_revisadas` y el del contrato vigente, cada uno con su huella.
+
+    Una huella se aprueba leyendo su texto; sin él no se puede comparar con el
+    siguiente. Sin credencial de lectura el servidor no lo entrega y lo guarda quien
+    lo leyó en el conector, en el mismo PR que añade la huella."""
+    where = paths(Path(root))
+    wanted = {h: "de una huella de instrucciones_revisadas" for h in (load_json(where["requirements"]) or {}).get("instrucciones_revisadas", [])}
+    current = load_json(where["current"])
+    if current:
+        wanted[current["instrucciones_sha256"]] = "del contrato vigente"
+    problems = []
+    for fingerprint, who in sorted(wanted.items()):
+        name = f"compat/instrucciones/{fingerprint[:12]}.txt"
+        text = Path(root) / name
+        if not text.is_file():
+            problems.append(f"{name} no existe: es el texto de las instrucciones {who}")
+        elif contract.sha256_text(text.read_text(encoding="utf-8")) != fingerprint:
+            problems.append(f"{name}: el texto no corresponde a su huella")
+    return problems
 
 
 def validate_event(event: dict) -> dict:
@@ -164,6 +196,8 @@ def evaluate(
     if getattr(prod, "has_token", False):
         try:
             live = prod.full_contract()
+        except production.CredentialRejected:
+            pass  # lo anota el cotejo, que sigue sin la credencial
         except production.ProductionError as e:
             evaluation["notas"].append(f"no se pudo leer el catálogo completo del servidor: {e}")
     if summary is None and live is not None:
@@ -179,22 +213,37 @@ def evaluate(
     evaluation["contrato"]["origen"] = source
 
     try:
-        greeting = prod.greeting()
-        problems = production.cross_check(summary, greeting, prod.tools(auth=False))
+        seen = prod.observe()
     except production.ProductionError as e:
         return stop("despliegue_no_confirmado", "avisar", f"no se pudo cotejar el contrato: {e}")
+    # Mientras dura el despliegue de la v2.296.1 valen las dos conductas sin
+    # credencial; la salida dice cuál vio.
+    evaluation["contrato"]["sin_credencial"] = seen["conducta"]
+    if seen.get("credencial") == "rechazada":
+        # Una credencial caducada o de otro entorno no impide el cotejo que se hace sin
+        # ella; queda en el registro y en la salida.
+        evaluation["contrato"]["credencial"] = "rechazada"
+        evaluation["notas"].append(
+            "la credencial de lectura no vale: el servidor la rechazó y el cotejo siguió sin ella"
+        )
+    problems = production.cross_check(summary, seen)
     if live is not None and live["huella"] != summary["huella"]:
         problems.append("el catálogo completo que sirve el despliegue no es el del contrato recibido")
     if problems:
         evaluation["motivos"] = problems
         return stop("contrato_no_coincide", "avisar", problems[0])
-    evaluation["contrato"]["verificacion"] = "completa" if live is not None else "parcial"
+    greeting = seen["saludo"]
+    # completa: el catálogo entero; parcial: instrucciones y protocolo; minima: sólo el
+    # commit y que el servidor pide la credencial, porque sin ella no hay saludo.
+    evaluation["contrato"]["verificacion"] = (
+        "completa" if live is not None else "parcial" if greeting is not None else "minima"
+    )
     # El contrato y las instrucciones cotejadas se guardan siempre: sirven para
     # reintentar, para comprobar un rollback y para que una persona lea lo que cambió.
     if not stored.exists():
         write_json(stored, summary)
     text = where["instructions"] / f"{summary['instrucciones_sha256'][:12]}.txt"
-    if not text.exists():
+    if greeting is not None and not text.exists():
         text.parent.mkdir(parents=True, exist_ok=True)
         text.write_text(greeting["instrucciones"], encoding="utf-8")
 
@@ -285,6 +334,12 @@ def ledger_entry(evaluation: dict, *, now: str, plugin: dict, result: Optional[s
     }
 
 
+def describe(evaluation: dict) -> str:
+    """Qué conducta vio el cotejo sin credencial y si la credencial de lectura valió."""
+    c = evaluation["contrato"]
+    return production.describe({"conducta": c["sin_credencial"], "credencial": c.get("credencial")})
+
+
 def proposal(evaluation: dict) -> dict:
     """El texto del aviso o de la propuesta que se abre para una persona."""
     deployment = evaluation["despliegue"]
@@ -310,6 +365,8 @@ def proposal(evaluation: dict) -> dict:
     ]
     if evaluation.get("motivos"):
         lines += ["", "Motivos:"] + [f"- {m}" for m in evaluation["motivos"]]
+    if evaluation["contrato"].get("sin_credencial"):
+        lines += ["", f"Cotejo: {describe(evaluation)}."]
     if evaluation.get("notas"):
         lines += ["", "Cambios del catálogo:"] + [f"- {n}" for n in evaluation["notas"]]
     if result == "retirada_fallida":
@@ -332,4 +389,13 @@ def proposal(evaluation: dict) -> dict:
             "Quien revise lee el texto nuevo contra la Skill y, si no cambia nada, añade la "
             "huella a `compat/requisitos.json`. Los pasos están en `MANTENER.md`.",
         ]
+        if evaluation["contrato"].get("verificacion") == "minima":
+            fingerprint = (evaluation.get("contrato_resumen") or {}).get("instrucciones_sha256", "")
+            lines += [
+                "",
+                "El texto de las instrucciones no quedó guardado: sin credencial de lectura el "
+                "servidor no lo entrega. Se lee en una conversación con el conector y se guarda "
+                f"como `compat/instrucciones/{fingerprint[:12]}.txt` en el mismo PR que añade "
+                "la huella; sin ese texto la comprobación del PR no pasa.",
+            ]
     return {"titulo": titles.get(result, f"Comprobación de compatibilidad: {result}"), "cuerpo": "\n".join(lines)}
