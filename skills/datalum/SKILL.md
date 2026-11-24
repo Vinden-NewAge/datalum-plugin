@@ -66,9 +66,9 @@ work. Find out which state they are in and give them the next step for that stat
 
 | What you see | State | Next step |
 |---|---|---|
-| No Datalum tool in this conversation, and the host cannot search for or load more tools | Connector not set up | The person adds the Datalum connector with the address `https://mcp.datalum.ai/mcp` and signs in. Steps per product: https://github.com/Vinden-NewAge/datalum-plugin/blob/main/INSTALAR.md |
+| No Datalum tool in this conversation, and the host cannot search for or load more tools | Connector not set up | Datalum lists no tools until the person signs in. If the connector is missing, the person adds it with the address `https://mcp.datalum.ai/mcp` and signs in; if it is there, they sign in from the host's connector panel. Steps per product: https://github.com/Vinden-NewAge/datalum-plugin/blob/main/INSTALAR.md |
 | The host loads tools on demand and you have not looked yet | Tools not discovered | Yours: search the host's tools for Datalum's `list_agents` and load it before concluding anything |
-| The connector exists but is turned off, or a call answers that a sign-in is required | No session | "Conecta tu cuenta de Datalum para comenzar." The person signs in from the host's connector panel. Never ask for a password, key or token in the chat |
+| The connector exists but is turned off or waits for a sign-in, or a call answers that a sign-in is required | No session | "Conecta tu cuenta de Datalum para comenzar." The person signs in from the host's connector panel. Never ask for a password, key or token in the chat |
 | Calls that worked start failing with an authentication error | Session expired | The person reconnects the connector in the host. After that the agent has to be chosen again |
 | The sign-in works but Datalum answers that the account cannot connect | No permission | Signing in again will not help. The person asks their company's Datalum administrator |
 | `list_agents` returns no agents and says none is granted | No agents granted | The person asks their administrator to grant one. Installing this plugin does not create accounts, companies or grants |
@@ -205,16 +205,16 @@ delivered here and offer what the host can do.
 Figures the person will rely on come from Datalum results. When you compute something
 yourself, use code where the host allows it and say that the calculation is yours.
 
-A result that takes longer than a call answers that it is in preparation; nothing
-failed. Call the same tool again with the same arguments and its `preparation_ref`, after
-the wait it gives, while it stays in preparation, and tell the person it is being
-prepared. A result that does not fit comes in pages of at most 1 000 rows or about
-40 000 characters, and is partial while it carries `next_cursor`: continue only with that
-`next_cursor`, never one you build or edit. Before reading more pages or downloading,
-tell the person how big the whole result is, in rows, size and pages as Datalum gives
-them, or that the total is not known. When it is large, such as hundreds of thousands of
-rows, offer the connector's download of the dataset as a file if it offers one, say the
-file's rows and size, and give the link at once: it lasts minutes.
+A result that takes longer than a call answers that it is in preparation; nothing failed.
+Call the same tool again with the same arguments and its `preparation_ref`, after the
+wait it gives, while it stays in preparation, and tell the person it is being prepared. A
+result that does not fit comes in pages of at most 1 000 rows or about 40 000 characters,
+and is partial while it carries `next_cursor`: continue only with that `next_cursor`,
+never one you build or edit. Before reading more pages or downloading, tell the person
+how big the whole result is, in rows, size and pages as `continuacion.total` gives them,
+or that the total is not known. When it is large, such as hundreds of thousands of rows,
+do not walk its pages: offer the connector's download of the dataset as a file if it
+offers one, say the file's rows and size, and give the link at once: it lasts minutes.
 
 If the data source did not finish in time, follow the error's `retryable`: if true, retry
 once; if false, do not repeat the call as it was. Do what the error says, such as a

@@ -65,7 +65,9 @@ class LaSkill(unittest.TestCase):
         # agente, 261. La 4.0.0 quita el párrafo de la pausa de gráficas y tableros y
         # añade el de la orden de la persona en cada escritura: 266. La 4.1.0 añade el
         # paso del arranque por partes: 274. La 4.2.0 añade la entrega después, las páginas,
-        # la descarga del conjunto, el plazo agotado y los pasos de un workflow: 297.
+        # la descarga del conjunto, el plazo agotado y los pasos de un workflow: 297. Puesta
+        # al día con v2.297.0, dice dónde viene el tamaño y que sin sesión no hay herramientas
+        # sin pasar de 299.
         self.assertLess(len(SKILL.splitlines()), 300, "la Skill dejó de ser corta")
 
     def test_los_entregables_siguen_al_cerebro_del_agente(self):
@@ -304,8 +306,23 @@ class LaVersion420(unittest.TestCase):
         self.assertIn(flat("give the link at once: it lasts minutes"), flat(SKILL))
 
     def test_antes_de_paginar_o_descargar_dice_el_tamano(self):
-        self.assertIn(flat("Before reading more pages or downloading,\ntell the person how big the whole result is, in rows, size and pages as Datalum gives\nthem, or that the total is not known"), flat(SKILL))
+        """Desde v2.293.1 la página dice el total en `continuacion.total` (filas, bytes y
+        páginas, o que no se conoce) y la descarga, las filas y los bytes del archivo."""
+        self.assertIn(flat("Before reading more pages or downloading, tell the person how big the whole result is, in rows, size and pages as `continuacion.total` gives them, or that the total is not known"), flat(SKILL))
         self.assertIn(flat("say the\nfile's rows and size"), flat(SKILL))
+
+    def test_lo_grande_se_descarga_sin_recorrer_paginas(self):
+        """Firma del 21-nov: un resultado grande se baja con el enlace, no por páginas."""
+        self.assertIn(flat("When it is large, such as hundreds of thousands of rows, do not walk its pages: offer the connector's download"), flat(SKILL))
+
+    def test_sin_sesion_datalum_no_lista_herramientas(self):
+        """Desde v2.296.1 el servidor contesta 401 a todo mensaje sin credencial: sin sesión
+        no hay ninguna herramienta de Datalum, ni siquiera `list_agents`."""
+        row = next(line for line in SKILL.splitlines() if "| Connector not set up |" in line)
+        self.assertIn("Datalum lists no tools until the person signs in", row)
+        self.assertIn("if it is there, they sign in from the host's connector panel", row)
+        row = next(line for line in SKILL.splitlines() if "| No session |" in line)
+        self.assertIn("waits for a sign-in", row)
 
     def test_el_plazo_agotado_sigue_a_retryable(self):
         self.assertIn(flat("follow the error's `retryable`: if true, retry\nonce; if false, do not repeat the call as it was"), flat(SKILL))

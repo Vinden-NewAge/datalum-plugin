@@ -1,0 +1,1 @@
+{"path": "datasets", "groups": [{"type": "Dataset", "entries": [{"concept_id": "datasets/pedidos", "title": "Pedidos", "desc": "Un renglón por pedido: folio, cliente, fecha e importe"}]}], "subdirs": [], "docs": 1, "entries_servidas": 1}
