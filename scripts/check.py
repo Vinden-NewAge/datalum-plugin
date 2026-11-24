@@ -22,7 +22,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from compatlib import contract, ledger, versioning  # noqa: E402
+from compatlib import contract, ledger, pipeline, versioning  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 MANIFEST = ROOT / ".claude-plugin" / "plugin.json"
@@ -235,11 +235,9 @@ def check_contract() -> tuple[dict, dict]:
         fail(f"compat/requisitos.json contra el contrato de producción: {reason}")
     if comparison["derivados_cambian"]:
         fail("client/contract-facts.json no es el que se deriva del contrato de producción")
-    stored = ROOT / "compat" / "instrucciones" / f"{summary['instrucciones_sha256'][:12]}.txt"
-    if not stored.is_file():
-        fail("compat/instrucciones/ no guarda el texto de las instrucciones del contrato vigente")
-    elif contract.sha256_text(stored.read_text(encoding="utf-8")) != summary["instrucciones_sha256"]:
-        fail(f"{stored.relative_to(ROOT)}: el texto no corresponde a su huella")
+    # Cada huella aprobada y la del contrato vigente guardan su texto.
+    for problem in pipeline.instruction_texts(ROOT):
+        fail(problem)
     try:
         ledger.read(LEDGER)
     except ValueError as e:

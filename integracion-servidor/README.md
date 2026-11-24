@@ -78,7 +78,7 @@ anota como no confirmado y no cambia nada.
 | Qué | Para qué |
 |---|---|
 | Variable `COMPAT_ACTORES` | Aceptar avisos de despliegue sólo de la cuenta dueña del token |
-| Secreto `DATALUM_COMPAT_TOKEN` | Una credencial de sólo lectura de una cuenta de Datalum sin agentes. Con ella el flujo saluda y lee el catálogo completo del servidor desplegado, y lo coteja entero contra el aviso. Desde la v2.296.1 es la única forma de cotejar las instrucciones |
+| Secreto `DATALUM_COMPAT_TOKEN` | Una credencial de sólo lectura de una cuenta de Datalum sin agentes. Con ella el flujo saluda y lee el catálogo completo del servidor desplegado, y lo coteja entero contra el aviso. Desde la v2.296.1 es la única forma de cotejar las instrucciones. Se manda sólo a producción; QA lleva la suya en `DATALUM_COMPAT_TOKEN_QA`. Si el servidor la rechaza, el cotejo sigue sin ella y lo anota |
 
 ## Lo que el aviso no cubre
 

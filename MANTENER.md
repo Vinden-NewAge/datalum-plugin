@@ -35,7 +35,8 @@ hora por su cuenta y cuando una persona lo lanza. Hace siempre lo mismo:
    vale la conducta anterior, el saludo sin credencial, y la línea del registro dice en
    `contrato.sin_credencial` cuál vio (`pide_credencial` o `saludo_publico`). Con la
    credencial de lectura saluda con ella y coteja las instrucciones, el protocolo y el
-   catálogo completo.
+   catálogo completo. Si el servidor la rechaza, no la vuelve a mandar, coteja sin ella
+   y lo anota en `contrato.credencial` (`rechazada`) y en la salida del paso.
 4. Lo compara con `compat/requisitos.json` y con el último contrato comprobado.
 5. Si hace falta, regenera `client/contract-facts.json` y sube la versión.
 6. Corre `check.py`, las pruebas y el empaquetado sobre el resultado.
@@ -49,7 +50,7 @@ La comparación sale en una de cuatro clases:
 |---|---|---|
 | `sin_cambios` | El contrato es el mismo que el último comprobado | Anota la compatibilidad. La versión del plugin no cambia |
 | `compatible` | Cambió algo que el plugin no usa, o algo que se resuelve regenerando archivos derivados | Si lo derivado cambió, publica una versión de parche. Si no, sólo anota |
-| `revision` | Cambió el texto de las instrucciones del servidor o la definición de una herramienta que el plugin usa | No publica. Guarda el texto nuevo y abre un issue para que una persona lo lea |
+| `revision` | Cambió el texto de las instrucciones del servidor o la definición de una herramienta que el plugin usa | No publica. Guarda el texto nuevo si el servidor lo entregó (con credencial de lectura o un servidor anterior a la v2.296.1) y abre un issue para que una persona lo lea |
 | `incompatible` | Falta una herramienta o un argumento que el plugin usa, o hay un argumento obligatorio nuevo | No publica. Abre un issue con la propuesta |
 
 Un entorno previo a producción (`qa`) recorre los mismos pasos, prepara la versión que
@@ -105,7 +106,8 @@ hora siguiente vuelve a intentarlo.
 | El paso de aviso y la sonda de contrato | Repositorio del servidor | Que el despliegue avise cuando termina, con su contrato | La lectura de cada hora ve el cambio de commit y anota `contrato_no_disponible` |
 | Secreto `DATALUM_PLUGIN_DISPATCH_TOKEN` | Repositorio del servidor | Disparar `compat.yml`. Permiso: Actions, lectura y escritura, sólo sobre este repositorio | No hay aviso |
 | Variable `COMPAT_ACTORES` | Este repositorio | Aceptar avisos sólo de esa cuenta | Se acepta el aviso de cualquiera que pueda lanzar el flujo. El servidor lo confirma igual |
-| Secreto `DATALUM_COMPAT_TOKEN` | Este repositorio | Saludar y leer el catálogo completo del servidor desplegado. Hoy no hay con qué: Datalum emite tokens de una hora, con renovación de 30 días que cambia en cada uso. Una credencial que el servidor rechaza termina en `despliegue_no_confirmado` | Contra Datalum v2.296.1 o posterior el cotejo es mínimo: el commit y que el servidor pide la credencial. Las instrucciones no se cotejan ni se guardan. Contra uno anterior es parcial: commit, instrucciones y protocolo |
+| Secreto `DATALUM_COMPAT_TOKEN` | Este repositorio | Saludar y leer el catálogo completo del servidor desplegado. Hoy no hay con qué: Datalum emite tokens de una hora, con renovación de 30 días que cambia en cada uso. Se manda sólo a producción. Una credencial que el servidor rechaza no impide el cotejo: sigue sin ella y queda `contrato.credencial: rechazada` en el registro | Contra Datalum v2.296.1 o posterior el cotejo es mínimo: el commit y que el servidor pide la credencial. Las instrucciones no se cotejan ni se guardan. Contra uno anterior es parcial: commit, instrucciones y protocolo |
+| Secreto `DATALUM_COMPAT_TOKEN_QA` | Este repositorio | Lo mismo para QA, que tiene su propio servidor de autorización: la credencial de producción no vale allí y no se le manda | Igual que sin `DATALUM_COMPAT_TOKEN`, para QA |
 | «Allow GitHub Actions to create and approve pull requests» | Ajustes de este repositorio | Abrir el PR cuando `main` no admita el empuje directo | Queda la rama `auto/compat-…` y el flujo lo dice; alguien abre el PR |
 
 Qué tiene que mandar el servidor está en `integracion-servidor/README.md`. GitHub apaga
@@ -130,7 +132,7 @@ gh workflow run compat.yml -f entorno=prod -f sha=<commit de 40 caracteres> -f c
 
 | Resultado | Qué hacer |
 |---|---|
-| `revision_requerida` | Lee el texto nuevo. Las instrucciones quedan en `compat/instrucciones/<huella>.txt` y se comparan con `diff` contra las anteriores; la definición de una herramienta se lee en el conector. Si la Skill y los controles siguen valiendo, añade la huella a `instrucciones_revisadas` o a `definiciones_revisadas` en `compat/requisitos.json`, por PR. Si no, cambia la Skill en ese mismo PR. El despliegue se cierra con la lectura de la hora siguiente |
+| `revision_requerida` | Lee el texto nuevo. Las instrucciones quedan en `compat/instrucciones/<huella>.txt` (los 12 primeros caracteres de la huella) y se comparan con `diff` contra las anteriores; la definición de una herramienta se lee en el conector. En un cotejo `minima` el texto no quedó guardado: se lee en una conversación con el conector y se guarda en ese fichero en el mismo PR. Si la Skill y los controles siguen valiendo, añade la huella a `instrucciones_revisadas` o a `definiciones_revisadas` en `compat/requisitos.json`, por PR. Si no, cambia la Skill en ese mismo PR. `check.py` no pasa si una huella de `instrucciones_revisadas` no tiene su texto o el texto no es el de la huella. El despliegue se cierra con la lectura de la hora siguiente |
 | `incompatible` | Sigue «Cambios incompatibles», más abajo |
 | `contrato_no_disponible` | Lanza el flujo a mano con el contrato, como arriba |
 | `contrato_no_coincide` | El aviso se armó con otro árbol que el desplegado. Revisa en el servidor de qué commit salió y vuelve a lanzar con el contrato del commit servido |

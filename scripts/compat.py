@@ -113,17 +113,16 @@ def cmd_evaluar(args: argparse.Namespace) -> int:
     event = json.loads(Path(args.evento).read_text(encoding="utf-8"))
     try:
         url = pipeline.mcp_url(ROOT, event.get("entorno"))
-        prod = production.Production(url, token=os.environ.get("DATALUM_COMPAT_TOKEN") or None)
+        prod = production.Production(url, token=pipeline.read_token(event.get("entorno"), os.environ))
         evaluation = pipeline.evaluate(ROOT, event, prod=prod, today=now_utc()[:10])
     except (pipeline.EventError, contract.ContractError, production.ProductionError) as e:
         print(f"No se pudo evaluar: {e}", file=sys.stderr)
         return 1
     Path(args.salida).write_text(json.dumps(evaluation, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"{evaluation['accion']}: {evaluation['resultado'] or 'sin cambios'} · {evaluation['detalle']}")
-    seen = evaluation["contrato"].get("sin_credencial")
-    if seen:
+    if evaluation["contrato"].get("sin_credencial"):
         verification = evaluation["contrato"].get("verificacion")
-        print(f"Cotejo{f' {verification}' if verification else ''}: {production.describe({'conducta': seen})}.")
+        print(f"Cotejo{f' {verification}' if verification else ''}: {pipeline.describe(evaluation)}.")
     return 0
 
 

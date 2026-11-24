@@ -13,7 +13,8 @@ Cuatro lecturas, todas contra el servidor desplegado y ninguna contra el reposit
   catálogo        tools/list del MCP con la credencial de lectura: el catálogo completo.
 
 La dirección sale de la configuración del plugin, nunca del aviso de un despliegue. La
-credencial sólo viaja en la cabecera `Authorization` y no sale en ningún mensaje.
+credencial sólo viaja en la cabecera `Authorization` y no sale en ningún mensaje. Si el
+servidor la rechaza (401 o 403), no se vuelve a mandar y el cotejo sigue sin ella.
 """
 
 from __future__ import annotations
@@ -37,6 +38,10 @@ class ProductionError(RuntimeError):
     """El servidor no contestó lo esperado."""
 
 
+class CredentialRejected(ProductionError):
+    """El servidor rechazó la credencial de lectura."""
+
+
 def http_fetch(method: str, url: str, headers: dict, body: Optional[bytes]) -> tuple:
     """Devuelve el estado, el cuerpo y las cabeceras de la respuesta, con los nombres
     de las cabeceras en minúsculas."""
@@ -55,14 +60,16 @@ def _headers(message) -> dict:
     return {k.lower(): v for k, v in (message.items() if message is not None else [])}
 
 
+def challenge_scheme(challenge: Optional[str]) -> Optional[str]:
+    """El esquema de un `WWW-Authenticate` (`Bearer`, `Basic`…), o None."""
+    return challenge.strip().partition(" ")[0] or None if challenge else None
+
+
 def resource_metadata(challenge: Optional[str]) -> Optional[str]:
     """La dirección `resource_metadata` de un `WWW-Authenticate: Bearer …`, o None."""
-    if not challenge:
+    if (challenge_scheme(challenge) or "").lower() != "bearer":
         return None
-    scheme, _, params = challenge.strip().partition(" ")
-    if scheme.lower() != "bearer":
-        return None
-    match = _RESOURCE_METADATA.search(params)
+    match = _RESOURCE_METADATA.search(challenge.strip().partition(" ")[2])
     return match.group(1) if match else None
 
 
@@ -78,10 +85,16 @@ class Production:
         self.health_url = f"https://{parts.netloc}/health"
         self._fetch = fetch
         self._token = token
+        self._rejected = False
 
     @property
     def has_token(self) -> bool:
-        return bool(self._token)
+        """Hay una credencial de lectura que el servidor no ha rechazado."""
+        return bool(self._token) and not self._rejected
+
+    @property
+    def credential_rejected(self) -> bool:
+        return self._rejected
 
     def health(self) -> dict:
         status, text, _ = self._fetch("GET", self.health_url, {"accept": "application/json"}, None)
@@ -110,8 +123,8 @@ class Production:
             "accept": "application/json, text/event-stream",
         }
         if auth:
-            if not self._token:
-                raise ProductionError("no hay credencial de lectura configurada")
+            if not self.has_token:
+                raise ProductionError("no hay credencial de lectura que el servidor acepte")
             headers["authorization"] = f"Bearer {self._token}"
         payload = {"jsonrpc": "2.0", "id": 1, "method": method}
         if params is not None:
@@ -121,6 +134,9 @@ class Production:
     def _rpc(self, method: str, params: Optional[dict], *, auth: bool) -> dict:
         status, text, _ = self._post(method, params, auth=auth)
         if status != 200:
+            if auth and status in (401, 403):
+                self._rejected = True
+                raise CredentialRejected(f"{method} con la credencial de lectura contestó {status}")
             who = "con la credencial de lectura" if auth else "sin credencial"
             raise ProductionError(f"{method} {who} contestó {status}")
         return _result(method, text)
@@ -130,8 +146,9 @@ class Production:
 
         `conducta` es `pide_credencial` (401, desde la v2.296.1) o `saludo_publico`
         (200, hasta la v2.296.0; trae `saludo`). Con un 401 devuelve la cabecera
-        `WWW-Authenticate` tal como llegó y su `resource_metadata`; si falta alguna,
-        lo dice `cross_check`. Cualquier otra respuesta es un error."""
+        `WWW-Authenticate` tal como llegó y su `resource_metadata`; si algo
+        falta o no vale, lo dice `cross_check`. Cualquier otra respuesta, también un
+        403, es un error."""
         status, text, headers = self._post("initialize", INITIALIZE, auth=False)
         if status == 401:
             challenge = headers.get("www-authenticate")
@@ -168,13 +185,20 @@ class Production:
     def observe(self) -> dict:
         """Lo que el cotejo necesita del servidor: cómo responde sin credencial y el
         saludo, con la credencial si la hay o el público de un servidor anterior. Sin
-        credencial y con la conducta nueva no hay saludo (`saludo` es None)."""
+        credencial y con la conducta nueva no hay saludo (`saludo` es None).
+
+        Si el servidor rechaza la credencial, el cotejo sigue con lo que contesta sin
+        ella, como un servidor sin credencial configurada, y `credencial` lo dice."""
         seen = self.anonymous()
         seen["mcp"] = self.mcp_url
+        seen.setdefault("saludo", None)
         if self.has_token:
-            seen["saludo"] = self.greeting()
-        else:
-            seen.setdefault("saludo", None)
+            try:
+                seen["saludo"] = self.greeting()
+            except CredentialRejected:
+                pass
+        if self._rejected:
+            seen["credencial"] = "rechazada"
         return seen
 
 
@@ -232,6 +256,8 @@ def cross_check(summary: dict, seen: dict) -> list:
     if seen["conducta"] == "pide_credencial":
         if not seen.get("www_authenticate"):
             problems.append("sin credencial el servidor contesta 401 sin WWW-Authenticate: un cliente no sabe dónde iniciar sesión")
+        elif (challenge_scheme(seen["www_authenticate"]) or "").lower() != "bearer":
+            problems.append("sin credencial el servidor contesta 401 con un WWW-Authenticate que no es Bearer: un cliente MCP no sabe iniciar sesión")
         elif not seen.get("resource_metadata"):
             problems.append("sin credencial el servidor contesta 401 con un WWW-Authenticate sin resource_metadata: un cliente no sabe dónde iniciar sesión")
         else:
@@ -248,7 +274,12 @@ def cross_check(summary: dict, seen: dict) -> list:
 
 
 def describe(seen: dict) -> str:
-    """Una línea para la salida del cotejo: qué hizo el servidor sin credencial."""
+    """Una línea para la salida del cotejo: qué hizo el servidor sin credencial y, si
+    la rechazó, que la credencial de lectura no vale."""
     if seen["conducta"] == "saludo_publico":
-        return "sin credencial el servidor contesta el saludo, como hasta Datalum v2.296.0"
-    return "sin credencial el servidor contesta 401 con dónde iniciar sesión, como desde Datalum v2.296.1"
+        line = "sin credencial el servidor contesta el saludo, como hasta Datalum v2.296.0"
+    else:
+        line = "sin credencial el servidor contesta 401 con dónde iniciar sesión, como desde Datalum v2.296.1"
+    if seen.get("credencial") == "rechazada":
+        line += "; la credencial de lectura no vale: el servidor la rechazó y el cotejo siguió sin ella"
+    return line
