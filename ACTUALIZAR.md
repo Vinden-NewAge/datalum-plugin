@@ -59,6 +59,32 @@ Para saber qué versión tienes, pregúntale al asistente «¿Qué versión de l
 Datalum tienes?». La más reciente es la primera de
 [Releases](https://github.com/Vinden-NewAge/datalum-plugin/releases).
 
+## Fallos conocidos de las aplicaciones
+
+### ChatGPT para macOS carga la Skill pero no las herramientas de Datalum
+
+Desde las versiones 26.1111 de la app de escritorio de ChatGPT y Codex para macOS, en
+algunas cuentas el plugin carga las instrucciones de la Skill y el chat no recibe
+ninguna herramienta de Datalum, ni `list_agents` ni `use_agent`. El inicio de sesión se
+completa bien. Los registros de la app repiten `Failed to load MCP server catalog:
+unsupported app-server method: mcpServerStatus/list`. Se vio con la 26.1120.41243 el
+24 de noviembre de 2026. La misma cuenta funciona en otro equipo y en el celular.
+
+El fallo está dentro de la app: la ventana le pide la lista de servidores MCP al
+proceso que corre sus herramientas y ese proceso no conoce la petición. La petición
+nunca llega a Datalum, así que no se arregla actualizando el plugin. Reinstalar el
+plugin, borrar los datos MCP, reiniciar, abrir otro chat y actualizar la app no lo
+quitan. OpenAI lo tiene abierto en
+[openai/codex#62631](https://github.com/openai/codex/issues/62631) y
+[openai/codex#61325](https://github.com/openai/codex/issues/61325).
+
+Mientras OpenAI lo corrige:
+
+| Prueba | Qué hacer |
+|---|---|
+| Ejecución local | Cambia la ejecución del chat de la nube a local. Si el registro dice `hostId=durable`, el chat corre en el host de la nube |
+| Conector en vez de plugin | Añade Datalum como conector de ChatGPT (`https://mcp.datalum.ai/mcp`). Es el mismo servidor y el mismo inicio de sesión, y los conectores no pasan por esa petición |
+
 ## Lo que una actualización del plugin no toca
 
 - El agente que eligió una conversación, ni su versión. Cambiar de agente o pasar a una
