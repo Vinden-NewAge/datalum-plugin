@@ -29,6 +29,7 @@ MANIFEST = ROOT / ".claude-plugin" / "plugin.json"
 MARKETPLACE = ROOT / ".claude-plugin" / "marketplace.json"
 MCP = ROOT / ".mcp.json"
 HOOKS = ROOT / "hooks" / "hooks.json"
+HOOK_COMMAND = re.compile(r'node "\$\{CLAUDE_PLUGIN_ROOT\}/([A-Za-z0-9_./-]+)"')
 SKILL_DIR = ROOT / "skills" / "datalum"
 SKILL = SKILL_DIR / "SKILL.md"
 OPENAI = SKILL_DIR / "agents" / "openai.yaml"
@@ -254,12 +255,13 @@ def check_hooks() -> None:
     for event, groups in hooks.items():
         for group in groups:
             for hook in group.get("hooks", []):
-                if hook.get("type") != "command" or hook.get("command") != "node":
-                    fail(f"hooks.json: {event} tiene que correr `node` con `args`, sin shell")
-                for arg in hook.get("args", []):
-                    target = ROOT / arg.replace("${CLAUDE_PLUGIN_ROOT}/", "")
-                    if "${CLAUDE_PLUGIN_ROOT}" in arg and not target.is_file():
-                        fail(f"hooks.json: {event} apunta a {arg}, que no existe")
+                # Codex sólo lee `command` (no conoce `args`) y lo corre en un shell, igual
+                # que Claude Code sin `args`. La ruta va entre comillas por si lleva espacios.
+                match = HOOK_COMMAND.fullmatch(hook.get("command") or "")
+                if hook.get("type") != "command" or "args" in hook or not match:
+                    fail(f'hooks.json: {event} tiene que correr `node "${{CLAUDE_PLUGIN_ROOT}}/<archivo>"`, sin `args`')
+                elif not (ROOT / match.group(1)).is_file():
+                    fail(f"hooks.json: {event} apunta a {match.group(1)}, que no existe")
             matcher = group.get("matcher")
             if event != "SessionStart" and (not matcher or "mcp__" not in matcher):
                 fail(f"hooks.json: {event} tiene que limitarse a herramientas MCP con un matcher")

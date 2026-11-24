@@ -157,8 +157,9 @@ test('los hooks declarados apuntan al adaptador y sólo a herramientas de Datalu
   }
   for (const groups of Object.values(hooks)) {
     for (const hook of groups.flatMap((g) => g.hooks)) {
-      assert.equal(hook.command, 'node');
-      assert.deepEqual(hook.args, ['${CLAUDE_PLUGIN_ROOT}/client/adapters/claude-code.js']);
+      // Sin `args`: Codex no lo conoce y lanzaría `node` solo.
+      assert.equal(hook.command, 'node "${CLAUDE_PLUGIN_ROOT}/client/adapters/hook.js"');
+      assert.equal('args' in hook, false);
     }
   }
 });

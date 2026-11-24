@@ -2,10 +2,10 @@
 'use strict';
 // Adaptador de los controles del cliente al formato de hooks de Claude Code.
 //
-// Lee el evento por stdin, se lo pasa a la política común y escribe la decisión en el
-// formato que espera la aplicación. No decide nada por su cuenta. Si algo falla aquí,
-// la llamada sigue su curso: los controles nunca dejan a la persona sin su herramienta,
-// y lo que de verdad no se puede hacer lo rechaza Datalum.
+// Recibe el evento que leyó hook.js, se lo pasa a la política común y devuelve la
+// decisión en el formato que espera la aplicación. No decide nada por su cuenta. Si
+// algo falla aquí, la llamada sigue su curso: los controles nunca dejan a la persona sin
+// su herramienta, y lo que de verdad no se puede hacer lo rechaza Datalum.
 
 const fs = require('fs');
 const path = require('path');
@@ -45,16 +45,20 @@ function versionNote(state, current) {
   );
 }
 
-function handle(event) {
+// `host.dialogs` dice si la aplicación sabe preguntarle a la persona cuando un hook lo
+// pide. Claude Code sí; donde no, lo que habría sido una pregunta se niega con el motivo.
+const CLAUDE_CODE = { dialogs: true };
+
+function handle(event, host) {
   if (!event || !event.session_id) return null;
   // Las llamadas que no son de Datalum se descartan antes de tocar el disco.
   if (event.hook_event_name !== 'SessionStart' && !policy.isDatalum(store.load(event.session_id, null), event.tool_name)) {
     return null;
   }
-  return store.withLock(event.session_id, () => handleLocked(event));
+  return store.withLock(event.session_id, () => handleLocked(event, host || CLAUDE_CODE));
 }
 
-function handleLocked(event) {
+function handleLocked(event, host) {
   const name = event.hook_event_name;
   const sessionId = event.session_id;
   const current = pluginVersion();
@@ -80,7 +84,7 @@ function handleLocked(event) {
   const note = versionNote(state, current);
 
   const facts = contractFacts();
-  const base = { now, at: new Date(now).toISOString(), toolUseId: event.tool_use_id || null, mode: event.permission_mode || null };
+  const base = { now, at: new Date(now).toISOString(), toolUseId: event.tool_use_id || null, mode: event.permission_mode || null, dialogs: host.dialogs !== false };
 
   if (name === 'PreToolUse') {
     // Para elegir agente hace falta saber qué eligió la persona en la aplicación.
@@ -116,24 +120,6 @@ function handleLocked(event) {
   return context ? { hookSpecificOutput: { hookEventName: name, additionalContext: context } } : null;
 }
 
-function main() {
-  let raw = '';
-  process.stdin.setEncoding('utf8');
-  process.stdin.on('data', (chunk) => (raw += chunk));
-  process.stdin.on('end', () => {
-    try {
-      const output = handle(JSON.parse(raw));
-      if (output) process.stdout.write(JSON.stringify(output));
-    } catch (error) {
-      // Al registro de depuración va sólo la clase del error: su mensaje puede citar
-      // la entrada, y la entrada puede traer palabras de la persona.
-      const kind = (error && (error.code || error.name)) || 'Error';
-      process.stderr.write(`datalum: control omitido (${kind})\n`);
-    }
-    process.exit(0);
-  });
-}
-
-if (require.main === module) main();
-
 module.exports = { handle };
+
+if (require.main === module) require('./hook').run(module.exports);

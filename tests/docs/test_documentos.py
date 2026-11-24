@@ -137,7 +137,7 @@ class LaVersion201(unittest.TestCase):
 
     def test_el_cliente_no_copia_reglas_de_un_agente(self):
         """El cliente no conoce oficios: nada del Builder, de gráficas ni de formatos."""
-        for name in ("policy.js", "human.js", "state.js", "adapters/claude-code.js"):
+        for name in ("policy.js", "human.js", "state.js", "adapters/claude-code.js", "adapters/codex.js", "adapters/hook.js"):
             code = (ROOT / "client" / name).read_text(encoding="utf-8").lower()
             for word in ("builder", "html", "render_chart", "upsert_chart", "dashboard"):
                 self.assertNotIn(word, code, f"{name} menciona {word}")
