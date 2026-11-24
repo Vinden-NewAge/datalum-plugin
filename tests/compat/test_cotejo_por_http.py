@@ -204,19 +204,19 @@ class Cotejo(unittest.TestCase):
         s = self.servidor("sin_cabecera")
         ev = self.evaluar(s, aviso(summary_of(base_tools())), token=True)
         self.assertEqual(ev["resultado"], "contrato_no_coincide", ev["detalle"])
-        self.assertIn("WWW-Authenticate", ev["detalle"])
+        self.assertIn("401 sin WWW-Authenticate", ev["detalle"])
 
     def test_un_401_sin_resource_metadata_es_un_fallo(self):
         s = self.servidor("sin_metadatos")
         ev = self.evaluar(s, aviso(summary_of(base_tools())), token=False)
         self.assertEqual(ev["resultado"], "contrato_no_coincide", ev["detalle"])
-        self.assertIn("resource_metadata", ev["detalle"])
+        self.assertIn("WWW-Authenticate sin resource_metadata", ev["detalle"])
 
     def test_un_401_que_manda_a_iniciar_sesion_en_otro_servidor_es_un_fallo(self):
         s = self.servidor("otro_servidor")
         ev = self.evaluar(s, aviso(summary_of(base_tools())), token=True)
         self.assertEqual(ev["resultado"], "contrato_no_coincide", ev["detalle"])
-        self.assertIn("resource_metadata", ev["detalle"])
+        self.assertIn("no apunta a este mismo servidor", ev["detalle"])
 
     def test_la_salida_dice_que_conducta_vio(self):
         for conducta, frase in (("pide_credencial", "401"), ("anterior", "contesta el saludo")):
