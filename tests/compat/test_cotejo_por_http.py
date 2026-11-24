@@ -275,6 +275,17 @@ class Cotejo(unittest.TestCase):
         # Rechazada una vez, no se vuelve a mandar en cada petición.
         self.assertEqual(sum(1 for p in s.peticiones if p["auth"]), 1)
 
+    def test_observe_con_credencial_rechazada_se_queda_con_lo_que_ve_sin_ella(self):
+        # observe() por sí sola, sin una lectura del catálogo antes que descubra el rechazo.
+        for conducta, saludo in (("anterior", True), ("pide_credencial", False)):
+            with self.subTest(conducta=conducta):
+                s = self.servidor(conducta)
+                prod = s.production(token="otra-credencial")
+                seen = prod.observe()
+                self.assertEqual(seen["credencial"], "rechazada")
+                self.assertEqual(seen["saludo"] is not None, saludo)
+                self.assertFalse(prod.has_token)
+
     def test_con_la_credencial_aceptada_no_se_anota_nada(self):
         s = self.servidor("pide_credencial")
         ev = self.evaluar(s, aviso(summary_of(base_tools())), token=True)
