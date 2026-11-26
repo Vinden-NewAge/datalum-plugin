@@ -4,6 +4,93 @@ Qué versión del plugin se comprobó contra qué, y cómo. «Comprobado» quier
 algo se ejecutó y dio ese resultado. Lo que sólo consta en la documentación de un
 producto se marca «Sin comprobar».
 
+## Versión 4.3.0
+
+Preparada el 25 de noviembre de 2026 con Datalum v2.301.0 (commit `3126db756aba`), que
+producción sirve ese día según su `/health`. Es la liberación del nombre: los tableros
+pasan a llamarse artefactos, de tipo Dashboard o Sites. Los controles del cliente y el
+cotejo de cada despliegue son los de la 4.2.0.
+
+Entre v2.297.0 y v2.301.0 producción pasó por seis versiones, y la lectura de cada hora
+anotó las de v2.298.0 en adelante como `contrato_no_disponible`. Ninguna quita una
+herramienta o un argumento que el plugin usa, ni vuelve obligatorio uno nuevo. Con los
+requisitos de la 4.2.0 todas dan `revision_requerida`: cambia la definición de
+`remember` en v2.297.1 y las instrucciones en v2.301.0. La Skill se activa con las
+palabras nuevas y nombra el artefacto en los entregables, así que sube el número menor.
+
+### De v2.297.1 a v2.301.0
+
+Los contratos se armaron del código de cada commit con el método de la 3.0.0, el 25 de
+noviembre. La sonda sobre `6cfe471036cc` (v2.297.0) da el contrato guardado
+(`33e83205c5ba`), huella por huella: el método sigue valiendo. «Con la 4.2.0» y «con la
+4.3.0» son lo que da `contract.compare` con los requisitos de cada versión y el contrato
+anterior; la primera fila se compara con el de v2.297.0.
+
+| Versión | Commit | Contrato, herramientas | Instrucciones | Usadas que cambian | Con la 4.2.0 | Con la 4.3.0 |
+|---|---|---|---|---|---|---|
+| v2.297.1 | `d024448ef60c` | `fabe06e3faee`, 100 | `6a3181a6053b` | `remember` | revision | compatible |
+| v2.298.0 | `2c35343971d5` | `fabe06e3faee`, 100 | `6a3181a6053b` | — | revision | sin_cambios |
+| v2.299.0 | `21ec71ec3c50` | `6a7a511177d2`, 100 | `6a3181a6053b` | — | revision | compatible |
+| v2.300.0 | `efefe90867b9` | `191cc7b71422`, 100 | `6a3181a6053b` | — | revision | compatible |
+| v2.300.1 | `3f7caf7080fe` | `191cc7b71422`, 100 | `6a3181a6053b` | — | revision | sin_cambios |
+| v2.301.0 | `3126db756aba` | `8993c879d15c`, 97 | `20fb1c516393` | — | revision | compatible |
+
+| Qué cambió | En qué versión | Cómo | ¿Pide cambiar la Skill o `compat/requisitos.json`? |
+|---|---|---|---|
+| `remember` | v2.297.1 | Dice la forma de un paso hecho de un avance: guion largo, corto o doble antes de quién, «·» o «\|» entre quién y cuándo, y la fecha en ISO-8601, sola o con hora. La forma que ya se usaba (`— @ana · 2026-10-05`) cabe. Los argumentos no cambian | `compat/requisitos.json` sí: la huella entra en `definiciones_revisadas`. La Skill no: no dice la forma del paso, la trae el cerebro |
+| Las herramientas de los tableros | v2.301.0 | Se listan `get_artifact`, `upsert_artifact`, `test_artifact`, `run_artifact` y `save_artifact_edit`, cada una con `type` (`dashboard` o `sites`). Los ocho nombres de antes dejan de listarse y siguen respondiendo | Sí, la Skill: se activa con artefactos, dashboards y sites, y el párrafo de entregables dice artefacto, Dashboard o Sites con la misma regla. No nombra ninguna de las trece |
+| Las instrucciones | v2.301.0 | Recuperar algo retirado es `upsert_*` sobre «gráfica, artefacto» donde decía «gráfica, tablero». Nada más cambia | `compat/requisitos.json` sí: la huella entra en `instrucciones_revisadas` y el texto en `compat/instrucciones/20fb1c516393.txt` |
+
+`client/contract-facts.json` sale de `compat.py evaluar` sobre esta rama con el aviso de
+`3126db756aba`, como en el flujo: suma las cinco de artefactos con su destino (`type` en
+`get_artifact`, que no pide `artifact`; `artifact` en `run_artifact`, `test_artifact` y
+`save_artifact_edit`; `name` en `upsert_artifact`) y quita los ocho nombres de antes. Un
+rollback a una versión anterior a v2.301.0 los vuelve a derivar y publica un parche: por
+eso `LaVersion297` y `LaEntregaDespues` dejan de exigir que el rollback no cambie los
+derivados.
+
+### Qué se ejecutó
+
+El 25 de noviembre, sobre `main` (4.2.0, `885f1e3`):
+
+| Qué | Resultado |
+|---|---|
+| La sonda sobre los siete commits de producción, de `6cfe471036cc` (v2.297.0) a `3126db756aba` (v2.301.0) | Las huellas de la tabla. El de v2.297.0 sale igual que el guardado |
+| `/health` de producción | Sirve `3126db756aba`, v2.301.0 |
+| `compat.py aviso` y `compat.py evaluar` sin credencial, con el contrato de `3126db756aba`, sobre la rama antes de leer los textos | Producción confirma el commit, cotejo `minima` con `pide_credencial`, clase `revision`: las instrucciones y `remember` sin leer |
+| Lo mismo tras anotar las dos huellas | Clase `compatible`: deja el contrato de producción, `client/contract-facts.json` y la versión de parche que esta versión sustituye por la 4.3.0 |
+| `compat.py evaluar` sin contrato en el aviso, como la lectura de cada hora, en una copia desechable de la rama | `compatible_sin_cambios`, con el contrato tomado del registro: fundida, esa lectura cierra v2.301.0 sin publicar nada |
+| `python3 scripts/check.py` | Pasa (97 herramientas) |
+| `python3 -m unittest discover -s tests -t .` | 190 pruebas, todas pasan |
+| `node --test tests/client/*.test.js` | 150 pruebas, todas pasan |
+| `claude plugin validate .`, con el CLI de la aplicación de escritorio (2.1.330) | Pasa, con avisos |
+
+Las evaluaciones con modelo corrieron con `claude plugin eval . --case <caso> --runs 1`,
+una corrida por brazo, sobre los dos casos de entregables, cuyo párrafo cambia. El
+catálogo simulado lista las cinco de artefactos en lugar de los tres tableros que tenía, y
+los correctores que prohíben el catálogo de Datalum suman las cinco. Costaron 0.64
+dólares.
+
+| Caso | Con la Skill | Sin la Skill |
+|---|---|---|
+| `entregables/anfitrion-sin-archivos` | 1.00 | 0.33 |
+| `entregables/tablero-html-externo`, con `--allow-tools Write` | 1.00 | 0.25 |
+
+| Qué | Dónde se prueba |
+|---|---|
+| Producción es v2.301.0, sus textos están leídos y los derivados son los suyos | `LaVersion301` en `tests/compat/test_automation.py` |
+| Un rollback a cualquiera de las seis no pide revisión; sin la huella de `remember` v2.297.1 la pide | El mismo |
+| La lista trae las cinco de artefactos y no los ocho nombres de antes, y los hechos del cliente las siguen | El mismo |
+| La Skill se activa con artefactos, dashboards y sites, conserva «tableros», dice el artefacto en los entregables y no nombra las cinco | `LaVersion430` en `tests/docs/test_documentos.py` |
+| El catálogo simulado lista las cinco, con su respuesta, y ningún nombre de tablero | El mismo |
+| Un artefacto pasa por la misma regla de vista previa que lo demás, y la de un Dashboard no vale para un Sites del mismo nombre | `tests/client/la-orden-de-la-persona.test.js` |
+
+Sin comprobar: el catálogo completo que sirve producción a una conexión con sesión, porque
+sigue sin haber credencial de lectura; el contrato sale del código de cada commit. Que la
+revisión del directorio de ChatGPT acepte la palabra «Sites»: el repositorio no tiene
+ninguna lista de palabras ni regla de esa revisión que lo compruebe, y no se mandó la
+Skill a revisión.
+
 ## Versión 4.2.0
 
 Preparada el 20 de noviembre de 2026 con Datalum v2.292.2 (commit `6f24d473aef7`) y

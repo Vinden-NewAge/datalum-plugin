@@ -1,1 +1,0 @@
-{"dashboard": "ventas", "charts": []}

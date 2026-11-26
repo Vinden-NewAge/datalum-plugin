@@ -7,6 +7,7 @@ evals/, con un modelo real.
 
 from __future__ import annotations
 
+import json
 import re
 import subprocess
 import sys
@@ -74,7 +75,7 @@ class LaSkill(unittest.TestCase):
 
     def test_los_entregables_siguen_al_cerebro_del_agente(self):
         self.assertIn(flat("Deliverables follow the brain too"), flat(SKILL))
-        self.assertIn(flat("Do not\nsend the request to Datalum's chart or dashboard tools instead"), flat(SKILL))
+        self.assertIn(flat("Do not send the request to Datalum's chart or artifact tools instead"), flat(SKILL))
         self.assertIn(flat("say what cannot be\ndelivered here"), flat(SKILL))
 
     def test_la_eleccion_es_de_la_persona_y_el_unico_agente_tiene_regla(self):
@@ -284,6 +285,48 @@ class LaVersion400(unittest.TestCase):
         self.assertIn("Sin comprobar", section)
 
 
+class LaVersion430(unittest.TestCase):
+    """Desde Datalum v2.301.0 los tableros se llaman artefactos, de tipo Dashboard o Sites,
+    y cinco herramientas toman el lugar de los ocho nombres de antes. La Skill se activa
+    también con esas palabras, conserva «tableros» y deja los entregables al cerebro igual
+    que antes, sin nombrar ninguna de las cinco."""
+
+    def description(self) -> str:
+        return flat(SKILL.split("description: >-", 1)[1].split("compatibility:", 1)[0])
+
+    def test_la_descripcion_se_activa_con_artefactos_dashboards_y_sites_y_conserva_tableros(self):
+        description = self.description()
+        for word in ("tableros", "artefactos", "dashboards", "sites", "gráficas"):
+            self.assertIn(word, description)
+
+    def test_los_entregables_dicen_artefacto_dashboard_y_sites_con_la_misma_regla(self):
+        self.assertIn(
+            flat("If the agent's procedure says a chart or an artifact (a Dashboard or a Sites) is "
+                 "delivered as an HTML file made with the host's file tools, make that file."),
+            flat(SKILL),
+        )
+        self.assertNotIn("dashboard tools", SKILL)
+
+    def test_no_nombra_las_herramientas_de_artefactos(self):
+        for name in ("get_artifact", "upsert_artifact", "test_artifact", "run_artifact", "save_artifact_edit"):
+            self.assertNotIn(name, SKILL)
+
+    def test_el_changelog_pone_la_4_3_0_encima_de_la_4_2_0(self):
+        text = read("CHANGELOG.md")
+        headings = re.findall(r"^## \[(\d+\.\d+\.\d+)\]", text, re.M)
+        self.assertEqual(headings[:2], ["4.3.0", "4.2.0"])
+        section = flat(text.split("## [4.3.0]", 1)[1].split("\n## [4.2.0]", 1)[0])
+        self.assertIn("v2.301.0", section)
+        self.assertIn("Sites", section)
+
+    def test_el_catalogo_de_prueba_lista_las_cinco_y_no_los_nombres_de_antes(self):
+        names = {t["name"] for t in json.loads(read("evals/mocks/datalum/_tools.json"))["tools"]}
+        for name in ("get_artifact", "upsert_artifact", "test_artifact", "run_artifact", "save_artifact_edit"):
+            self.assertIn(name, names)
+            self.assertTrue((ROOT / "evals/mocks/datalum" / f"{name}.md").is_file(), name)
+        self.assertEqual(sorted(n for n in names if "dashboard" in n), [])
+
+
 class LaVersion420(unittest.TestCase):
     """Datalum v2.292.2 entrega después lo que no cabe en una llamada, sirve por páginas lo
     guardado, descarga el conjunto entero y dice si un plazo agotado se reintenta. Desde
@@ -343,7 +386,8 @@ class LaVersion420(unittest.TestCase):
         """La 4.2.0 sale después de la 4.1.1 y dice lo que trae frente a ella."""
         text = read("CHANGELOG.md")
         headings = re.findall(r"^## \[(\d+\.\d+\.\d+)\]", text, re.M)
-        self.assertEqual(headings[:3], ["4.2.0", "4.1.1", "4.1.0"])
+        start = headings.index("4.2.0")
+        self.assertEqual(headings[start:start + 3], ["4.2.0", "4.1.1", "4.1.0"])
         section = flat(text.split("## [4.2.0]", 1)[1].split("\n## [4.1.1]", 1)[0])
         self.assertIn("Frente a la 4.1.1 cambia la Skill", section)
 
@@ -496,7 +540,6 @@ class ElRepositorio(unittest.TestCase):
     def test_el_contrato_guardado_solo_lleva_nombres_y_huellas(self):
         """Ni descripciones ni esquemas del servidor: por herramienta, su nombre, su
         huella, sus argumentos y cuáles son obligatorios."""
-        import json
 
         paths = list((ROOT / "compat" / "contratos").glob("*.json")) + [ROOT / "compat" / "contrato-produccion.json"]
         for path in paths:

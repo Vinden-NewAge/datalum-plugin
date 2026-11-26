@@ -631,25 +631,25 @@ class PausedFamilies(unittest.TestCase):
         summary = summary_of([tool("render_chart", ["name"], ["name"])])
         self.assertNotIn("en_pausa", contract.derive_facts(summary, {}))
 
-    # Las herramientas de gráficas y tableros que servía Datalum cuando la 4.0.0 levantó
-    # la pausa. Un despliegue posterior puede sumar otras de las mismas familias.
-    GRAFICAS_Y_TABLEROS_DE_LA_4_0_0 = (
-        "export_chart_csv", "get_chart", "get_dashboard", "render_chart", "run_dashboard",
-        "save_chart_edit", "save_dashboard_edit", "set_chart_options", "test_chart",
-        "test_custom_dashboard", "test_dashboard", "upsert_chart", "upsert_custom_dashboard",
-        "upsert_dashboard",
+    # Las herramientas de gráficas que servía Datalum cuando la 4.0.0 levantó la pausa, y
+    # las cinco de artefactos que desde v2.301.0 listan los tableros en lugar de sus ocho
+    # nombres de antes. Un despliegue posterior puede sumar otras de las mismas familias.
+    GRAFICAS_Y_ARTEFACTOS = (
+        "export_chart_csv", "get_chart", "render_chart", "save_chart_edit",
+        "set_chart_options", "test_chart", "upsert_chart",
+        "get_artifact", "run_artifact", "save_artifact_edit", "test_artifact", "upsert_artifact",
     )
 
-    def test_produccion_sirve_las_graficas_y_los_tableros_y_el_plugin_no_los_tiene_en_pausa(self):
-        """La 4.0.0 levanta la pausa de la 2.0.4: el contrato de producción sigue sirviendo
-        al menos las 14 herramientas de esas familias que había entonces, sin importar
-        cuántas sume después, y ni los requisitos ni los hechos del cliente las niegan."""
+    def test_produccion_sirve_las_graficas_y_los_artefactos_y_el_plugin_no_los_tiene_en_pausa(self):
+        """La 4.0.0 levanta la pausa de la 2.0.4: el contrato de producción sirve las siete
+        herramientas de gráficas de entonces y las cinco de artefactos, sin importar cuántas
+        sume después, y ni los requisitos ni los hechos del cliente las niegan."""
         root = Path(__file__).resolve().parents[2]
         facts = json.loads((root / "client/contract-facts.json").read_text(encoding="utf-8"))
         requirements = json.loads((root / "compat/requisitos.json").read_text(encoding="utf-8"))
         names = {t["n"] for t in json.loads((root / "compat/contrato-produccion.json").read_text(encoding="utf-8"))["herramientas"]}
-        self.assertEqual(len(self.GRAFICAS_Y_TABLEROS_DE_LA_4_0_0), 14)
-        self.assertEqual(sorted(set(self.GRAFICAS_Y_TABLEROS_DE_LA_4_0_0) - names), [], "producción dejó de servirlas")
+        self.assertEqual(len(self.GRAFICAS_Y_ARTEFACTOS), 12)
+        self.assertEqual(sorted(set(self.GRAFICAS_Y_ARTEFACTOS) - names), [], "producción dejó de servirlas")
         self.assertNotIn("en_pausa", requirements)
         self.assertNotIn("en_pausa", facts)
 
@@ -897,11 +897,12 @@ class LaEntregaDespues(unittest.TestCase):
     def load(self, relative: str) -> dict:
         return json.loads((self.ROOT / relative).read_text(encoding="utf-8"))
 
-    def test_un_rollback_a_v2_292_2_no_pide_revision_ni_cambia_los_derivados(self):
+    def test_un_rollback_a_v2_292_2_no_pide_revision(self):
+        """Desde v2.301.0 un rollback a una versión con los ocho nombres de los tableros
+        cambia la lista derivada: el flujo la regenera y publica un parche."""
         summary = contract.validate(self.load(self.V2_292_2))
         comparison = contract.compare(summary, self.load("compat/requisitos.json"), current_facts=self.load("client/contract-facts.json"))
         self.assertEqual(comparison["incompatible"] + comparison["revision"], [])
-        self.assertFalse(comparison["derivados_cambian"])
 
     def test_un_rollback_a_v2_292_1_o_a_v2_292_0_no_pide_revision(self):
         requirements = self.load("compat/requisitos.json")
@@ -962,20 +963,19 @@ class LaVersion297(unittest.TestCase):
     def stored(self, commit: str) -> dict:
         return contract.validate(self.load(f"compat/contratos/{commit}.json"))
 
-    def test_produccion_es_v2_297_0_y_sus_textos_estan_revisados(self):
-        summary = contract.validate(self.load("compat/contrato-produccion.json"))
-        self.assertEqual(summary, self.stored("6cfe471036cc"))
-        comparison = contract.compare(summary, self.load("compat/requisitos.json"), current_facts=self.load("client/contract-facts.json"))
+    def test_v2_297_0_y_sus_textos_estan_revisados(self):
+        summary = self.stored("6cfe471036cc")
+        comparison = contract.compare(summary, self.load("compat/requisitos.json"))
         self.assertEqual(comparison["incompatible"] + comparison["revision"], [])
-        self.assertFalse(comparison["derivados_cambian"])
 
     def test_un_rollback_a_cualquiera_de_las_ocho_no_pide_revision(self):
+        """Desde v2.301.0 el rollback a una de las ocho cambia la lista derivada, porque
+        vuelven los ocho nombres de los tableros: el flujo publica un parche."""
         requirements = self.load("compat/requisitos.json")
         facts = self.load("client/contract-facts.json")
         for version, commit in self.VERSIONES:
             comparison = contract.compare(self.stored(commit), requirements, current_facts=facts)
             self.assertEqual(comparison["incompatible"] + comparison["revision"], [], version)
-            self.assertFalse(comparison["derivados_cambian"], version)
 
     def test_sin_la_lectura_de_use_agent_v2_295_0_pide_revision(self):
         """Sin la huella leída de `use_agent`, el flujo para en v2.295.0 y las siguientes."""
@@ -1017,6 +1017,93 @@ class LaVersion297(unittest.TestCase):
 
     def test_v2_296_1_sirve_el_contrato_de_v2_296_0(self):
         self.assertEqual(self.stored("cd6982d20052")["huella"], self.stored("31e5506cd27d")["huella"])
+
+
+class LaVersion301(unittest.TestCase):
+    """Producción pasó de v2.297.0 a v2.301.0 por seis versiones sin contrato. v2.297.1
+    cambia la definición de `remember`: dice la forma de un paso hecho y acepta la que ya
+    usaba. v2.301.0 es la liberación del nombre: lista `get_artifact`, `upsert_artifact`,
+    `test_artifact`, `run_artifact` y `save_artifact_edit` en lugar de los ocho nombres de
+    los tableros, que siguen respondiendo sin listarse, y sus instrucciones dicen
+    «artefacto» donde decían «tablero». Ninguna cambia los argumentos de lo que el plugin
+    usa."""
+
+    ROOT = Path(__file__).resolve().parents[2]
+    VERSIONES = (
+        ("v2.297.1", "d024448ef60c"),
+        ("v2.298.0", "2c35343971d5"),
+        ("v2.299.0", "21ec71ec3c50"),
+        ("v2.300.0", "efefe90867b9"),
+        ("v2.300.1", "3f7caf7080fe"),
+        ("v2.301.0", "3126db756aba"),
+    )
+    ARTEFACTOS = ("get_artifact", "run_artifact", "save_artifact_edit", "test_artifact", "upsert_artifact")
+    TABLEROS = (
+        "get_custom_dashboard", "get_dashboard", "run_dashboard", "save_dashboard_edit",
+        "test_custom_dashboard", "test_dashboard", "upsert_custom_dashboard", "upsert_dashboard",
+    )
+    USA = ElArranquePorPartes.USA
+
+    def load(self, relative: str) -> dict:
+        return json.loads((self.ROOT / relative).read_text(encoding="utf-8"))
+
+    def stored(self, commit: str) -> dict:
+        return contract.validate(self.load(f"compat/contratos/{commit}.json"))
+
+    def test_produccion_es_v2_301_0_y_sus_textos_estan_revisados(self):
+        summary = contract.validate(self.load("compat/contrato-produccion.json"))
+        self.assertEqual(summary, self.stored("3126db756aba"))
+        comparison = contract.compare(summary, self.load("compat/requisitos.json"), current_facts=self.load("client/contract-facts.json"))
+        self.assertEqual(comparison["incompatible"] + comparison["revision"], [])
+        self.assertFalse(comparison["derivados_cambian"])
+
+    def test_un_rollback_a_cualquiera_de_las_seis_no_pide_revision(self):
+        requirements = self.load("compat/requisitos.json")
+        for version, commit in self.VERSIONES:
+            comparison = contract.compare(self.stored(commit), requirements)
+            self.assertEqual(comparison["incompatible"] + comparison["revision"], [], version)
+
+    def test_la_lista_nombra_las_cinco_de_artefactos_y_no_las_ocho_de_antes(self):
+        names = set(contract.by_name(self.stored("3126db756aba")))
+        self.assertTrue(set(self.ARTEFACTOS) <= names)
+        self.assertEqual(sorted(set(self.TABLEROS) & names), [])
+        before = set(contract.by_name(self.stored("3f7caf7080fe")))
+        self.assertTrue(set(self.TABLEROS) <= before)
+        destinos = self.load("client/contract-facts.json")["destinos"]
+        for name in self.ARTEFACTOS:
+            self.assertIn(name, destinos)
+        for name in self.TABLEROS:
+            self.assertNotIn(name, destinos)
+
+    def test_las_instrucciones_nuevas_estan_guardadas_y_revisadas(self):
+        reviewed = self.load("compat/requisitos.json")["instrucciones_revisadas"]
+        text = (self.ROOT / "compat/instrucciones/20fb1c516393.txt").read_text(encoding="utf-8")
+        digest = contract.sha256_text(text)
+        self.assertTrue(digest.startswith("20fb1c516393"))
+        self.assertIn(digest, reviewed)
+        self.assertEqual(self.stored("3126db756aba")["instrucciones_sha256"], digest)
+        for version, commit in self.VERSIONES[:-1]:
+            self.assertEqual(self.stored(commit)["instrucciones_sha256"][:12], "6a3181a6053b", version)
+
+    def test_sin_la_lectura_de_remember_v2_297_1_pide_revision(self):
+        """Sin la huella leída de `remember`, el flujo para en v2.297.1 y las siguientes."""
+        old = self.load("compat/requisitos.json")
+        old["definiciones_revisadas"] = {
+            name: hashes[:-1] if name == "remember" else hashes
+            for name, hashes in old["definiciones_revisadas"].items()
+        }
+        self.assertEqual(
+            contract.compare(self.stored("d024448ef60c"), old)["revision"],
+            ["la definición de `remember` cambió y nadie la ha leído contra la Skill"],
+        )
+
+    def test_las_herramientas_que_usa_no_cambian_de_argumentos(self):
+        anterior = contract.by_name(self.stored("6cfe471036cc"))
+        for version, commit in self.VERSIONES:
+            nuevo = contract.by_name(self.stored(commit))
+            for name in self.USA:
+                self.assertEqual(nuevo[name]["p"], anterior[name]["p"], f"{version} {name}")
+                self.assertEqual(nuevo[name]["r"], anterior[name]["r"], f"{version} {name}")
 
 
 class Events(unittest.TestCase):

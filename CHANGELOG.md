@@ -4,6 +4,49 @@ Cada versión del plugin de Datalum dice qué cambia para quien usa la Skill, co
 versión del servidor se comprobó y qué hay que hacer para recibirla. La más reciente va
 primero.
 
+## [4.3.0] - 2026-11-25
+
+Frente a la 4.2.0 cambia la Skill. Desde Datalum v2.301.0 los tableros se llaman
+artefactos, de dos tipos: Dashboard, las gráficas en mosaicos con sus filtros, y Sites,
+una página en código. La lista de herramientas nombra cinco de artefactos en lugar de los
+ocho nombres de los tableros, que siguen respondiendo sin listarse. La Skill se activa
+con las palabras nuevas y sube el número menor.
+
+### Cambiado
+
+- La Skill se activa también cuando la persona habla de artefactos, dashboards o sites.
+  Sigue activándose con «tableros».
+- Los entregables siguen al cerebro del agente con la misma regla: si su procedimiento
+  dice que una gráfica o un artefacto, Dashboard o Sites, se entrega como archivo HTML
+  hecho con la aplicación, el asistente hace ese archivo y no manda la petición a las
+  herramientas de gráficas o de artefactos de Datalum.
+
+### Servidor
+
+- Comprobada con Datalum v2.301.0, commit `3126db756aba`, que producción sirve el 25 de
+  noviembre. La lista pasa de 100 a 97 herramientas: entran `get_artifact`,
+  `upsert_artifact`, `test_artifact`, `run_artifact` y `save_artifact_edit`, y dejan de
+  listarse `get_dashboard`, `upsert_dashboard`, `test_dashboard`, `run_dashboard`,
+  `save_dashboard_edit`, `get_custom_dashboard`, `upsert_custom_dashboard` y
+  `test_custom_dashboard`. La Skill no nombra ninguna de las trece.
+- Las instrucciones del servidor dicen «artefacto» donde decían «tablero». La definición
+  de `remember` cambió en v2.297.1: dice la forma de un paso hecho y acepta la que ya se
+  usaba. Las dos huellas están leídas en `compat/requisitos.json`.
+- Las seis versiones de v2.297.1 a v2.301.0 salen `compatible` o `sin_cambios` con esta
+  versión. `compat/contratos/` guarda sus contratos.
+- El código de los controles del cliente es el de la 4.2.0. `client/contract-facts.json`,
+  derivado del contrato de producción, nombra las cinco herramientas de artefactos y deja
+  los ocho nombres de antes. Un rollback de producción a una versión anterior a v2.301.0
+  vuelve a derivarlos, y la comprobación publica un parche.
+- El detalle está en `COMPATIBILIDAD.md`.
+
+### Para recibirla
+
+Lo de siempre, según la aplicación: `ACTUALIZAR.md`. En ChatGPT, quien administra el
+conector tiene que actualizarlo para que la lista guardada traiga las cinco herramientas
+de artefactos; mientras tanto, la lista guardada sigue con los nombres de antes, que
+responden. Una conversación abierta sigue con la Skill que cargó hasta que se recarga.
+
 ## [4.2.0] - 2026-11-24
 
 Frente a la 4.1.1 cambia la Skill. Los controles del cliente y el cotejo de cada
