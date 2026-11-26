@@ -3,14 +3,14 @@ name: datalum
 description: >-
   Work with a company's data in Datalum through the agent the person was
   granted. Use whenever the person mentions Datalum, or asks for company data,
-  indicadores, conjuntos de datos, gráficas, tableros, an agent's brain
-  (cerebro) or its memory while the Datalum connector is available. Also use it
-  when the person wants to continue earlier work on their company's data and
-  the Datalum connector is available, because the progress may be saved in the
-  agent's memory. Covers connecting the account, choosing the agent, loading
-  that agent's brain, keeping the conversation on it, saving progress to memory
-  the way the agent's own rules say, and telling the person what happened in
-  plain words.
+  indicadores, conjuntos de datos, gráficas, tableros, artefactos, dashboards,
+  sites, an agent's brain (cerebro) or its memory while the Datalum connector
+  is available. Also use it when the person wants to continue earlier work on
+  their company's data and the Datalum connector is available, because the
+  progress may be saved in the agent's memory. Covers connecting the account,
+  choosing the agent, loading that agent's brain, keeping the conversation on
+  it, saving progress to memory the way the agent's own rules say, and telling
+  the person what happened in plain words.
 compatibility: >-
   Needs the Datalum connector (remote MCP server at
   https://mcp.datalum.ai/mcp) and a Datalum account with at least one
@@ -18,12 +18,12 @@ compatibility: >-
 metadata:
   author: Vinden
   short-description: AI CONTEXT PILL
-  version: "4.2.0"
+  version: "4.3.0"
 ---
 
 # Datalum
 
-This is version 4.2.0 of the Datalum skill.
+This is version 4.3.0 of the Datalum skill.
 
 Datalum is a governed data layer. A person works in it through one agent that their
 company's administrator granted them. This skill gets the person connected, loads the
@@ -198,11 +198,11 @@ accepted there. Correct the name and call again; if none carries what you meant,
 tool does not take it: read its description instead of dropping it silently. In a
 batch, each operation takes only what it reads, and the error gives its number.
 
-Deliverables follow the brain too. If the agent's procedure says a chart or a dashboard
-is delivered as an HTML file made with the host's file tools, make that file. Do not
-send the request to Datalum's chart or dashboard tools instead. If the procedure needs
-something the host lacks, such as writing files or showing visuals, say what cannot be
-delivered here and offer what the host can do.
+Deliverables follow the brain too. If the agent's procedure says a chart or an artifact
+(a Dashboard or a Sites) is delivered as an HTML file made with the host's file tools,
+make that file. Do not send the request to Datalum's chart or artifact tools instead. If
+the procedure needs something the host lacks, such as writing files or showing visuals,
+say what cannot be delivered here and offer what the host can do.
 
 Figures the person will rely on come from Datalum results. When you compute something
 yourself, use code where the host allows it and say that the calculation is yours.

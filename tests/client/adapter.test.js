@@ -215,9 +215,9 @@ test('tras actualizar desde la 2.0.0, una elección de antes no vuelve a elegir'
   assert.equal(result.out.hookSpecificOutput.permissionDecision, 'ask');
 });
 
-test('desde la 4.0.0 el plugin ya no niega las gráficas ni los tableros de Datalum', () => {
+test('desde la 4.0.0 el plugin ya no niega las gráficas ni los tableros de Datalum, tampoco con su nombre de artefacto', () => {
   const box = sandbox();
-  for (const name of ['render_chart', 'upsert_dashboard', 'get_chart', 'run_dashboard']) {
+  for (const name of ['render_chart', 'upsert_dashboard', 'get_chart', 'run_dashboard', 'get_artifact', 'run_artifact']) {
     const result = box.run({ hook_event_name: 'PreToolUse', tool_name: TOOL(name), tool_input: { name: 'ventas' } });
     assert.equal(result.status, 0, name);
     assert.equal(result.out, null, `${name}: el control no dice nada`);

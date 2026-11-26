@@ -857,8 +857,8 @@
       }
     },
     {
-      "name": "run_dashboard",
-      "description": "[Lee] Corre un tablero del catálogo de Datalum.",
+      "name": "get_artifact",
+      "description": "[Lee] Lee un artefacto del catálogo de Datalum, un Dashboard o un Sites, por su id en `artifact`. Sin `artifact`, la lista.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -866,21 +866,93 @@
             "type": "string",
             "description": "Slug del conector."
           },
-          "dashboard": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "dashboard",
+              "sites"
+            ],
+            "description": "El tipo del artefacto: 'dashboard', gráficas en mosaicos con sus filtros, o 'sites', una página en código."
+          },
+          "artifact": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "light",
+              "full"
+            ]
+          },
+          "selection_context": {
+            "type": "string",
+            "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
+          },
+          "run_id": {
+            "type": "string",
+            "description": "Opcional. La ejecución de esta llamada; omítelo para seguir la abierta y manda \"new\" para abrir otra."
+          }
+        },
+        "required": [
+          "connector",
+          "type"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "run_artifact",
+      "description": "[Lee] Corre un artefacto del catálogo de Datalum: un Dashboard devuelve la cifra de cada gráfica y un Sites el enlace a su página.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "connector": {
+            "type": "string",
+            "description": "Slug del conector."
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "dashboard",
+              "sites"
+            ],
+            "description": "El tipo del artefacto: 'dashboard', gráficas en mosaicos con sus filtros, o 'sites', una página en código."
+          },
+          "artifact": {
             "type": "string"
           },
           "params": {
             "type": "object",
             "description": "Los parámetros que declara el indicador, { nombre: valor }. Opcional."
           },
+          "filters": {
+            "type": "object"
+          },
+          "tile": {
+            "type": "integer"
+          },
           "selection_context": {
             "type": "string",
             "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
+          },
+          "run_id": {
+            "type": "string",
+            "description": "Opcional. La ejecución de esta llamada; omítelo para seguir la abierta y manda \"new\" para abrir otra."
           }
         },
         "required": [
           "connector",
-          "dashboard"
+          "type",
+          "artifact"
         ],
         "additionalProperties": false
       },
@@ -2031,14 +2103,22 @@
       }
     },
     {
-      "name": "upsert_dashboard",
-      "description": "[Escribe] Crea o edita un tablero en el catálogo de Datalum. Nace en propuesto y lo activa una persona. Sin `confirm: true` sólo previsualiza. Lleva la orden textual de la persona en `user_request_quote`.",
+      "name": "upsert_artifact",
+      "description": "[Escribe] Crea o edita un artefacto en el catálogo de Datalum: un Dashboard o un Sites, según `type`. Nace en propuesto y lo activa una persona. Sin `confirm: true` sólo previsualiza. Lleva la orden textual de la persona en `user_request_quote`.",
       "inputSchema": {
         "type": "object",
         "properties": {
           "connector": {
             "type": "string",
             "description": "Slug del conector."
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "dashboard",
+              "sites"
+            ],
+            "description": "El tipo del artefacto: 'dashboard', gráficas en mosaicos con sus filtros, o 'sites', una página en código."
           },
           "name": {
             "type": "string"
@@ -2378,9 +2458,33 @@
                 ]
               }
             },
-            "additionalProperties": false
+            "additionalProperties": false,
+            "description": "Sólo con type 'dashboard'."
+          },
+          "template": {
+            "type": "string",
+            "description": "Sólo con type 'sites'. El código de la página."
+          },
+          "metrics": {
+            "type": "array",
+            "description": "Sólo con type 'sites'."
+          },
+          "datasets_refs": {
+            "type": "array",
+            "description": "Sólo con type 'sites'."
+          },
+          "projection": {
+            "type": "array",
+            "description": "Sólo con type 'sites'."
+          },
+          "contract_version": {
+            "type": "string",
+            "description": "Sólo con type 'sites'."
           },
           "if_match": {
+            "type": "string"
+          },
+          "change_note": {
             "type": "string"
           },
           "confirm": {
@@ -2394,12 +2498,16 @@
           "user_request_quote": {
             "type": "string",
             "description": "La orden de la persona para este cambio, con sus palabras textuales copiadas de la conversación."
+          },
+          "run_id": {
+            "type": "string",
+            "description": "Opcional. La ejecución de esta llamada; omítelo para seguir la abierta y manda \"new\" para abrir otra."
           }
         },
         "required": [
           "connector",
-          "name",
-          "spec"
+          "type",
+          "name"
         ],
         "additionalProperties": false
       },
@@ -2411,8 +2519,8 @@
       }
     },
     {
-      "name": "upsert_custom_dashboard",
-      "description": "[Escribe] Crea o edita un tablero en código (HTML) dentro del catálogo de Datalum. Nace en propuesto y lo activa una persona. Sin `confirm: true` sólo previsualiza. Lleva la orden textual de la persona en `user_request_quote`.",
+      "name": "test_artifact",
+      "description": "[Escribe] Prueba un artefacto del catálogo de Datalum por su nombre en `artifact`. Sin `confirm: true` sólo previsualiza. Lleva la orden textual de la persona en `user_request_quote`.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -2420,22 +2528,18 @@
             "type": "string",
             "description": "Slug del conector."
           },
-          "name": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "dashboard",
+              "sites"
+            ],
+            "description": "El tipo del artefacto: 'dashboard', gráficas en mosaicos con sus filtros, o 'sites', una página en código."
+          },
+          "artifact": {
             "type": "string"
           },
-          "template": {
-            "type": "string"
-          },
-          "datasets_refs": {
-            "type": "array"
-          },
-          "projection": {
-            "type": "array"
-          },
-          "queries": {
-            "type": "array"
-          },
-          "contract_version": {
+          "version_id": {
             "type": "string"
           },
           "if_match": {
@@ -2452,12 +2556,71 @@
           "user_request_quote": {
             "type": "string",
             "description": "La orden de la persona para este cambio, con sus palabras textuales copiadas de la conversación."
+          },
+          "run_id": {
+            "type": "string",
+            "description": "Opcional. La ejecución de esta llamada; omítelo para seguir la abierta y manda \"new\" para abrir otra."
           }
         },
         "required": [
           "connector",
-          "name",
-          "template"
+          "type",
+          "artifact"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "save_artifact_edit",
+      "description": "[Escribe] Guarda como versión el borrador de trabajo de un Dashboard. Sin `confirm: true` sólo previsualiza. Lleva la orden textual de la persona en `user_request_quote`.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "connector": {
+            "type": "string",
+            "description": "Slug del conector."
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "dashboard",
+              "sites"
+            ],
+            "description": "El tipo del artefacto: 'dashboard', gráficas en mosaicos con sus filtros, o 'sites', una página en código."
+          },
+          "artifact": {
+            "type": "string"
+          },
+          "change_note": {
+            "type": "string"
+          },
+          "confirm": {
+            "type": "boolean",
+            "description": "Con true aplica; sin él sólo previsualiza."
+          },
+          "selection_context": {
+            "type": "string",
+            "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
+          },
+          "user_request_quote": {
+            "type": "string",
+            "description": "La orden de la persona para este cambio, con sus palabras textuales copiadas de la conversación."
+          },
+          "run_id": {
+            "type": "string",
+            "description": "Opcional. La ejecución de esta llamada; omítelo para seguir la abierta y manda \"new\" para abrir otra."
+          }
+        },
+        "required": [
+          "connector",
+          "type",
+          "artifact"
         ],
         "additionalProperties": false
       },

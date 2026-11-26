@@ -112,3 +112,20 @@ test('las gráficas y los tableros ya no se niegan: pasan por las mismas reglas 
   policy.postToolUse(state, 'upsert_dashboard', dashboard, { preview: true }, { now: T0 + 11000 }, FACTS);
   assert.equal(pre(state, 'upsert_dashboard', apply, 12000).decision, 'pass');
 });
+
+test('un artefacto pasa por las mismas reglas: sin vista previa se niega y con ella pasa', () => {
+  const state = sealed();
+  const sites = { connector: 'principal', type: 'sites', name: 'ventas_por_region', template: '<main></main>', user_request_quote: 'arma la página de ventas' };
+  const apply = Object.assign({ confirm: true }, sites);
+  const denied = pre(state, 'upsert_artifact', apply);
+  assert.equal(denied.decision, 'deny');
+  assert.match(denied.reason, /preview first/);
+  policy.postToolUse(state, 'upsert_artifact', sites, { preview: true }, { now: T0 + 11000 }, FACTS);
+  assert.equal(pre(state, 'upsert_artifact', apply, 12000).decision, 'pass');
+  // La vista previa de un Dashboard con el mismo nombre no vale para el Sites.
+  const other = sealed();
+  const { template, ...rest } = sites;
+  const dashboard = Object.assign(rest, { type: 'dashboard', spec: { tiles: [] } });
+  policy.postToolUse(other, 'upsert_artifact', dashboard, { preview: true }, { now: T0 + 11000 }, FACTS);
+  assert.equal(pre(other, 'upsert_artifact', apply, 12000).decision, 'deny');
+});
