@@ -1,0 +1,1 @@
+{"contract": {"contract_version": "v3", "data": "La página abre sin datos y pide sus fuentes con VINDEN_QUERY; cada fuente llega por su id con sus columnas y su meta.", "limits": {"template_bytes": 5242880, "metrics": 20, "rows_per_source": 1000}}, "examples": []}

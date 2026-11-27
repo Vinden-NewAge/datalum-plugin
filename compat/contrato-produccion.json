@@ -196,7 +196,7 @@
       ]
     },
     {
-      "h": "54819bb27e3995f6e36744ea770b7b9f5560d48fd599e885d54a6e2406feeab1",
+      "h": "d70bf5329527821554f79d1d22dcd47a28ce57ab13a3f9f33f02157c0d629787",
       "n": "brain_write",
       "p": [
         "body_md",
@@ -508,11 +508,12 @@
       ]
     },
     {
-      "h": "af56accd26cc9cfba35a6dd30edd288e350cf6601f1b6cfd6435f3501408d889",
+      "h": "1bc9a30c30f13313c9571f10f5cfe682684761ab95acd8bae0eaacfe8b806682",
       "n": "get_artifact",
       "p": [
         "artifact",
         "connector",
+        "draft",
         "list_after",
         "mode",
         "queries_from",
@@ -527,6 +528,16 @@
         "connector",
         "type"
       ]
+    },
+    {
+      "h": "38a2443ffd0d29e59720ae892627deeccde698571ee43342ba68be88aca43be9",
+      "n": "get_artifact_kit",
+      "p": [
+        "fonts",
+        "run_id",
+        "selection_context"
+      ],
+      "r": []
     },
     {
       "h": "15cce61f1dd0dca89eddc446cac4a84cd83bfac8a8e6c7458573eefb2108ddfb",
@@ -875,7 +886,7 @@
       ]
     },
     {
-      "h": "2ce44982e5c24b14e4333d560d09b67876aecafea13da39d888ebec24ac04486",
+      "h": "d47baf798dad12ffbb76a9cbf271590b88f57eaec3d2ccf4850d073816cade59",
       "n": "propose_metric",
       "p": [
         "aggregation",
@@ -981,7 +992,7 @@
       ]
     },
     {
-      "h": "83da7c96ee6c1bb1b402ee9ea16a5f922a0026369875d0a928b399141e8477a6",
+      "h": "cf6d351eb28eebe01ab0a52d89036091b01e54670cd5a6aff9e3052ef345b57c",
       "n": "remember",
       "p": [
         "body_md",
@@ -1075,7 +1086,7 @@
       ]
     },
     {
-      "h": "86d9b2c269313fc0e4a48d95f86f18cf41dc787bc6bf0a9a8d530954dced5822",
+      "h": "ab40667a5b7551505c3c7bbe0763412e1c066fe3fd490484e0021401f85be87e",
       "n": "run_artifact",
       "p": [
         "active_version",
@@ -1086,7 +1097,8 @@
         "run_id",
         "selection_context",
         "tile",
-        "type"
+        "type",
+        "version"
       ],
       "r": [
         "artifact",
@@ -1161,7 +1173,7 @@
       ]
     },
     {
-      "h": "e6dc0fa7f13a68ea9867ba233aafefb8f66fec42734f6fcb288433c2b79425dc",
+      "h": "e35a79415e68519d75418f8c1e548e09cf2dc0619061c81e2c35392c126ff415",
       "n": "run_workflow",
       "p": [
         "inputs",
@@ -1173,7 +1185,7 @@
       "r": []
     },
     {
-      "h": "c77bc2f49289d50895421143e2a01b16146449da952d7a93bd1c148e6d23c4f4",
+      "h": "d0060f1ea5dd3cc43bf4cc7a39b0489d759617cfca90246175cc1d7d5cde7173",
       "n": "save_artifact_edit",
       "p": [
         "artifact",
@@ -1181,6 +1193,7 @@
         "change_summary",
         "confirm",
         "connector",
+        "if_match",
         "run_id",
         "selection_context",
         "type",
@@ -1193,7 +1206,7 @@
       ]
     },
     {
-      "h": "5cc7d0b0feac44402aa87a71b57e093cbb7dd9695259d560b87f5e824f7166a0",
+      "h": "f49e76f012b14b2331258fba5b9cb38a8e9b8197ab21c41295d72c0f4ef7ae67",
       "n": "save_chart_edit",
       "p": [
         "change_note",
@@ -1320,13 +1333,14 @@
       ]
     },
     {
-      "h": "c973aa2bf9e17c548b6923cc03d01899c76fbbcf94e3fedb941d04b3993b7df7",
+      "h": "ff7d394475fd1062a2a167d89c1d953d771e93022ba70b26ec5ec541bd7e922e",
       "n": "test_artifact",
       "p": [
         "artifact",
         "confirm",
         "connector",
         "if_match",
+        "requests",
         "run_id",
         "selection_context",
         "type",
@@ -1436,7 +1450,7 @@
       ]
     },
     {
-      "h": "9dab52939d8bb6ca0559871a160d60976bd90a58a3ad483cf247a97fbf2ee027",
+      "h": "5eac70fb8118874b81fa367db1e5a032e039b5b3a59156721de679d5ffa3999c",
       "n": "upsert_artifact",
       "p": [
         "business_definition",
@@ -1445,6 +1459,7 @@
         "connector",
         "contract_version",
         "datasets_refs",
+        "edits",
         "if_match",
         "metrics",
         "name",
@@ -1453,6 +1468,7 @@
         "selection_context",
         "spec",
         "template",
+        "template_offset",
         "type",
         "user_request_quote"
       ],
@@ -1463,7 +1479,7 @@
       ]
     },
     {
-      "h": "2fe846456d890a3972ee61a4d3c9d23019fc23d5255e637213e3f8c2ffe601b1",
+      "h": "8d86e1e96d5554c8cc0246242e0fb405519bb2b4b5c09c0b6aef991965a8873c",
       "n": "upsert_chart",
       "p": [
         "business_definition",
@@ -1641,7 +1657,7 @@
       ]
     }
   ],
-  "huella": "8993c879d15c25eb053b1285a7cdc9fc6015cdd2774176700033ada5d5dc4fb8",
+  "huella": "fccc68e683f0cc84c1a18ba540035f05b4184397d894a29df408ec8ee9949e5b",
   "instrucciones_sha256": "20fb1c516393df92e3c9c50de7c531844ce9134d86d4028f9a32af94cc5bc3c8",
   "protocolo": "2025-06-18"
 }

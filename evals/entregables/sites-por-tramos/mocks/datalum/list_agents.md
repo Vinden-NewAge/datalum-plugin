@@ -1,0 +1,1 @@
+{"agents": [{"agentId": "ag_publicador", "name": "Publicador", "tagline": "Páginas publicadas en Datalum", "family": "creativo", "status": "activo", "version": 2}], "message": "Tienes un agente («Publicador»). Dile a la persona cuál es y actívalo con use_agent."}

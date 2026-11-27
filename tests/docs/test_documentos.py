@@ -70,8 +70,9 @@ class LaSkill(unittest.TestCase):
         # al día con v2.297.0, dice dónde viene el tamaño y que sin sesión no hay herramientas
         # sin pasar de 299. La revisión suma dos líneas: hacer la llamada que propone un
         # rechazo, también al soltar el agente, y decir lo que el conector no terminó de
-        # leer: 301, y el tope queda justo encima.
-        self.assertLess(len(SKILL.splitlines()), 302, "la Skill dejó de ser corta")
+        # leer: 301. La 4.4.0 añade el camino del Sites que el procedimiento pide publicar
+        # en Datalum: 312, y el tope queda justo encima.
+        self.assertLess(len(SKILL.splitlines()), 313, "la Skill dejó de ser corta")
 
     def test_los_entregables_siguen_al_cerebro_del_agente(self):
         self.assertIn(flat("Deliverables follow the brain too"), flat(SKILL))
