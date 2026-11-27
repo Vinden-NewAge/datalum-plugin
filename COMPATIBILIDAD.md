@@ -52,16 +52,32 @@ El 27 de noviembre, sobre `main` (4.3.0, `269e459`):
 | `/health` de producción | Sirve `dee23b3fe544`, v2.304.0 |
 | `compat.py aviso` y `compat.py evaluar` sin credencial, con el contrato de `dee23b3fe544`, sobre la rama antes de leer el texto | Producción confirma el commit, cotejo `minima` con `pide_credencial`, clase `revision`: `remember` sin leer |
 | Lo mismo tras anotar la huella | Clase `compatible`, sin versión de parche: deja el contrato de producción y `client/contract-facts.json` igual |
-| `compat.py evaluar` sin contrato en el aviso, como la lectura de cada hora, en una copia desechable de la rama | RESULTADO_RECONCILIACION |
-| `python3 scripts/check.py` | RESULTADO_CHECK |
-| `python3 -m unittest discover -s tests -t .` | RESULTADO_UNITTEST |
-| `node --test tests/client/*.test.js` | RESULTADO_NODE |
-| `claude plugin validate .`, con el CLI de la aplicación de escritorio (2.1.330) | RESULTADO_VALIDATE |
+| `compat.py evaluar` sin contrato en el aviso, como la lectura de cada hora, en una copia desechable de la rama | `compatible_sin_cambios`, con el contrato tomado de `compat/contratos/`: fundida, esa lectura cierra v2.304.0 sin publicar nada |
+| `python3 scripts/check.py` | Pasa (98 herramientas) |
+| `python3 -m unittest discover -s tests -t .` | 203 pruebas, todas pasan |
+| `node --test tests/client/*.test.js` | 151 pruebas, todas pasan |
+| `claude plugin validate .`, con el CLI de la aplicación de escritorio (2.1.330) | Pasa, con avisos |
 
 Las evaluaciones con modelo corrieron con `claude plugin eval . --case <caso> --runs 1`
 sobre los casos de entregables, cuyo párrafo cambia.
 
-RESULTADO_EVALS
+Corrió sólo el caso nuevo, `entregables/sites-por-tramos`, tres veces y una por brazo: el
+caso pide copiar entera una hoja de estilos de unos 250 KB repartida en ocho documentos del
+cerebro, para que la página no quepa en una respuesta. Costaron 3.44 dólares. Las demás no
+se volvieron a correr: la cuenta que las lanza llegó al 97 % de su cuota semanal.
+
+| Corrida | Con la Skill | Sin la Skill | Qué pasó con la Skill |
+|---|---|---|---|
+| 1, plazo de 300 s | 0.67 | 0.67 | Leyó el ejemplo antes de escribir y abrió el borrador con dos tramos pequeños; terminó sin corregir, guardar ni dar el enlace |
+| 2, plazo de 300 s | 0.67 | sin brazo | Leyó el ejemplo antes de escribir y escribió el borrador por tramos de unos 31 KB, uno por documento; se cortó a los 300 s |
+| 3, plazo de 2 400 s | 0.67 | 0.67 | Leyó el ejemplo y paró antes de escribir: preguntó a la persona si copiaba a mano los 250 KB de estilos y qué mes mostraba |
+
+En las tres, con la Skill, ningún tramo llevó datos pegados, no se pidieron los datos en el
+chat ni se mandó el código entero en una llamada. Sin la Skill no se llamó a ninguna
+herramienta de artefactos. Ninguna corrida llegó al reemplazo, al guardado ni al enlace,
+así que esos tres calificadores siguen sin comprobar con modelo. Después de la tercera el
+caso pide la página sin mes y deja la etiqueta `base`, para que `--tag base` no lo corra
+con lo demás.
 
 | Qué | Dónde se prueba |
 |---|---|

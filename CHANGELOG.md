@@ -27,7 +27,8 @@ Datalum, la Skill la publica como Sites y entrega su enlace. Sube el número men
 - Caso nuevo de evaluación, `entregables/sites-por-tramos`: un cerebro que pide un Sites de
   unos 250 KB a partir de un ejemplo de Datalum. Se mide que lee el ejemplo antes de
   publicar, que escribe por tramos, que corrige con un reemplazo sin reemitir el código,
-  que guarda con vista previa y que entrega el enlace.
+  que guarda con vista previa y que entrega el enlace. En sus tres primeras corridas no
+  llegó a corregir ni a guardar; el detalle está en `COMPATIBILIDAD.md`.
 
 ### Servidor
 
