@@ -4,6 +4,77 @@ Qué versión del plugin se comprobó contra qué, y cómo. «Comprobado» quier
 algo se ejecutó y dio ese resultado. Lo que sólo consta en la documentación de un
 producto se marca «Sin comprobar».
 
+## Versión 4.4.0
+
+Preparada el 27 de noviembre de 2026 con Datalum v2.304.0 (commit `dee23b3fe544`), que
+producción sirve ese día según su `/health`. Es la liberación del borrador del Sites: un
+Sites se escribe por tramos y se corrige por reemplazos, y su contrato se lee con
+`get_artifact_kit`. La Skill publica el Sites cuando el procedimiento del agente lo pide,
+así que sube el número menor. Los controles del cliente y el cotejo de cada despliegue son
+los de la 4.3.0.
+
+Entre v2.301.0 y v2.304.0 producción pasó por cuatro versiones, y la lectura de cada hora
+las anotó como `contrato_no_disponible`. Ninguna quita una herramienta o un argumento que
+el plugin usa, ni vuelve obligatorio uno nuevo. Con los requisitos de la 4.3.0 todas dan
+`revision_requerida`: cambia la definición de `remember` en v2.302.0.
+
+### De v2.302.0 a v2.304.0
+
+Los contratos se armaron del código de cada commit con el método de la 3.0.0, el 27 de
+noviembre. La sonda sobre `3126db756aba` (v2.301.0) da el contrato guardado
+(`8993c879d15c`), huella por huella: el método sigue valiendo. «Con la 4.3.0» y «con la
+4.4.0» son lo que da `contract.compare` con los requisitos de cada versión.
+
+| Versión | Commit | Contrato, herramientas | Instrucciones | Usadas que cambian | Con la 4.3.0 | Con la 4.4.0 |
+|---|---|---|---|---|---|---|
+| v2.302.0 | `70300e3fd347` | `dafb8a2d6d3c`, 97 | `20fb1c516393` | `remember` | revision | compatible |
+| v2.303.1 | `f0ebf75fe62c` | `447f447b1cb3`, 98 | `20fb1c516393` | — | revision | compatible |
+| v2.303.2 | `737c8a45acbb` | `447f447b1cb3`, 98 | `20fb1c516393` | — | revision | sin_cambios |
+| v2.304.0 | `dee23b3fe544` | `fccc68e683f0`, 98 | `20fb1c516393` | — | revision | compatible |
+
+| Qué cambió | En qué versión | Cómo | ¿Pide cambiar la Skill o `compat/requisitos.json`? |
+|---|---|---|---|
+| `remember` | v2.302.0 | `body_md` dice que el archivo entero, con la cabecera que compone la plataforma, no pasa de 4 000 caracteres, y lo declara con `maxLength`. Los argumentos no cambian | `compat/requisitos.json` sí: la huella entra en `definiciones_revisadas`. La Skill no: el tope lo dice el esquema y la forma la trae el cerebro |
+| `get_artifact_kit` | v2.303.1 | Herramienta nueva de lectura: el contrato de la página de un Sites y sus ejemplos de partida. La descripción de `upsert_artifact` manda leerlo antes de escribir | No. La Skill no la nombra |
+| El borrador del Sites | v2.304.0 | `upsert_artifact` acepta `template_offset` (un tramo del código) y `edits` (reemplazos), que escriben en el borrador sin `confirm`; `get_artifact` acepta `draft`; `save_artifact_edit` acepta `if_match` y guarda el borrador en una versión | Sí, la Skill: el camino del Sites cuando el procedimiento pide publicar la página en Datalum. El control del cliente no cambia: un tramo y un reemplazo son llamadas sin `confirm` y pasan; guardar con `confirm` pide su vista previa como cualquier cambio |
+
+`client/contract-facts.json` sale igual de `compat.py evaluar` sobre esta rama con el aviso
+de `dee23b3fe544`: `get_artifact_kit` no tiene destino (no pide `name` ni ningún argumento
+obligatorio), y las otras herramientas mantienen el suyo.
+
+### Qué se ejecutó
+
+El 27 de noviembre, sobre `main` (4.3.0, `269e459`):
+
+| Qué | Resultado |
+|---|---|
+| La sonda sobre los cinco commits de producción, de `3126db756aba` (v2.301.0) a `dee23b3fe544` (v2.304.0) | Las huellas de la tabla. El de v2.301.0 sale igual que el guardado |
+| `/health` de producción | Sirve `dee23b3fe544`, v2.304.0 |
+| `compat.py aviso` y `compat.py evaluar` sin credencial, con el contrato de `dee23b3fe544`, sobre la rama antes de leer el texto | Producción confirma el commit, cotejo `minima` con `pide_credencial`, clase `revision`: `remember` sin leer |
+| Lo mismo tras anotar la huella | Clase `compatible`, sin versión de parche: deja el contrato de producción y `client/contract-facts.json` igual |
+| `compat.py evaluar` sin contrato en el aviso, como la lectura de cada hora, en una copia desechable de la rama | RESULTADO_RECONCILIACION |
+| `python3 scripts/check.py` | RESULTADO_CHECK |
+| `python3 -m unittest discover -s tests -t .` | RESULTADO_UNITTEST |
+| `node --test tests/client/*.test.js` | RESULTADO_NODE |
+| `claude plugin validate .`, con el CLI de la aplicación de escritorio (2.1.330) | RESULTADO_VALIDATE |
+
+Las evaluaciones con modelo corrieron con `claude plugin eval . --case <caso> --runs 1`
+sobre los casos de entregables, cuyo párrafo cambia.
+
+RESULTADO_EVALS
+
+| Qué | Dónde se prueba |
+|---|---|
+| Producción es v2.304.0, su texto está leído y los derivados son los suyos | `LaVersion304` en `tests/compat/test_automation.py` |
+| Un rollback a cualquiera de las cuatro no pide revisión; sin la huella de `remember` v2.302.0 la pide | El mismo |
+| `get_artifact_kit` entra en v2.303.1 y v2.304.0 escribe el Sites por tramos y reemplazos | El mismo |
+| La Skill publica el Sites cuando el procedimiento lo pide, conserva que los entregables siguen al cerebro y no nombra ninguna herramienta de artefactos ni la del contrato | `LaVersion440` en `tests/docs/test_documentos.py` |
+| El caso nuevo tiene el kit entre sus dobles y el catálogo simulado trae los argumentos del borrador | El mismo |
+| Un tramo y un reemplazo pasan sin vista previa, y guardar con `confirm` sin vista previa se niega | `tests/client/la-orden-de-la-persona.test.js` |
+
+Sin comprobar: el catálogo completo que sirve producción a una conexión con sesión, porque
+sigue sin haber credencial de lectura; el contrato sale del código de cada commit.
+
 ## Versión 4.3.0
 
 Preparada el 25 de noviembre de 2026 con Datalum v2.301.0 (commit `3126db756aba`), que
@@ -1167,6 +1238,7 @@ Lo que no se ejecutó:
 | Herramienta retirada | `sesion/herramienta-retirada` | Herramienta retirada | |
 | Reintentos y límite de recuperación | `sesion/reintentos-con-limite` | Límite de tres fallos | |
 | Dashboard HTML externo | `entregables/tablero-html-externo` | | Entregables por el cerebro |
+| Sites publicado en Datalum por tramos | `entregables/sites-por-tramos` | Un tramo y un reemplazo pasan sin vista previa; guardar con `confirm` sin ella se niega | El camino del Sites |
 | Anfitrión sin capacidades para el entregable | `entregables/anfitrion-sin-archivos` | | Entregables por el cerebro |
 | Reanudación después de perder contexto | `memoria/retoma-el-avance`, en una conversación nueva | Estado devuelto tras compactar | |
 | Respuestas sin detalles internos | El calificador `sin-detalles-internos`, en todos los casos | | Regla de respuestas |
