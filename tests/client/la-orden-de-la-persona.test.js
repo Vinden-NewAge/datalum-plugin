@@ -129,3 +129,31 @@ test('un artefacto pasa por las mismas reglas: sin vista previa se niega y con e
   policy.postToolUse(other, 'upsert_artifact', dashboard, { preview: true }, { now: T0 + 11000 }, FACTS);
   assert.equal(pre(other, 'upsert_artifact', apply, 12000).decision, 'deny');
 });
+
+// La 4.4.0 y Datalum v2.304.0: un Sites que no cabe en una respuesta se escribe en su
+// borrador por tramos (`template_offset`) y se corrige con reemplazos (`edits`), los dos
+// sin `confirm`; sólo guardar el borrador en una versión pide vista previa.
+test('un tramo y un reemplazo del Sites pasan sin vista previa; guardarlo con confirm sin ella se niega', () => {
+  const state = sealed();
+  const quote = 'publica la página de ventas por región';
+  const base = { connector: 'principal', type: 'sites', name: 'ventas_por_region', user_request_quote: quote };
+  const first = Object.assign({ template: '<main>'.padEnd(1024, ' '), template_offset: 0 }, base);
+  const tramo = pre(state, 'upsert_artifact', first);
+  assert.equal(tramo.decision, 'pass', 'el primer tramo no pide vista previa');
+  policy.postToolUse(state, 'upsert_artifact', first, { next_offset: 1024, version_token: 'vt-1', bytes: 1024, sha256: 'a'.repeat(64) }, { now: T0 + 11000 }, FACTS);
+  const second = Object.assign({ template: '</main>', template_offset: 1024, if_match: 'vt-1' }, base);
+  assert.equal(pre(state, 'upsert_artifact', second, 12000).decision, 'pass', 'el siguiente tramo tampoco');
+  policy.postToolUse(state, 'upsert_artifact', second, { next_offset: 1031, version_token: 'vt-2', bytes: 1031, sha256: 'b'.repeat(64) }, { now: T0 + 13000 }, FACTS);
+  const fix = Object.assign({ edits: [{ old: '<main>', new: '<main class="ventas">' }], if_match: 'vt-2' }, base);
+  assert.equal(pre(state, 'upsert_artifact', fix, 14000).decision, 'pass', 'el reemplazo tampoco');
+  policy.postToolUse(state, 'upsert_artifact', fix, { version_token: 'vt-3', bytes: 1046, sha256: 'c'.repeat(64) }, { now: T0 + 15000 }, FACTS);
+
+  const save = { connector: 'principal', type: 'sites', artifact: 'ventas_por_region', if_match: 'vt-3', user_request_quote: quote };
+  const apply = Object.assign({ confirm: true }, save);
+  const denied = pre(state, 'save_artifact_edit', apply, 16000);
+  assert.equal(denied.decision, 'deny', 'guardar con confirm sin vista previa se niega, aunque haya tramos');
+  assert.match(denied.reason, /preview first/);
+  assert.equal(pre(state, 'save_artifact_edit', save, 17000).decision, 'pass', 'la vista previa de guardar pasa');
+  policy.postToolUse(state, 'save_artifact_edit', save, { preview: true }, { now: T0 + 18000 }, FACTS);
+  assert.equal(pre(state, 'save_artifact_edit', apply, 19000).decision, 'pass', 'con su vista previa, guardar pasa');
+});
