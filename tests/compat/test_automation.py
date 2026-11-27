@@ -1050,10 +1050,10 @@ class LaVersion301(unittest.TestCase):
     def stored(self, commit: str) -> dict:
         return contract.validate(self.load(f"compat/contratos/{commit}.json"))
 
-    def test_produccion_es_v2_301_0_y_sus_textos_estan_revisados(self):
-        summary = contract.validate(self.load("compat/contrato-produccion.json"))
-        self.assertEqual(summary, self.stored("3126db756aba"))
-        comparison = contract.compare(summary, self.load("compat/requisitos.json"), current_facts=self.load("client/contract-facts.json"))
+    def test_v2_301_0_y_sus_textos_estan_revisados(self):
+        """Desde la 4.4.0 producción es v2.304.0 (`LaVersion304`); v2.301.0 da los mismos
+        derivados, así que un rollback a ella no publica nada."""
+        comparison = contract.compare(self.stored("3126db756aba"), self.load("compat/requisitos.json"), current_facts=self.load("client/contract-facts.json"))
         self.assertEqual(comparison["incompatible"] + comparison["revision"], [])
         self.assertFalse(comparison["derivados_cambian"])
 
@@ -1087,11 +1087,9 @@ class LaVersion301(unittest.TestCase):
 
     def test_sin_la_lectura_de_remember_v2_297_1_pide_revision(self):
         """Sin la huella leída de `remember`, el flujo para en v2.297.1 y las siguientes."""
+        leida = contract.by_name(self.stored("d024448ef60c"))["remember"]["h"]
         old = self.load("compat/requisitos.json")
-        old["definiciones_revisadas"] = {
-            name: hashes[:-1] if name == "remember" else hashes
-            for name, hashes in old["definiciones_revisadas"].items()
-        }
+        old["definiciones_revisadas"]["remember"] = [h for h in old["definiciones_revisadas"]["remember"] if h != leida]
         self.assertEqual(
             contract.compare(self.stored("d024448ef60c"), old)["revision"],
             ["la definición de `remember` cambió y nadie la ha leído contra la Skill"],
@@ -1099,6 +1097,83 @@ class LaVersion301(unittest.TestCase):
 
     def test_las_herramientas_que_usa_no_cambian_de_argumentos(self):
         anterior = contract.by_name(self.stored("6cfe471036cc"))
+        for version, commit in self.VERSIONES:
+            nuevo = contract.by_name(self.stored(commit))
+            for name in self.USA:
+                self.assertEqual(nuevo[name]["p"], anterior[name]["p"], f"{version} {name}")
+                self.assertEqual(nuevo[name]["r"], anterior[name]["r"], f"{version} {name}")
+
+
+class LaVersion304(unittest.TestCase):
+    """Producción pasó de v2.301.0 a v2.304.0 por cuatro versiones sin contrato. v2.302.0
+    pone tope al cuerpo de `remember` (4 000 caracteres con la cabecera). v2.303.1 suma
+    `get_artifact_kit`, el contrato de la página de un Sites. v2.304.0 escribe un Sites en
+    su borrador por tramos (`template_offset`) y por reemplazos (`edits`), los dos sin
+    `confirm`, y lo guarda en una versión con `if_match`. Ninguna cambia los argumentos de
+    lo que el plugin usa ni sus instrucciones."""
+
+    ROOT = Path(__file__).resolve().parents[2]
+    VERSIONES = (
+        ("v2.302.0", "70300e3fd347"),
+        ("v2.303.1", "f0ebf75fe62c"),
+        ("v2.303.2", "737c8a45acbb"),
+        ("v2.304.0", "dee23b3fe544"),
+    )
+    USA = ElArranquePorPartes.USA
+
+    def load(self, relative: str) -> dict:
+        return json.loads((self.ROOT / relative).read_text(encoding="utf-8"))
+
+    def stored(self, commit: str) -> dict:
+        return contract.validate(self.load(f"compat/contratos/{commit}.json"))
+
+    def test_produccion_es_v2_304_0_y_sus_textos_estan_revisados(self):
+        summary = contract.validate(self.load("compat/contrato-produccion.json"))
+        self.assertEqual(summary, self.stored("dee23b3fe544"))
+        comparison = contract.compare(summary, self.load("compat/requisitos.json"), current_facts=self.load("client/contract-facts.json"))
+        self.assertEqual(comparison["incompatible"] + comparison["revision"], [])
+        self.assertFalse(comparison["derivados_cambian"])
+
+    def test_un_rollback_a_cualquiera_de_las_cuatro_no_pide_revision(self):
+        requirements = self.load("compat/requisitos.json")
+        for version, commit in self.VERSIONES:
+            comparison = contract.compare(self.stored(commit), requirements)
+            self.assertEqual(comparison["incompatible"] + comparison["revision"], [], version)
+
+    def test_sin_la_lectura_de_remember_v2_302_0_pide_revision(self):
+        """Sin la huella leída de `remember` de v2.302.0, el flujo para en las cuatro."""
+        nueva = contract.by_name(self.stored("70300e3fd347"))["remember"]["h"]
+        old = self.load("compat/requisitos.json")
+        self.assertIn(nueva, old["definiciones_revisadas"]["remember"])
+        old["definiciones_revisadas"]["remember"] = [h for h in old["definiciones_revisadas"]["remember"] if h != nueva]
+        for version, commit in self.VERSIONES:
+            self.assertEqual(
+                contract.compare(self.stored(commit), old)["revision"],
+                ["la definición de `remember` cambió y nadie la ha leído contra la Skill"],
+                version,
+            )
+
+    def test_get_artifact_kit_entra_en_v2_303_1(self):
+        self.assertNotIn("get_artifact_kit", contract.by_name(self.stored("70300e3fd347")))
+        for version, commit in self.VERSIONES[1:]:
+            names = contract.by_name(self.stored(commit))
+            self.assertIn("get_artifact_kit", names, version)
+            self.assertEqual(len(names), 98, version)
+
+    def test_v2_304_0_escribe_el_sites_por_tramos_y_reemplazos(self):
+        names = contract.by_name(self.stored("dee23b3fe544"))
+        self.assertTrue({"template_offset", "edits", "if_match"} <= set(names["upsert_artifact"]["p"]))
+        self.assertIn("if_match", names["save_artifact_edit"]["p"])
+        antes = contract.by_name(self.stored("737c8a45acbb"))
+        self.assertNotIn("edits", antes["upsert_artifact"]["p"])
+        self.assertNotIn("if_match", antes["save_artifact_edit"]["p"])
+
+    def test_las_instrucciones_son_las_de_v2_301_0_en_las_cuatro(self):
+        for version, commit in self.VERSIONES:
+            self.assertEqual(self.stored(commit)["instrucciones_sha256"][:12], "20fb1c516393", version)
+
+    def test_las_herramientas_que_usa_no_cambian_de_argumentos(self):
+        anterior = contract.by_name(self.stored("3126db756aba"))
         for version, commit in self.VERSIONES:
             nuevo = contract.by_name(self.stored(commit))
             for name in self.USA:

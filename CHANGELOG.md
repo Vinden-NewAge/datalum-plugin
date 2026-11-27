@@ -4,6 +4,58 @@ Cada versión del plugin de Datalum dice qué cambia para quien usa la Skill, co
 versión del servidor se comprobó y qué hay que hacer para recibirla. La más reciente va
 primero.
 
+## [4.4.0] - 2026-11-27
+
+Frente a la 4.3.0 cambia la Skill. Desde Datalum v2.304.0 un Sites se escribe en su
+borrador por tramos y se corrige por reemplazos, y desde v2.303.1 su contrato se lee con
+su propia herramienta. Cuando el procedimiento del agente pide la página publicada en
+Datalum, la Skill la publica como Sites y entrega su enlace. Sube el número menor.
+
+### Añadido
+
+- El camino del Sites. Si el procedimiento del agente dice que la página se publica en
+  Datalum, el asistente la publica como Sites con las herramientas de artefactos de
+  Datalum, nunca con las de artefactos o de archivos de la aplicación. Manda el código
+  entero en una llamada si cabe en una respuesta; si no, lo escribe en su borrador por
+  tramos (`template_offset`), cada uno desde el `next_offset` del anterior. Lo corrige
+  reemplazando sólo lo que cambia (`edits`) con el último `version_token` en `if_match`,
+  sin volver a mandar el código entero. Guardar el borrador en una versión pasa por la
+  vista previa como cualquier cambio. No pega datos ni librerías en el código, no pide
+  los datos a la persona en el chat y le entrega la `url` de la página guardada.
+- Lo demás de los entregables no cambia: si el procedimiento dice que se entregan como
+  archivo HTML hecho con la aplicación, el asistente hace ese archivo.
+- Caso nuevo de evaluación, `entregables/sites-por-tramos`: un cerebro que pide un Sites de
+  unos 250 KB a partir de un ejemplo de Datalum. Se mide que lee el ejemplo antes de
+  publicar, que escribe por tramos, que corrige con un reemplazo sin reemitir el código,
+  que guarda con vista previa y que entrega el enlace. En sus tres primeras corridas no
+  llegó a corregir ni a guardar; el detalle está en `COMPATIBILIDAD.md`.
+
+### Servidor
+
+- Comprobada con Datalum v2.304.0, commit `dee23b3fe544`, que producción sirve el 27 de
+  noviembre. La lista pasa de 97 a 98 herramientas: entra `get_artifact_kit` en v2.303.1.
+  En v2.304.0 `upsert_artifact` acepta `template_offset` y `edits`, que escriben en el
+  borrador sin `confirm`, y `save_artifact_edit` acepta `if_match`. La Skill no nombra
+  ninguna herramienta de artefactos: la del contrato la nombra la descripción de
+  `upsert_artifact`.
+- La definición de `remember` cambió en v2.302.0: el archivo entero, con su cabecera, no
+  pasa de 4 000 caracteres. Su huella está leída en `compat/requisitos.json`. Las
+  instrucciones del servidor no cambian desde v2.301.0.
+- Las cuatro versiones de v2.302.0 a v2.304.0 salen `compatible` o `sin_cambios` con esta
+  versión. `compat/contratos/` guarda sus contratos.
+- El código de los controles del cliente es el de la 4.3.0. Un tramo y un reemplazo pasan
+  sin vista previa, y guardar con `confirm` sin la suya se niega; lo prueba
+  `tests/client/la-orden-de-la-persona.test.js`. `client/contract-facts.json` sale igual
+  al derivarlo del contrato de v2.304.0.
+- El detalle está en `COMPATIBILIDAD.md`.
+
+### Para recibirla
+
+Lo de siempre, según la aplicación: `ACTUALIZAR.md`. En ChatGPT, quien administra el
+conector tiene que actualizarlo para que la lista guardada traiga `get_artifact_kit` y los
+argumentos nuevos de `upsert_artifact` y `save_artifact_edit`. Una conversación abierta
+sigue con la Skill que cargó hasta que se recarga.
+
 ## [4.3.0] - 2026-11-25
 
 Frente a la 4.2.0 cambia la Skill. Desde Datalum v2.301.0 los tableros se llaman

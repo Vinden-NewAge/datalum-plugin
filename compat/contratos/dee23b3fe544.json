@@ -1,0 +1,1663 @@
+{
+  "esquema": 1,
+  "herramientas": [
+    {
+      "h": "27983409c46d256bf72e8b3d399b2ad2b743ebea7c6c2323b23b9a67732de40a",
+      "n": "add_agent_document",
+      "p": [
+        "agentId",
+        "body",
+        "description",
+        "kind",
+        "run_id",
+        "selection_context",
+        "title",
+        "user_request_quote"
+      ],
+      "r": [
+        "agentId",
+        "body",
+        "description",
+        "kind",
+        "title",
+        "user_request_quote"
+      ]
+    },
+    {
+      "h": "4297dba8127d1d9d6c70db1c46e376c989d8793b44be6f2dcbe028ed25c09de3",
+      "n": "apply_batch",
+      "p": [
+        "change_note",
+        "confirm",
+        "connector",
+        "cursor",
+        "document",
+        "format",
+        "operations",
+        "run_id",
+        "selection_context",
+        "user_request_quote"
+      ],
+      "r": [
+        "connector"
+      ]
+    },
+    {
+      "h": "4b1b9155c8806b6168dea5f9854f46141dab24615ebe955ef69696f1f1a7599e",
+      "n": "apply_solution_update",
+      "p": [
+        "confirm",
+        "run_id",
+        "selection_context",
+        "solution",
+        "user_request_quote"
+      ],
+      "r": [
+        "solution"
+      ]
+    },
+    {
+      "h": "ef4cf18d383ac8dee34134c44f5a43ec197c0b4ce8dc23320ff447cbdc9fddba",
+      "n": "attach_agent_document",
+      "p": [
+        "agentId",
+        "documentId",
+        "run_id",
+        "selection_context",
+        "sort",
+        "user_request_quote"
+      ],
+      "r": [
+        "agentId",
+        "documentId",
+        "user_request_quote"
+      ]
+    },
+    {
+      "h": "11eb0051145375c6b11f294fd63c45d84f0eae0e9a66a6c754f42c70480dc21f",
+      "n": "attach_draft_connector",
+      "p": [
+        "agentId",
+        "connector",
+        "run_id",
+        "selection_context",
+        "user_request_quote"
+      ],
+      "r": [
+        "agentId",
+        "connector",
+        "user_request_quote"
+      ]
+    },
+    {
+      "h": "f8742903e1a378037245673253e04ff6af7f809dc1ce029cfe2a4d210bcd448d",
+      "n": "attach_draft_document",
+      "p": [
+        "agentId",
+        "documentId",
+        "run_id",
+        "segment",
+        "selection_context",
+        "sort",
+        "user_request_quote"
+      ],
+      "r": [
+        "agentId",
+        "documentId",
+        "segment",
+        "user_request_quote"
+      ]
+    },
+    {
+      "h": "3b3d3ba0b065894ce6c320f98b3ed6b4de54a44300538004af8c35de75c8cb69",
+      "n": "brain_import",
+      "p": [
+        "files",
+        "run_id"
+      ],
+      "r": [
+        "files"
+      ]
+    },
+    {
+      "h": "b96466781b8a737e1df8a5db28f4edf4bf108a67a634b8b95bc5490691362be0",
+      "n": "brain_index",
+      "p": [
+        "connector",
+        "cursor",
+        "include_drafts",
+        "limit",
+        "locale",
+        "mode",
+        "path",
+        "run_id",
+        "selection_context",
+        "unit",
+        "version"
+      ],
+      "r": []
+    },
+    {
+      "h": "ac49b7f1e35e1646c416c70f4545b6ed4b38c0a1ba62904159921681d377609b",
+      "n": "brain_manifest",
+      "p": [
+        "connector",
+        "include_drafts",
+        "locale",
+        "mode",
+        "run_id",
+        "selection_context",
+        "unit",
+        "version"
+      ],
+      "r": [
+        "connector"
+      ]
+    },
+    {
+      "h": "d365e952a7d831432f57408b994026d7c469d7d57f565e209edabad99d573f4b",
+      "n": "brain_read",
+      "p": [
+        "concept_id",
+        "connector",
+        "include_drafts",
+        "locale",
+        "max_bytes",
+        "mode",
+        "offset",
+        "run_id",
+        "selection_context",
+        "unit",
+        "version"
+      ],
+      "r": [
+        "concept_id"
+      ]
+    },
+    {
+      "h": "496abfd2d59865ce65097a66967f84bbc81d4c95b448853f1196ce5a194ab07c",
+      "n": "brain_search",
+      "p": [
+        "connector",
+        "include_drafts",
+        "limit",
+        "locale",
+        "mode",
+        "q",
+        "run_id",
+        "selection_context",
+        "tag",
+        "type",
+        "unit",
+        "version"
+      ],
+      "r": [
+        "connector"
+      ]
+    },
+    {
+      "h": "d70bf5329527821554f79d1d22dcd47a28ce57ab13a3f9f33f02157c0d629787",
+      "n": "brain_write",
+      "p": [
+        "body_md",
+        "concept_id",
+        "documents",
+        "kind",
+        "run_id",
+        "scope",
+        "selection_context",
+        "tagline",
+        "title",
+        "user_request_quote"
+      ],
+      "r": [
+        "concept_id",
+        "title",
+        "user_request_quote"
+      ]
+    },
+    {
+      "h": "fc2399079774a48a0199e60616e9da4ceccc2c3bb9d83ba9653c50746d75b1a0",
+      "n": "cancel_run",
+      "p": [
+        "reason",
+        "run_id",
+        "selection_context"
+      ],
+      "r": []
+    },
+    {
+      "h": "bdd53c2c4ba63b2707d94dd7dda4936e017eff974fba698fcd1a10fdc28ab78a",
+      "n": "clone_agent",
+      "p": [
+        "name",
+        "run_id",
+        "selection_context",
+        "templateAgentId",
+        "user_request_quote"
+      ],
+      "r": [
+        "templateAgentId",
+        "user_request_quote"
+      ]
+    },
+    {
+      "h": "df60df4ec51fbc2b89735c9b5b54312ef173f3875fec391fb94c7686bda6e446",
+      "n": "compare_template",
+      "p": [
+        "connector",
+        "run_id",
+        "selection_context",
+        "template_id",
+        "version"
+      ],
+      "r": [
+        "connector",
+        "template_id"
+      ]
+    },
+    {
+      "h": "8b1ce9ae0f3610c0e5d4c204519ad8a3d777cf90c6ba3b54710d713017ba1944",
+      "n": "complete_run",
+      "p": [
+        "evidence",
+        "memory",
+        "run_id",
+        "selection_context",
+        "status",
+        "user_request_quote"
+      ],
+      "r": [
+        "status"
+      ]
+    },
+    {
+      "h": "305697685c5f810c052d8d928ef6b94e386d618fb5ff17a1e40be74ead67dea6",
+      "n": "curate_table",
+      "p": [
+        "compact",
+        "confirm",
+        "connector",
+        "run_id",
+        "selection_context",
+        "tables",
+        "user_request_quote"
+      ],
+      "r": [
+        "connector",
+        "tables"
+      ]
+    },
+    {
+      "h": "bf753eb0f444c259d4da5e78836cd0b8b2ce2aa3cdc1c412a74902df525d432c",
+      "n": "delete_my_memories",
+      "p": [
+        "confirm",
+        "run_id",
+        "selection_context",
+        "user_request_quote"
+      ],
+      "r": [
+        "confirm",
+        "user_request_quote"
+      ]
+    },
+    {
+      "h": "4c29778a710b0d12f65c9d5074d38cee6b6a2af85a2fd42c1d0115acf18ad6f6",
+      "n": "describe_connector",
+      "p": [
+        "confirm",
+        "connector",
+        "description",
+        "run_id",
+        "selection_context",
+        "time_zone",
+        "user_request_quote"
+      ],
+      "r": [
+        "connector"
+      ]
+    },
+    {
+      "h": "363e28fc169b43d754975abf16a13aeb63b2e9eb4bc91798856a5f76f8faf5e6",
+      "n": "describe_dataset_fields",
+      "p": [
+        "confirm",
+        "connector",
+        "dataset",
+        "fields",
+        "run_id",
+        "selection_context",
+        "user_request_quote"
+      ],
+      "r": [
+        "connector",
+        "dataset"
+      ]
+    },
+    {
+      "h": "44257f976951bf94522d421d13e2ae0bfc978e236b4232c15cd671d114468918",
+      "n": "describe_table",
+      "p": [
+        "connector",
+        "run_id",
+        "selection_context",
+        "table"
+      ],
+      "r": [
+        "connector",
+        "table"
+      ]
+    },
+    {
+      "h": "97f23873d762d410a28d532e98a6aa703f1fd6c972a7166733ec1feda8fb710a",
+      "n": "detach_agent_document",
+      "p": [
+        "agentId",
+        "documentId",
+        "run_id",
+        "selection_context",
+        "user_request_quote"
+      ],
+      "r": [
+        "agentId",
+        "documentId",
+        "user_request_quote"
+      ]
+    },
+    {
+      "h": "ef94d577d43edbb5b11c59af0d2180ff5597320e1aecd7e9c5542c96b836416b",
+      "n": "detach_draft_connector",
+      "p": [
+        "agentId",
+        "connector",
+        "run_id",
+        "selection_context",
+        "user_request_quote"
+      ],
+      "r": [
+        "agentId",
+        "connector",
+        "user_request_quote"
+      ]
+    },
+    {
+      "h": "81ac2b75923b56e92888ce1152c1217e6ff76d7d23b34ba0d71fddec0fac0ab6",
+      "n": "detach_draft_document",
+      "p": [
+        "agentId",
+        "documentId",
+        "run_id",
+        "selection_context",
+        "user_request_quote"
+      ],
+      "r": [
+        "agentId",
+        "documentId",
+        "user_request_quote"
+      ]
+    },
+    {
+      "h": "440c66d33d9e0ec82113eb18761ab9edeec18124c9d57949197008cb2782e95d",
+      "n": "edit_agent_profile",
+      "p": [
+        "agentId",
+        "herramientasRetiradas",
+        "icon",
+        "name",
+        "orchestrationMode",
+        "proposalsEnabled",
+        "recommendedModel",
+        "run_id",
+        "selection_context",
+        "tagline",
+        "user_request_quote"
+      ],
+      "r": [
+        "agentId",
+        "user_request_quote"
+      ]
+    },
+    {
+      "h": "0dfa97964ae3edf322874d3f18ec9349d9e75108252d0b9fc29757f833e0e11c",
+      "n": "edit_draft_agent",
+      "p": [
+        "agentId",
+        "icon",
+        "name",
+        "proposalsEnabled",
+        "run_id",
+        "selection_context",
+        "tagline",
+        "user_request_quote"
+      ],
+      "r": [
+        "agentId",
+        "user_request_quote"
+      ]
+    },
+    {
+      "h": "d41846a167535a4678c2eb3b5eecc5dd5230cba7827c997f9855bac0a1802bab",
+      "n": "export_brain",
+      "p": [
+        "connector",
+        "connectors",
+        "format",
+        "include_drafts",
+        "locale",
+        "mode",
+        "run_id",
+        "scope",
+        "selection_context",
+        "version"
+      ],
+      "r": [
+        "connector"
+      ]
+    },
+    {
+      "h": "379a44c61f9f2e6a3ef342a82f34baf4031316ceb328a50f53ddf85bbe6eb317",
+      "n": "export_chart_csv",
+      "p": [
+        "chart",
+        "connector",
+        "drill",
+        "filters",
+        "format",
+        "params",
+        "preparation_ref",
+        "run_id",
+        "selection_context",
+        "time_grain",
+        "version_id"
+      ],
+      "r": [
+        "chart",
+        "connector"
+      ]
+    },
+    {
+      "h": "762332a06ffc9477e1a7004564da6db762872e2b1aeba0dc438afd4c0da357ad",
+      "n": "export_dataset_csv",
+      "p": [
+        "connector",
+        "dataset",
+        "params",
+        "preparation_ref",
+        "run_id",
+        "selection_context",
+        "version"
+      ],
+      "r": [
+        "connector",
+        "dataset"
+      ]
+    },
+    {
+      "h": "eee8e9a80d77bca38f1e62b07757d7f3385700320018caeaa8bd66f77817dda5",
+      "n": "forget",
+      "p": [
+        "memory",
+        "run_id",
+        "selection_context",
+        "user_request_quote"
+      ],
+      "r": [
+        "memory",
+        "user_request_quote"
+      ]
+    },
+    {
+      "h": "1bc9a30c30f13313c9571f10f5cfe682684761ab95acd8bae0eaacfe8b806682",
+      "n": "get_artifact",
+      "p": [
+        "artifact",
+        "connector",
+        "draft",
+        "list_after",
+        "mode",
+        "queries_from",
+        "run_id",
+        "selection_context",
+        "template_max_bytes",
+        "template_offset",
+        "type",
+        "version"
+      ],
+      "r": [
+        "connector",
+        "type"
+      ]
+    },
+    {
+      "h": "38a2443ffd0d29e59720ae892627deeccde698571ee43342ba68be88aca43be9",
+      "n": "get_artifact_kit",
+      "p": [
+        "fonts",
+        "run_id",
+        "selection_context"
+      ],
+      "r": []
+    },
+    {
+      "h": "15cce61f1dd0dca89eddc446cac4a84cd83bfac8a8e6c7458573eefb2108ddfb",
+      "n": "get_catalog_state",
+      "p": [
+        "connector",
+        "cursor",
+        "run_id",
+        "selection_context"
+      ],
+      "r": []
+    },
+    {
+      "h": "2467ac2b967166a8b1da6cf0fef41625ab57ba8618ee4c363d85ae852d372576",
+      "n": "get_chart",
+      "p": [
+        "chart",
+        "connector",
+        "mode",
+        "run_id",
+        "selection_context",
+        "version"
+      ],
+      "r": [
+        "chart",
+        "connector"
+      ]
+    },
+    {
+      "h": "1d5433f4ff956d09e5f401991034a9b61ce9836c04beaaddb82e911f7b680ffb",
+      "n": "get_execution_sql",
+      "p": [
+        "connector",
+        "execution_ref",
+        "run_id",
+        "selection_context"
+      ],
+      "r": [
+        "connector",
+        "execution_ref"
+      ]
+    },
+    {
+      "h": "b150815a831309bada17dae347dc356b83bda643caecd6275a19586f3854154a",
+      "n": "get_filter_set",
+      "p": [
+        "connector",
+        "filter_set",
+        "run_id",
+        "selection_context",
+        "version"
+      ],
+      "r": [
+        "connector",
+        "filter_set"
+      ]
+    },
+    {
+      "h": "bfa4e8454a97469f7a324ee6191da4e09c55ddb2ec9411ecebf37505b039e809",
+      "n": "get_model",
+      "p": [
+        "connector",
+        "include_drafts",
+        "locale",
+        "run_id",
+        "selection_context",
+        "version"
+      ],
+      "r": [
+        "connector"
+      ]
+    },
+    {
+      "h": "c7570acb78f2333339a4d0997380250822b5c7a345e7cd46b7d26dbedbf5b95c",
+      "n": "install_solution",
+      "p": [
+        "acuerdoRef",
+        "run_id",
+        "selection_context",
+        "solutionVersionId",
+        "user_request_quote"
+      ],
+      "r": [
+        "solutionVersionId",
+        "user_request_quote"
+      ]
+    },
+    {
+      "h": "85d0d5b67caebdf36905e37788563ee224943eff60df919a4b19340285d54176",
+      "n": "list_agent_documents",
+      "p": [
+        "agentId",
+        "run_id",
+        "selection_context"
+      ],
+      "r": [
+        "agentId"
+      ]
+    },
+    {
+      "h": "cf183ec01a86b09c93be523216d385725cfac2f30c5ae7248191b3725cc011e8",
+      "n": "list_agents",
+      "p": [
+        "run_id"
+      ],
+      "r": []
+    },
+    {
+      "h": "603ec8c468e4d9fea8a86a1380a270f0bdf85a716d9b8cd2473b92abc45c34ba",
+      "n": "list_dimension_values",
+      "p": [
+        "cap",
+        "connector",
+        "cursor",
+        "dimension",
+        "preparation_ref",
+        "run_id",
+        "search",
+        "selection_context"
+      ],
+      "r": [
+        "connector",
+        "dimension"
+      ]
+    },
+    {
+      "h": "142ccb7704b9d3e7d490b2f39fa236f14cd312bfc85eaa8f6125cb774a9f9c7a",
+      "n": "list_filter_sets",
+      "p": [
+        "connector",
+        "run_id",
+        "selection_context"
+      ],
+      "r": [
+        "connector"
+      ]
+    },
+    {
+      "h": "e5e757e5e16525ca9bbcbfb1f40cddd6cb4bc4f890edd4d1d1f92dc9f2a0302f",
+      "n": "list_memories",
+      "p": [
+        "cursor",
+        "kind",
+        "memory",
+        "run_id",
+        "selection_context"
+      ],
+      "r": []
+    },
+    {
+      "h": "311b392a4ba395f339db85128deb6058de60202888d329b094c10c015544478b",
+      "n": "list_my_attempts",
+      "p": [
+        "limit",
+        "only_failed",
+        "run_id",
+        "selection_context"
+      ],
+      "r": []
+    },
+    {
+      "h": "40a27bbc79885405acd6cfea6c08e7f93e34ccfc04cbfe8cde18eb66a7f8dc37",
+      "n": "list_my_curations",
+      "p": [
+        "run_id",
+        "selection_context"
+      ],
+      "r": []
+    },
+    {
+      "h": "738374abf69f16568516d69834aad4ec78b31a4328f91bbea7178e5298595782",
+      "n": "list_my_proposals",
+      "p": [
+        "run_id",
+        "selection_context"
+      ],
+      "r": []
+    },
+    {
+      "h": "b0e0368823f1bc531e8ee2378baaa330b0fd62af23253d1bef2b4a7f5a53bf3b",
+      "n": "list_organization_agents",
+      "p": [
+        "run_id",
+        "selection_context"
+      ],
+      "r": []
+    },
+    {
+      "h": "975c3fc74b3310161274bfa97237f19674c6f7112d7439f9023650c19b62fc93",
+      "n": "list_proposals",
+      "p": [
+        "limit",
+        "offset",
+        "owner_id",
+        "run_id",
+        "selection_context",
+        "state"
+      ],
+      "r": []
+    },
+    {
+      "h": "93d1d12452bca17eef9e478f06c381a1c212e14cd9128185970f83fffec4e4b2",
+      "n": "list_solutions",
+      "p": [
+        "run_id",
+        "selection_context"
+      ],
+      "r": []
+    },
+    {
+      "h": "1e420dcf0cd6bbe8043b67170f19317f07cdec9d22d1284e710d05d4173f18c4",
+      "n": "list_tables",
+      "p": [
+        "compact",
+        "connector",
+        "cursor",
+        "page_size",
+        "prefix",
+        "run_id",
+        "selection_context"
+      ],
+      "r": [
+        "connector"
+      ]
+    },
+    {
+      "h": "9856dc087ed7bf98b1f172061068a5e49248d571a0d56a3e308088126ab863de",
+      "n": "list_templates",
+      "p": [
+        "connector",
+        "run_id",
+        "selection_context"
+      ],
+      "r": [
+        "connector"
+      ]
+    },
+    {
+      "h": "03c53d55ed929b49093bb09245afc4336b4103821cf371d4f21c878c818f54b8",
+      "n": "profile_table",
+      "p": [
+        "connector",
+        "refresh",
+        "run_id",
+        "selection_context",
+        "table"
+      ],
+      "r": [
+        "connector",
+        "table"
+      ]
+    },
+    {
+      "h": "f6d1d30d0f79bf8474e08d5482e629c5283df8b353df5003a8c1dd4b6765a7d4",
+      "n": "propose_agent",
+      "p": [
+        "connectors",
+        "documents",
+        "family",
+        "herramientas_retiradas",
+        "name",
+        "orchestration_mode",
+        "proposals_enabled",
+        "run_id",
+        "selection_context",
+        "tagline",
+        "user_request_quote"
+      ],
+      "r": [
+        "name",
+        "user_request_quote"
+      ]
+    },
+    {
+      "h": "bae1f68d4d95ebb3cf7780699041f3208a8c2d3fb9daae6abd9939fa733f5355",
+      "n": "propose_column_rename",
+      "p": [
+        "confirm",
+        "connector",
+        "new_name",
+        "old_name",
+        "run_id",
+        "selection_context",
+        "table",
+        "user_request_quote"
+      ],
+      "r": [
+        "connector",
+        "new_name",
+        "old_name",
+        "table"
+      ]
+    },
+    {
+      "h": "90534be8ea6228a1246acd1592c4340a151e83664247e14f49a3e730aa1750a7",
+      "n": "propose_dataset",
+      "p": [
+        "business_definition",
+        "change_note",
+        "confirm",
+        "connector",
+        "default_params",
+        "if_match",
+        "name",
+        "run_id",
+        "selection_context",
+        "sql",
+        "tier",
+        "user_request_quote"
+      ],
+      "r": [
+        "connector",
+        "name",
+        "sql"
+      ]
+    },
+    {
+      "h": "ac11b4eaf51ba0b78ab1488dcdf0603863824af6f621adcec3336ae19a358155",
+      "n": "propose_dimension",
+      "p": [
+        "aliases",
+        "business_definition",
+        "change_note",
+        "closed_list",
+        "confirm",
+        "connector",
+        "definition",
+        "dimension_class",
+        "expr",
+        "filter_only",
+        "if_match",
+        "name",
+        "new_name",
+        "rolls_up_to",
+        "run_id",
+        "selection_context",
+        "source_column",
+        "source_table",
+        "time_grain",
+        "user_request_quote"
+      ],
+      "r": [
+        "connector",
+        "expr",
+        "name"
+      ]
+    },
+    {
+      "h": "d47baf798dad12ffbb76a9cbf271590b88f57eaec3d2ccf4850d073816cade59",
+      "n": "propose_metric",
+      "p": [
+        "aggregation",
+        "aliases",
+        "business_definition",
+        "change_note",
+        "confirm",
+        "connector",
+        "conversion_calculation",
+        "conversion_entity",
+        "conversion_window",
+        "cumulative_window",
+        "currency",
+        "definition",
+        "derived_formula",
+        "from_dimension",
+        "if_match",
+        "metric_class",
+        "metric_refs",
+        "name",
+        "new_name",
+        "non_additive_collapse",
+        "non_additive_dimension",
+        "non_additive_elements",
+        "percentile_value",
+        "period_date_column",
+        "period_sum",
+        "run_id",
+        "selection_context",
+        "source_table",
+        "unit",
+        "user_request_quote",
+        "valid_dimensions",
+        "value_format"
+      ],
+      "r": [
+        "connector",
+        "name"
+      ]
+    },
+    {
+      "h": "1baabee880413a4f160cfeda6bd7daa1bbcb6fbfa0863fa6ab96b5dc6bda9e26",
+      "n": "propose_solution_install",
+      "p": [
+        "column_mappings",
+        "confirm",
+        "connector",
+        "run_id",
+        "selection_context",
+        "suggest_by_type",
+        "template_id",
+        "user_request_quote",
+        "version"
+      ],
+      "r": [
+        "connector",
+        "template_id"
+      ]
+    },
+    {
+      "h": "6d5e5c5aa194871625db5340872f26dcee2bfecfc32e07aa34c4477107804fd0",
+      "n": "propose_template",
+      "p": [
+        "change_note",
+        "confirm",
+        "connector",
+        "description",
+        "name",
+        "run_id",
+        "selection_context",
+        "slug",
+        "user_request_quote"
+      ],
+      "r": [
+        "connector",
+        "slug"
+      ]
+    },
+    {
+      "h": "e5879e94d7d607e2d45ecd7e9aafdc8f93ee277a8815f00b1141f4b986a1ad5c",
+      "n": "read_library_document",
+      "p": [
+        "documentId",
+        "max_bytes",
+        "offset",
+        "run_id",
+        "selection_context"
+      ],
+      "r": [
+        "documentId"
+      ]
+    },
+    {
+      "h": "acc46a25ba8010fd3de33fce319edbf7edf8c9d0dab35b0f84e808da7c09bdae",
+      "n": "release_agent",
+      "p": [
+        "run_id",
+        "selection_context",
+        "user_request_quote"
+      ],
+      "r": [
+        "user_request_quote"
+      ]
+    },
+    {
+      "h": "cf6d351eb28eebe01ab0a52d89036091b01e54670cd5a6aff9e3052ef345b57c",
+      "n": "remember",
+      "p": [
+        "body_md",
+        "kind",
+        "run_id",
+        "scope",
+        "selection_context",
+        "slug",
+        "title",
+        "user_request_quote"
+      ],
+      "r": [
+        "body_md",
+        "kind",
+        "title",
+        "user_request_quote"
+      ]
+    },
+    {
+      "h": "5d396de2b63009709d08b0236fa7096f17840554969da77e1e4bb49abe2b29d5",
+      "n": "render_chart",
+      "p": [
+        "chart",
+        "connector",
+        "drill",
+        "filters",
+        "group_by",
+        "height",
+        "metric",
+        "params",
+        "pixel_ratio",
+        "preparation_ref",
+        "run_id",
+        "selection_context",
+        "time_grain",
+        "version_id",
+        "width"
+      ],
+      "r": [
+        "connector"
+      ]
+    },
+    {
+      "h": "0fcebc87053b881a5c9e55921e7852170420ef1f3098cc205d2317854bdcc9e1",
+      "n": "reorder_agent_documents",
+      "p": [
+        "agentId",
+        "order",
+        "run_id",
+        "selection_context",
+        "user_request_quote"
+      ],
+      "r": [
+        "agentId",
+        "order",
+        "user_request_quote"
+      ]
+    },
+    {
+      "h": "fed414e26f7ea4908be7b1b31127342aab3248dcf48198f506f1822f6c0b275b",
+      "n": "reorder_draft_documents",
+      "p": [
+        "agentId",
+        "order",
+        "run_id",
+        "segment",
+        "selection_context",
+        "user_request_quote"
+      ],
+      "r": [
+        "agentId",
+        "order",
+        "segment",
+        "user_request_quote"
+      ]
+    },
+    {
+      "h": "6467739b33a6aa6626469e51b87e60dfb29817ab50d2adca4b189bc5ef7a94b2",
+      "n": "request_dataset_activation",
+      "p": [
+        "confirm",
+        "connector",
+        "dataset",
+        "run_id",
+        "selection_context",
+        "user_request_quote"
+      ],
+      "r": [
+        "connector",
+        "dataset"
+      ]
+    },
+    {
+      "h": "ab40667a5b7551505c3c7bbe0763412e1c066fe3fd490484e0021401f85be87e",
+      "n": "run_artifact",
+      "p": [
+        "active_version",
+        "artifact",
+        "connector",
+        "filters",
+        "params",
+        "run_id",
+        "selection_context",
+        "tile",
+        "type",
+        "version"
+      ],
+      "r": [
+        "artifact",
+        "connector",
+        "type"
+      ]
+    },
+    {
+      "h": "1425cdce84b8add382963025eaab799546c718c229da89ab66826a6b02bec211",
+      "n": "run_dataset",
+      "p": [
+        "connector",
+        "cursor",
+        "dataset",
+        "params",
+        "preparation_ref",
+        "row_format",
+        "run_id",
+        "selection_context",
+        "version"
+      ],
+      "r": [
+        "connector",
+        "dataset"
+      ]
+    },
+    {
+      "h": "bd909e06a6f6f41546da8655dceaf88249320cdb552c69d6e3c7af6b7953ac91",
+      "n": "run_metric",
+      "p": [
+        "calendar_axis",
+        "compare",
+        "connector",
+        "cursor",
+        "filters",
+        "group_by",
+        "limit",
+        "metric",
+        "metrics",
+        "order_by",
+        "params",
+        "preparation_ref",
+        "row_format",
+        "run_id",
+        "selection_context",
+        "share_of_total",
+        "time_grain",
+        "window"
+      ],
+      "r": [
+        "connector"
+      ]
+    },
+    {
+      "h": "0d394ea11c874f4fbe82f118d5050ea3c211985ad3ed4207094caea6c7a94a84",
+      "n": "run_query",
+      "p": [
+        "connector",
+        "cursor",
+        "limit",
+        "page_size",
+        "projection",
+        "row_format",
+        "run_id",
+        "sample",
+        "selection_context",
+        "sql"
+      ],
+      "r": [
+        "connector",
+        "sql"
+      ]
+    },
+    {
+      "h": "e35a79415e68519d75418f8c1e548e09cf2dc0619061c81e2c35392c126ff415",
+      "n": "run_workflow",
+      "p": [
+        "inputs",
+        "run_id",
+        "selection_context",
+        "test_case",
+        "workflow"
+      ],
+      "r": []
+    },
+    {
+      "h": "d0060f1ea5dd3cc43bf4cc7a39b0489d759617cfca90246175cc1d7d5cde7173",
+      "n": "save_artifact_edit",
+      "p": [
+        "artifact",
+        "change_note",
+        "change_summary",
+        "confirm",
+        "connector",
+        "if_match",
+        "run_id",
+        "selection_context",
+        "type",
+        "user_request_quote"
+      ],
+      "r": [
+        "artifact",
+        "connector",
+        "type"
+      ]
+    },
+    {
+      "h": "f49e76f012b14b2331258fba5b9cb38a8e9b8197ab21c41295d72c0f4ef7ae67",
+      "n": "save_chart_edit",
+      "p": [
+        "change_note",
+        "change_summary",
+        "chart",
+        "confirm",
+        "connector",
+        "run_id",
+        "selection_context",
+        "user_request_quote"
+      ],
+      "r": [
+        "chart",
+        "connector"
+      ]
+    },
+    {
+      "h": "1d62b54c9a160b24d4f72e94b1a75a1bfbd5e2e3728726ab078bde39780f6855",
+      "n": "search_model",
+      "p": [
+        "connector",
+        "limit",
+        "query",
+        "run_id",
+        "selection_context"
+      ],
+      "r": [
+        "connector",
+        "query"
+      ]
+    },
+    {
+      "h": "0734d037f23e436b6ba6560bcd67e0d47ab656a55c9779d2058143280f965864",
+      "n": "set_chart_options",
+      "p": [
+        "chart",
+        "chart_type",
+        "confirm",
+        "connector",
+        "options",
+        "run_id",
+        "selection_context",
+        "user_request_quote"
+      ],
+      "r": [
+        "chart",
+        "connector"
+      ]
+    },
+    {
+      "h": "6655978dcd2e81b01246f65f271ff64b9a9647f985de9f64ad8431f4ed03d1c0",
+      "n": "set_connector_links",
+      "p": [
+        "confirm",
+        "connector",
+        "links",
+        "run_id",
+        "selection_context",
+        "user_request_quote"
+      ],
+      "r": [
+        "connector",
+        "links"
+      ]
+    },
+    {
+      "h": "8bd2b3f2c0dd29a50bf1b526a1e29a58d74c42a49fc03bb7d5692e961833398b",
+      "n": "set_proposal_state",
+      "p": [
+        "action",
+        "confirm",
+        "note",
+        "priority",
+        "priority_reason",
+        "proposal_id",
+        "resolution",
+        "run_id",
+        "selection_context",
+        "state",
+        "user_request_quote"
+      ],
+      "r": [
+        "action",
+        "confirm",
+        "proposal_id",
+        "user_request_quote"
+      ]
+    },
+    {
+      "h": "258982a87b43edc4adc196c34982dc30be8ae49d4584e8542e17cf53868ba365",
+      "n": "set_relations",
+      "p": [
+        "confirm",
+        "connector",
+        "relations",
+        "run_id",
+        "selection_context",
+        "user_request_quote"
+      ],
+      "r": [
+        "connector",
+        "relations"
+      ]
+    },
+    {
+      "h": "6f2f754314b7339e23f57d69bbe8acecfaaca8a1628cb391000709da35101d15",
+      "n": "submit_proposal",
+      "p": [
+        "body",
+        "context",
+        "how_to_verify",
+        "kind",
+        "run_id",
+        "selection_context",
+        "title",
+        "user_request_quote",
+        "what_happens",
+        "what_is_asked",
+        "where"
+      ],
+      "r": [
+        "title",
+        "user_request_quote"
+      ]
+    },
+    {
+      "h": "ff7d394475fd1062a2a167d89c1d953d771e93022ba70b26ec5ec541bd7e922e",
+      "n": "test_artifact",
+      "p": [
+        "artifact",
+        "confirm",
+        "connector",
+        "if_match",
+        "requests",
+        "run_id",
+        "selection_context",
+        "type",
+        "user_request_quote",
+        "version_id"
+      ],
+      "r": [
+        "artifact",
+        "connector",
+        "type"
+      ]
+    },
+    {
+      "h": "acfb924c686578f83abcee220e91d43f2f563fe7ab5d8272a3c03ab66f1267b8",
+      "n": "test_chart",
+      "p": [
+        "chart",
+        "confirm",
+        "connector",
+        "if_match",
+        "params",
+        "preparation_ref",
+        "run_id",
+        "selection_context",
+        "user_request_quote",
+        "version_id"
+      ],
+      "r": [
+        "chart",
+        "connector"
+      ]
+    },
+    {
+      "h": "743296b47fe9ada469bb76a5d3ec30024027cb9b7d94017f7424867afa3a645a",
+      "n": "test_dimension",
+      "p": [
+        "confirm",
+        "connector",
+        "dimension",
+        "if_match",
+        "params",
+        "preparation_ref",
+        "run_id",
+        "selection_context",
+        "user_request_quote"
+      ],
+      "r": [
+        "connector",
+        "dimension"
+      ]
+    },
+    {
+      "h": "2837688f40e2d17b8686b3115d96a490616d24f1036de53aa721d4e9712c8380",
+      "n": "test_filter_set",
+      "p": [
+        "confirm",
+        "connector",
+        "filter_set",
+        "run_id",
+        "selection_context",
+        "user_request_quote"
+      ],
+      "r": [
+        "connector",
+        "filter_set"
+      ]
+    },
+    {
+      "h": "7fe78fe4c4145ad7e1766fb3a42c11a7377bc37b81769fd94ff6864efeb6ad21",
+      "n": "test_metric",
+      "p": [
+        "confirm",
+        "connector",
+        "filters",
+        "group_by",
+        "if_match",
+        "metric",
+        "params",
+        "preparation_ref",
+        "run_id",
+        "selection_context",
+        "share_of_total",
+        "time_grain",
+        "user_request_quote"
+      ],
+      "r": [
+        "connector",
+        "metric"
+      ]
+    },
+    {
+      "h": "da848d782c0d34faf8f80c4f3aa7e6accd7f25dd8b3927fc9760529759144092",
+      "n": "toggle_agent_document",
+      "p": [
+        "agentId",
+        "documentId",
+        "enabled",
+        "run_id",
+        "selection_context",
+        "user_request_quote"
+      ],
+      "r": [
+        "agentId",
+        "documentId",
+        "enabled",
+        "user_request_quote"
+      ]
+    },
+    {
+      "h": "5eac70fb8118874b81fa367db1e5a032e039b5b3a59156721de679d5ffa3999c",
+      "n": "upsert_artifact",
+      "p": [
+        "business_definition",
+        "change_note",
+        "confirm",
+        "connector",
+        "contract_version",
+        "datasets_refs",
+        "edits",
+        "if_match",
+        "metrics",
+        "name",
+        "projection",
+        "run_id",
+        "selection_context",
+        "spec",
+        "template",
+        "template_offset",
+        "type",
+        "user_request_quote"
+      ],
+      "r": [
+        "connector",
+        "name",
+        "type"
+      ]
+    },
+    {
+      "h": "8d86e1e96d5554c8cc0246242e0fb405519bb2b4b5c09c0b6aef991965a8873c",
+      "n": "upsert_chart",
+      "p": [
+        "business_definition",
+        "change_note",
+        "chart_type",
+        "confirm",
+        "connector",
+        "if_match",
+        "name",
+        "run_id",
+        "selection_context",
+        "spec",
+        "user_request_quote"
+      ],
+      "r": [
+        "chart_type",
+        "connector",
+        "name",
+        "spec"
+      ]
+    },
+    {
+      "h": "fb68ce5018c6a86b81697d881481a01d18b0519d3de1003b0ff8eaec8bdf1adc",
+      "n": "upsert_filter_set",
+      "p": [
+        "business_definition",
+        "change_note",
+        "confirm",
+        "connector",
+        "filters",
+        "if_match",
+        "name",
+        "run_id",
+        "selection_context",
+        "user_request_quote"
+      ],
+      "r": [
+        "connector",
+        "filters",
+        "name"
+      ]
+    },
+    {
+      "h": "582cb248f37721feb3b90ea81fdb2504ba13f624c3445501f6d33c1af976a832",
+      "n": "use_agent",
+      "p": [
+        "agent",
+        "model",
+        "provider",
+        "run_id",
+        "selection_context",
+        "user_choice_quote"
+      ],
+      "r": [
+        "agent",
+        "user_choice_quote"
+      ]
+    },
+    {
+      "h": "58f87c762cb46ceaff30124fa07e28260a683d9fbbc18107f96ec5d6cd629b81",
+      "n": "workspace_migrate",
+      "p": [
+        "nombre",
+        "run_id",
+        "selection_context",
+        "sql",
+        "user_request_quote"
+      ],
+      "r": [
+        "nombre",
+        "sql",
+        "user_request_quote"
+      ]
+    },
+    {
+      "h": "2fe298946c774cd23e34d348c433c53a54715c6573d490fce19f270de5d509a1",
+      "n": "workspace_purge",
+      "p": [
+        "run_id",
+        "selection_context",
+        "user_request_quote"
+      ],
+      "r": [
+        "user_request_quote"
+      ]
+    },
+    {
+      "h": "b4bb69c95994b252f887a9eb05fd478cfdb3de86018c27f5ecffc0bc3214b92b",
+      "n": "workspace_query",
+      "p": [
+        "run_id",
+        "selection_context",
+        "sql"
+      ],
+      "r": [
+        "sql"
+      ]
+    },
+    {
+      "h": "534b90e57d4c1139cb134ad3300d704b5a7f67dd61ad5f622c421aae39572284",
+      "n": "workspace_restore",
+      "p": [
+        "checkpoint",
+        "run_id",
+        "selection_context",
+        "user_request_quote"
+      ],
+      "r": [
+        "checkpoint",
+        "user_request_quote"
+      ]
+    },
+    {
+      "h": "a27d91cc93dc5fd8101431c1e4f49e568183acd8e5b1db35d57951f5dfc884ff",
+      "n": "workspace_schema",
+      "p": [
+        "run_id",
+        "selection_context"
+      ],
+      "r": []
+    },
+    {
+      "h": "6b870c304663105d8ff8b584912d1a594a98222f5ba7290889af93fec7c3732a",
+      "n": "workspace_undelete",
+      "p": [
+        "ids",
+        "run_id",
+        "selection_context",
+        "user_request_quote"
+      ],
+      "r": [
+        "ids",
+        "user_request_quote"
+      ]
+    },
+    {
+      "h": "1f3caf6b60597c20d14938b13243f1d66ff8da5cfe1360dcb8531401744621f6",
+      "n": "workspace_undo",
+      "p": [
+        "run_id",
+        "selection_context",
+        "tabla"
+      ],
+      "r": []
+    },
+    {
+      "h": "a5efe43db21fb937cef16bdcd8b1d1b4506191edce0e5987c7977f2342aa3df8",
+      "n": "workspace_write",
+      "p": [
+        "run_id",
+        "selection_context",
+        "sql",
+        "user_request_quote"
+      ],
+      "r": [
+        "sql",
+        "user_request_quote"
+      ]
+    },
+    {
+      "h": "29db109501a08482cd1bd2924b1e7f6718047db8c38f6c5741221453f389f815",
+      "n": "write_agent_document",
+      "p": [
+        "body",
+        "description",
+        "documentId",
+        "name",
+        "run_id",
+        "selection_context",
+        "user_request_quote"
+      ],
+      "r": [
+        "documentId",
+        "user_request_quote"
+      ]
+    }
+  ],
+  "huella": "fccc68e683f0cc84c1a18ba540035f05b4184397d894a29df408ec8ee9949e5b",
+  "instrucciones_sha256": "20fb1c516393df92e3c9c50de7c531844ce9134d86d4028f9a32af94cc5bc3c8",
+  "protocolo": "2025-06-18"
+}

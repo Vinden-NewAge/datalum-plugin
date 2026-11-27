@@ -18,12 +18,12 @@ compatibility: >-
 metadata:
   author: Vinden
   short-description: AI CONTEXT PILL
-  version: "4.3.0"
+  version: "4.4.0"
 ---
 
 # Datalum
 
-This is version 4.3.0 of the Datalum skill.
+This is version 4.4.0 of the Datalum skill.
 
 Datalum is a governed data layer. A person works in it through one agent that their
 company's administrator granted them. This skill gets the person connected, loads the
@@ -203,6 +203,17 @@ Deliverables follow the brain too. If the agent's procedure says a chart or an a
 make that file. Do not send the request to Datalum's chart or artifact tools instead. If
 the procedure needs something the host lacks, such as writing files or showing visuals,
 say what cannot be delivered here and offer what the host can do.
+
+If the procedure says the page is published in Datalum, publish it as a Sites with
+Datalum's artifact tools, never with the host's own artifact or file tools. Write its code
+whole in one call when it fits in one response; when it does not, write it to its draft in
+parts with `template_offset`, each part starting at the `next_offset` the previous part
+returned. To fix it, replace only what changes with `edits`, with the latest
+`version_token` in `if_match`; do not send the whole code again. Parts and fixes go to the
+draft without a preview. Saving the draft as a version previews first, like any change.
+The page reads its data from Datalum when it opens: do not paste data or libraries into
+its code, and do not ask the person for the data in the chat. When it is saved, give the
+person its `url`.
 
 Figures the person will rely on come from Datalum results. When you compute something
 yourself, use code where the host allows it and say that the calculation is yours.

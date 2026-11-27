@@ -70,8 +70,9 @@ class LaSkill(unittest.TestCase):
         # al día con v2.297.0, dice dónde viene el tamaño y que sin sesión no hay herramientas
         # sin pasar de 299. La revisión suma dos líneas: hacer la llamada que propone un
         # rechazo, también al soltar el agente, y decir lo que el conector no terminó de
-        # leer: 301, y el tope queda justo encima.
-        self.assertLess(len(SKILL.splitlines()), 302, "la Skill dejó de ser corta")
+        # leer: 301. La 4.4.0 añade el camino del Sites que el procedimiento pide publicar
+        # en Datalum: 312, y el tope queda justo encima.
+        self.assertLess(len(SKILL.splitlines()), 313, "la Skill dejó de ser corta")
 
     def test_los_entregables_siguen_al_cerebro_del_agente(self):
         self.assertIn(flat("Deliverables follow the brain too"), flat(SKILL))
@@ -285,6 +286,73 @@ class LaVersion400(unittest.TestCase):
         self.assertIn("Sin comprobar", section)
 
 
+class LaVersion440(unittest.TestCase):
+    """Desde Datalum v2.304.0 un Sites se escribe en su borrador por tramos y se corrige
+    por reemplazos, y v2.303.1 sirve su contrato con su propia herramienta. Cuando el
+    procedimiento del agente pide la página publicada en Datalum, la Skill la publica como
+    Sites y entrega su enlace; lo demás de los entregables sigue al cerebro como antes. La
+    Skill dice la conducta con los argumentos y no nombra ninguna herramienta: la del
+    contrato la nombra la descripción de la que escribe."""
+
+    CASE = ROOT / "evals/entregables/sites-por-tramos"
+
+    def test_conserva_que_los_entregables_siguen_al_cerebro(self):
+        self.assertIn(flat("Deliverables follow the brain too"), flat(SKILL))
+        self.assertIn(flat("Do not send the request to Datalum's chart or artifact tools instead"), flat(SKILL))
+
+    def test_publica_el_sites_cuando_el_procedimiento_lo_pide(self):
+        for phrase in (
+            "If the procedure says the page is published in Datalum, publish it as a Sites with "
+            "Datalum's artifact tools, never with the host's own artifact or file tools.",
+            "Write its code whole in one call when it fits in one response;",
+            "write it to its draft in parts with `template_offset`",
+            "starting at the `next_offset` the previous part returned",
+            "replace only what changes with `edits`",
+            "in `if_match`; do not send the whole code again",
+            "Saving the draft as a version previews first, like any change.",
+            "do not paste data or libraries into its code",
+            "do not ask the person for the data in the chat",
+            "When it is saved, give the person its `url`.",
+        ):
+            self.assertIn(flat(phrase), flat(SKILL), phrase)
+
+    def test_no_nombra_el_contrato_ni_las_herramientas(self):
+        self.assertNotIn("get_artifact_kit", SKILL)
+        for name in ("get_artifact", "upsert_artifact", "test_artifact", "run_artifact", "save_artifact_edit"):
+            self.assertNotIn(name, SKILL)
+
+    def test_la_version_es_la_4_4_0(self):
+        manifest = json.loads(read(".claude-plugin/plugin.json"))
+        self.assertEqual(manifest["version"], "4.4.0")
+        self.assertIn('version: "4.4.0"', SKILL)
+        self.assertIn("This is version 4.4.0 of the Datalum skill.", SKILL)
+
+    def test_el_changelog_pone_la_4_4_0_encima_de_la_4_3_0(self):
+        text = read("CHANGELOG.md")
+        headings = re.findall(r"^## \[(\d+\.\d+\.\d+)\]", text, re.M)
+        self.assertEqual(headings[:2], ["4.4.0", "4.3.0"])
+        section = flat(text.split("## [4.4.0]", 1)[1].split("\n## [4.3.0]", 1)[0])
+        for word in ("v2.304.0", "Sites", "tramos"):
+            self.assertIn(word, section)
+
+    def test_el_caso_nuevo_publica_por_tramos_con_el_kit_entre_sus_dobles(self):
+        mocks = self.CASE / "mocks/datalum"
+        self.assertTrue((mocks / "get_artifact_kit.md").is_file())
+        names = {t["name"] for t in json.loads(read("evals/mocks/datalum/_tools.json"))["tools"]}
+        self.assertIn("get_artifact_kit", names)
+        upsert = next(t for t in json.loads(read("evals/mocks/datalum/_tools.json"))["tools"] if t["name"] == "upsert_artifact")
+        for arg in ("template", "template_offset", "edits", "if_match"):
+            self.assertIn(arg, upsert["inputSchema"]["properties"], arg)
+        graders = {g.stem for g in (self.CASE / "graders").glob("*.md")}
+        for grader in (
+            "lee-el-ejemplo-antes-de-publicar", "escribe-por-tramos", "corrige-por-reemplazo",
+            "no-reemite-el-codigo", "guarda-con-vista-previa", "entrega-la-url",
+        ):
+            self.assertIn(grader, graders)
+        # El caso del archivo HTML del cerebro se queda como está: mide que la Skill obedece.
+        self.assertIn("No publiques el tablero en el catálogo de Datalum", read("evals/entregables/tablero-html-externo/mocks/datalum/brain_read.md"))
+
+
 class LaVersion430(unittest.TestCase):
     """Desde Datalum v2.301.0 los tableros se llaman artefactos, de tipo Dashboard o Sites,
     y cinco herramientas toman el lugar de los ocho nombres de antes. La Skill se activa
@@ -314,7 +382,8 @@ class LaVersion430(unittest.TestCase):
     def test_el_changelog_pone_la_4_3_0_encima_de_la_4_2_0(self):
         text = read("CHANGELOG.md")
         headings = re.findall(r"^## \[(\d+\.\d+\.\d+)\]", text, re.M)
-        self.assertEqual(headings[:2], ["4.3.0", "4.2.0"])
+        start = headings.index("4.3.0")
+        self.assertEqual(headings[start:start + 2], ["4.3.0", "4.2.0"])
         section = flat(text.split("## [4.3.0]", 1)[1].split("\n## [4.2.0]", 1)[0])
         self.assertIn("v2.301.0", section)
         self.assertIn("Sites", section)

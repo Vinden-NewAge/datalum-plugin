@@ -894,6 +894,18 @@
           "run_id": {
             "type": "string",
             "description": "Opcional. La ejecución de esta llamada; omítelo para seguir la abierta y manda \"new\" para abrir otra."
+          },
+          "template_offset": {
+            "type": "integer",
+            "description": "Sólo con type 'sites'. Desde qué byte servir la plantilla. Usa ÚNICAMENTE el 'template.next_offset' que devolvió la lectura anterior; no lo calcules tú."
+          },
+          "template_max_bytes": {
+            "type": "integer",
+            "description": "Sólo con type 'sites'. Tope de bytes de la plantilla en esta lectura (por omisión y como máximo 32768)."
+          },
+          "draft": {
+            "type": "boolean",
+            "description": "Sólo con type 'sites'. true sirve en 'draft' el borrador sin guardar, con su contenido y su código por los mismos tramos, en lugar de una versión. Sin él, 'draft' trae sólo su base, sus bytes y su sha256."
           }
         },
         "required": [
@@ -907,6 +919,52 @@
         "destructiveHint": false,
         "idempotentHint": true,
         "openWorldHint": false
+      }
+    },
+    {
+      "name": "get_artifact_kit",
+      "description": "[Lee] Devuelve en 'contract' lo que recibe el código de un Sites y lo que se rechaza, y en 'examples' ejemplos de partida cuando los haya; usarlos es optativo. Léelo antes de escribir un Sites con upsert_artifact. No pide conector.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "fonts": {
+            "type": "object",
+            "description": "Busca en el catálogo de fuentes: query, una parte del nombre; category, sans, serif, mono, handwriting o display. Devuelve sólo las familias que casan.",
+            "properties": {
+              "query": {
+                "type": "string",
+                "maxLength": 64
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "sans",
+                  "serif",
+                  "mono",
+                  "handwriting",
+                  "display"
+                ]
+              }
+            },
+            "additionalProperties": false
+          },
+          "selection_context": {
+            "type": "string",
+            "description": "El identificador de esta conversación que devolvió use_agent. Mándalo en cada llamada."
+          },
+          "run_id": {
+            "type": "string",
+            "description": "Opcional. La ejecución de esta llamada; omítelo para seguir la abierta y manda \"new\" para abrir otra."
+          }
+        },
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "title": "Leer el contrato de un Sites"
       }
     },
     {
@@ -2104,7 +2162,7 @@
     },
     {
       "name": "upsert_artifact",
-      "description": "[Escribe] Crea o edita un artefacto en el catálogo de Datalum: un Dashboard o un Sites, según `type`. Nace en propuesto y lo activa una persona. Sin `confirm: true` sólo previsualiza. Lleva la orden textual de la persona en `user_request_quote`.",
+      "description": "[Escribe] Crea o edita un artefacto en el catálogo de Datalum por su nombre: un Dashboard o un Sites, según `type`. Nace en propuesto y lo activa una persona. Sin `confirm: true` sólo previsualiza. Con type 'sites': una página en código (HTML+CSS+JS). Sus datos salen sólo de indicadores (metrics) y conjuntos (datasets_refs) en Activo; el código no lleva librerías ni datos pegados. Antes de escribirlo, lee su contrato con get_artifact_kit. Si no cabe en una respuesta, va en tramos de unos 100 KB con 'template_offset'; para corregirlo, 'edits'. Los dos van a su borrador sin vista previa; save_artifact_edit lo guarda en una versión. Con confirm:true lleva la orden textual de la persona en `user_request_quote`.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -2463,29 +2521,32 @@
           },
           "template": {
             "type": "string",
-            "description": "Sólo con type 'sites'. El código de la página."
+            "description": "Sólo con type 'sites'. El código del Sites entero (HTML+CSS+JS · tope de tamaño · se hashea por contenido). Obligatorio sin 'edits'. Con un borrador sin guardar se rechaza. Con 'template_offset', un tramo del código."
           },
           "metrics": {
             "type": "array",
-            "description": "Sólo con type 'sites'."
+            "description": "Sólo con type 'sites'. Indicadores que el Sites lee: [{name, metric_id, dimensions?}], con dimensions = [dimension_id] o [{dimension_id, time_grain?}]. Cada uno corre como una gráfica de tabla del indicador por esas características y sus filas llegan bajo su name. Máximo 20. Acepta JSON-string."
           },
           "datasets_refs": {
             "type": "array",
-            "description": "Sólo con type 'sites'."
+            "description": "Sólo con type 'sites'. Los conjuntos de datos que consume: [{dataset_id, name?, columns?}] (o ['dataset_id']). Sus filas llegan bajo su name (sin él, su dataset_id), con las columnas de la proyección. Acepta JSON-string (Postel)."
           },
           "projection": {
             "type": "array",
-            "description": "Sólo con type 'sites'."
+            "description": "Sólo con type 'sites'. Columnas que el template PUEDE leer: [{dataset_id, column}] (o ['column']). Cerrada por omisión · debe cubrir lo referenciado. Acepta JSON-string."
           },
           "contract_version": {
             "type": "string",
-            "description": "Sólo con type 'sites'."
+            "description": "Sólo con type 'sites'. Versión del contrato de datos de la página. La que sirve el marco es 'v3': la página pide sus fuentes con VINDEN_QUERY. Si falta, la de la versión de la que parte; en un alta, 'v3'."
           },
           "if_match": {
-            "type": "string"
+            "type": "string",
+            "description": "Con type 'dashboard': Opcional · control de edición concurrente. Pega aquí el 'version_token' que devuelve get_artifact para este objeto. Si ya no es el vigente, la operación se rechaza sin aplicar nada: vuelve a leer el objeto con get_artifact y reintenta con el nuevo. Si lo omites, gana la última escritura. Con type 'sites': Opcional · control de edición concurrente. Pega aquí el 'version_token' que devuelve get_artifact para este objeto. Si ya no es el vigente, la operación se rechaza sin aplicar nada: vuelve a leer el objeto con get_artifact y reintenta con el nuevo. Si lo omites, gana la última escritura."
           },
           "change_note": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 1000,
+            "description": "Con type 'dashboard': Nota de cambio para la persona que aprueba: qué cambia y por qué, en lenguaje de negocio. Queda en la versión que deja esta escritura: la 1 del alta, la nueva de la recuperación o de una edición fuera de Activo, o la pendiente de aprobar si está en Activo. Hasta 1000 caracteres; vacía es sin nota. Va en la versión, no en la ficha. Con type 'sites': Nota de cambio para la persona que aprueba: qué cambia y por qué, en lenguaje de negocio. Queda como el resumen de la versión nueva que deja esta escritura (la 1 del alta, la de la recuperación, la de la edición o la del borrador guardado), en lugar del texto fijo. Hasta 1000 caracteres; vacía es sin nota. Va en la versión, no en la ficha."
           },
           "confirm": {
             "type": "boolean",
@@ -2502,6 +2563,31 @@
           "run_id": {
             "type": "string",
             "description": "Opcional. La ejecución de esta llamada; omítelo para seguir la abierta y manda \"new\" para abrir otra."
+          },
+          "template_offset": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Sólo con type 'sites'. Escribe 'template' como un tramo del borrador del Sites, para un código que no cabe en una respuesta: tramos de unos 100 KB (hasta 512 KiB). 0 abre el borrador o lo reinicia y descarta el vivo; después, el 'next_offset' que devolvió el tramo anterior. Escribe sin 'confirm' y devuelve next_offset, version_token, bytes y sha256. En un alta, el primero va sin 'if_match' y la versión 1 nace al guardar con save_artifact_edit."
+          },
+          "edits": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "old": {
+                  "type": "string"
+                },
+                "new": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "old",
+                "new"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Sólo con type 'sites'. Reemplazos [{old, new}] sobre el borrador del Sites, en lugar de 'template'. Cada 'old' aparece una sola vez en el código, sin solaparse con otro; o entran todos o ninguno. Sin borrador, el primero lo abre desde la última versión. Escribe sin 'confirm', con 'if_match', y devuelve version_token, bytes y sha256 del borrador. Hasta 512 KiB entre todos."
           }
         },
         "required": [
@@ -2578,7 +2664,7 @@
     },
     {
       "name": "save_artifact_edit",
-      "description": "[Escribe] Guarda como versión el borrador de trabajo de un Dashboard. Sin `confirm: true` sólo previsualiza. Lleva la orden textual de la persona en `user_request_quote`.",
+      "description": "[Escribe] Guarda como versión el borrador de trabajo de un artefacto. Con type 'sites' y su id o su nombre en 'artifact': guarda el borrador que dejaron los 'edits' o los tramos ('template_offset') de upsert_artifact en una versión nueva en Propuesto. Pide 'if_match'. Devuelve 'url' con la versión y 'warnings' de la prueba. Sin `confirm: true` sólo previsualiza. Lleva la orden textual de la persona en `user_request_quote`.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -2615,6 +2701,10 @@
           "run_id": {
             "type": "string",
             "description": "Opcional. La ejecución de esta llamada; omítelo para seguir la abierta y manda \"new\" para abrir otra."
+          },
+          "if_match": {
+            "type": "string",
+            "description": "Sólo con type 'sites'. Opcional · control de edición concurrente. Pega aquí el 'version_token' que devuelve get_artifact para este objeto. Si ya no es el vigente, la operación se rechaza sin aplicar nada: vuelve a leer el objeto con get_artifact y reintenta con el nuevo. Si lo omites, gana la última escritura."
           }
         },
         "required": [

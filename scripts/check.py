@@ -65,6 +65,7 @@ RESPONSE_NAMES = {
     "sin_listar",
     "tool_not_in_state",
     "user_request_quote_required",
+    "version_token",
 }
 # La Skill arranca la sesión y carga el cerebro; el oficio lo trae el agente. Si nombra
 # más herramientas que éstas, volvió a ser un catálogo.
