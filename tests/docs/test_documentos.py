@@ -413,6 +413,10 @@ class ElSitesPorTramosLoEscribeElAgente(unittest.TestCase):
         self.assertNotIn("Paleta de la marca", docs["pub-marca"]["body"])
         self.assertIn("lleva la clase cierre-tono-NNN", docs["pub-marca"]["body"])
         self.assertIn("cada fila de la tabla en su tono", docs["pub-sites-de-cierre"]["body"])
+        # Y en otras dos llegó a la vista previa y paró: la guía pedía el color del encabezado
+        # «tal cual» y la prueba avisaba de él. El procedimiento dice cuál de los dos manda.
+        self.assertNotIn("tal cual", docs["pub-marca"]["body"])
+        self.assertIn("si avisa de un color que viene de la guía, manda la prueba", docs["pub-sites-de-cierre"]["body"])
 
     def test_el_caso_esta_en_la_base(self):
         head = read("evals/entregables/sites-por-tramos/prompt.md").split("---", 2)[1]
