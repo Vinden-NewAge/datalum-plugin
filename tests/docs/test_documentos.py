@@ -403,6 +403,15 @@ class ElSitesPorTramosLoEscribeElAgente(unittest.TestCase):
         upsert = read("evals/entregables/sites-por-tramos/mocks/datalum/upsert_artifact.md")
         self.assertNotIn("aproximada vale", upsert)
         self.assertIn("bytes igual a ese mismo next_offset", upsert)
+        # Y el doble, que es un modelo, cuenta mal a ojo un tramo de 16 KB: lo cuenta por
+        # reglas de la escala, cuyo tamaño medio es el de la guía.
+        rules = "".join(
+            f".cierre-tono-{n:03d} {{\n  color: hsl({n % 360} 45% 22%);\n  background: hsl({n % 360} 45% 96%);\n"
+            f"  border-left: 4px solid hsl({n % 360} 45% 48%);\n  padding: 6px 12px;\n  margin: 0 0 4px;\n}}\n"
+            for n in range(900)
+        )
+        self.assertGreater(len(rules.encode()), 120 * 1024)
+        self.assertIn(f"mide {round(len(rules.encode()) / 900)} bytes", upsert)
         draft = read("evals/entregables/sites-por-tramos/mocks/datalum/get_artifact.md")
         self.assertIn('"bytes": <el último next_offset que devolvió upsert_artifact>', draft)
 
