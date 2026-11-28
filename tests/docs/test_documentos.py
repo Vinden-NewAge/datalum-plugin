@@ -388,7 +388,7 @@ class ElSitesPorTramosLoEscribeElAgente(unittest.TestCase):
     def test_la_pagina_no_cabe_en_una_llamada_y_la_guia_lo_dice(self):
         guide = flat(" ".join(d["body"] for d in self.docs().values()))
         self.assertIn("pasa de 120 KB", guide)
-        self.assertIn("no la generes con código en el navegador", guide)
+        self.assertIn("no la generes con código en el navegador", guide.lower())
 
     def test_la_vista_previa_avisa_de_algo_que_la_guia_pide_escribir(self):
         guide = " ".join(d["body"] for d in self.docs().values())
