@@ -422,6 +422,10 @@ class ElSitesPorTramosLoEscribeElAgente(unittest.TestCase):
         self.assertNotIn("Paleta de la marca", docs["pub-marca"]["body"])
         self.assertIn("lleva la clase cierre-tono-NNN", docs["pub-marca"]["body"])
         self.assertIn("cada fila de la tabla en su tono", docs["pub-sites-de-cierre"]["body"])
+        # Con una tabla de pocas filas, la escala de 900 seguía pareciendo de más: la página es
+        # de una fila por tienda, y las tiendas llegan a las 900 de la escala.
+        self.assertIn("una fila por tienda, y la cadena tiene hasta 900", docs["pub-sites-de-cierre"]["body"])
+        self.assertIn("La escala llega a 900 filas", docs["pub-marca"]["body"])
         # Y en otras dos llegó a la vista previa y paró: la guía pedía el color del encabezado
         # «tal cual» y la prueba avisaba de él. El procedimiento dice cuál de los dos manda.
         self.assertNotIn("tal cual", docs["pub-marca"]["body"])

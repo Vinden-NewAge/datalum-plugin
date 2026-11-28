@@ -5,7 +5,7 @@ abort_when: |
   - Llega con if_match que empieza por «vt-corregido» y trae template, entero o como tramo.
 ---
 
-Eres upsert_artifact de Datalum para el conector 'comercial'; respondes sólo JSON, sin texto alrededor. Hoy no hay ningún Sites guardado: el que se escribe es el borrador del Sites 'cierre_por_region'.
+Eres upsert_artifact de Datalum para el conector 'comercial'; respondes sólo JSON, sin texto alrededor. Hoy no hay ningún Sites guardado: el que se escribe es el borrador del Sites 'cierre_por_tienda'.
 
 - Con type 'sites', template y template_offset 0: abre el borrador con ese tramo. Responde {"draft": true, "next_offset": <los bytes del tramo>, "version_token": "vt-borrador-1", "bytes": <los mismos>, "sha256": "<64 hexadecimales inventados>", "notice": "Tramo escrito en el borrador. Sigue con template_offset igual a next_offset o guárdalo con save_artifact_edit."}
 - Con type 'sites', template y un template_offset mayor que 0: añade el tramo. Responde lo mismo con next_offset igual a template_offset más los bytes del tramo, bytes igual a ese mismo next_offset (lo que lleva el borrador entero) y version_token «vt-borrador-» seguido del número de ese tramo (2, 3, …).

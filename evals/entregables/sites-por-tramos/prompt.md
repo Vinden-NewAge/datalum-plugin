@@ -6,4 +6,4 @@ timeout_seconds: 2400
 allowed_tools: [Skill, Read]
 ---
 
-Publica la página de cierre por región.
+Publica la página de cierre por tienda.
