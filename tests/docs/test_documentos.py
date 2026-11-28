@@ -392,10 +392,27 @@ class ElSitesPorTramosLoEscribeElAgente(unittest.TestCase):
 
     def test_la_vista_previa_avisa_de_algo_que_la_guia_pide_escribir(self):
         guide = " ".join(d["body"] for d in self.docs().values())
-        self.assertIn(".cierre-encabezado", guide)
-        self.assertIn("#ff00ff", guide)
+        color = re.search(r"\.cierre-encabezado \{\s*color: (#[0-9a-f]{6});", guide).group(1)
         save = read("evals/entregables/sites-por-tramos/mocks/datalum/save_artifact_edit.md")
-        self.assertIn("(.cierre-encabezado) usa el color #ff00ff", save)
+        self.assertIn(f"(.cierre-encabezado) usa el color {color}", save)
+
+    def test_los_dobles_dan_el_tamano_del_borrador_entero_como_el_servidor(self):
+        # En dos corridas el agente paró porque el doble daba un tamaño que no casaba con lo
+        # que había mandado. El servidor da en `bytes` el borrador entero y en `next_offset`
+        # lo mismo; el doble no aproxima.
+        upsert = read("evals/entregables/sites-por-tramos/mocks/datalum/upsert_artifact.md")
+        self.assertNotIn("aproximada vale", upsert)
+        self.assertIn("bytes igual a ese mismo next_offset", upsert)
+        draft = read("evals/entregables/sites-por-tramos/mocks/datalum/get_artifact.md")
+        self.assertIn('"bytes": <el último next_offset que devolvió upsert_artifact>', draft)
+
+    def test_la_guia_no_se_contradice_ni_pide_reglas_que_la_pagina_no_usa(self):
+        # En otras dos el agente paró a preguntar: la escala no la usaba ninguna fila y el
+        # color del encabezado no era de la paleta que la propia guía listaba.
+        docs = self.docs()
+        self.assertNotIn("Paleta de la marca", docs["pub-marca"]["body"])
+        self.assertIn("lleva la clase cierre-tono-NNN", docs["pub-marca"]["body"])
+        self.assertIn("cada fila de la tabla en su tono", docs["pub-sites-de-cierre"]["body"])
 
     def test_el_caso_esta_en_la_base(self):
         head = read("evals/entregables/sites-por-tramos/prompt.md").split("---", 2)[1]
