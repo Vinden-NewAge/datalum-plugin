@@ -353,6 +353,56 @@ class LaVersion440(unittest.TestCase):
         self.assertIn("No publiques el tablero en el catálogo de Datalum", read("evals/entregables/tablero-html-externo/mocks/datalum/brain_read.md"))
 
 
+class ElSitesPorTramosLoEscribeElAgente(unittest.TestCase):
+    """El caso del Sites por tramos medía poco: la página era grande por una hoja de
+    estilos de 250 KB que el agente tenía que copiar de ocho documentos, y en tres corridas
+    ninguna llegó al reemplazo, al guardado ni a la url. Ahora la página es grande por el
+    código que el agente escribe a partir de una guía corta, y el caso vuelve a la base."""
+
+    CASE = ROOT / "evals/entregables/sites-por-tramos"
+
+    def docs(self) -> dict[str, dict]:
+        return {
+            p.stem: json.loads(p.read_text(encoding="utf-8"))
+            for p in sorted((self.CASE / "mocks/datalum/docs").glob("*.json"))
+        }
+
+    def test_ningun_documento_del_cerebro_trae_codigo_para_copiar(self):
+        docs = self.docs()
+        total = sum(len(p.read_bytes()) for p in (self.CASE / "mocks/datalum/docs").glob("*.json"))
+        self.assertLess(total, 16 * 1024, "los documentos del caso pasan de 16 KB")
+        for name, doc in docs.items():
+            self.assertLess(len(doc["body"].encode("utf-8")), 8 * 1024, name)
+
+    def test_el_indice_sirve_los_mismos_documentos_que_hay(self):
+        docs = set(self.docs())
+        index = json.loads(read("evals/entregables/sites-por-tramos/mocks/datalum/brain_index.md"))
+        listed = {e["concept_id"] for g in index["groups"] for e in g["entries"]}
+        self.assertEqual(listed, docs)
+        use_agent = json.loads(read("evals/entregables/sites-por-tramos/mocks/datalum/use_agent.md"))
+        listed = {e["concept_id"] for g in use_agent["index"]["groups"] for e in g["entries"]}
+        self.assertEqual(listed, docs)
+        self.assertEqual(index["docs"], len(docs))
+        self.assertEqual(use_agent["index"]["docs"], len(docs))
+
+    def test_la_pagina_no_cabe_en_una_llamada_y_la_guia_lo_dice(self):
+        guide = flat(" ".join(d["body"] for d in self.docs().values()))
+        self.assertIn("pasa de 120 KB", guide)
+        self.assertIn("no la generes con código en el navegador", guide)
+
+    def test_la_vista_previa_avisa_de_algo_que_la_guia_pide_escribir(self):
+        guide = " ".join(d["body"] for d in self.docs().values())
+        self.assertIn(".cierre-encabezado", guide)
+        self.assertIn("#ff00ff", guide)
+        save = read("evals/entregables/sites-por-tramos/mocks/datalum/save_artifact_edit.md")
+        self.assertIn("(.cierre-encabezado) usa el color #ff00ff", save)
+
+    def test_el_caso_esta_en_la_base(self):
+        head = read("evals/entregables/sites-por-tramos/prompt.md").split("---", 2)[1]
+        tags = re.search(r"^tags:\s*\[(.*)\]", head, re.M).group(1)
+        self.assertIn("base", [t.strip() for t in tags.split(",")])
+
+
 class LaVersion430(unittest.TestCase):
     """Desde Datalum v2.301.0 los tableros se llaman artefactos, de tipo Dashboard o Sites,
     y cinco herramientas toman el lugar de los ocho nombres de antes. La Skill se activa
