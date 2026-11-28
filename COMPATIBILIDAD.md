@@ -91,6 +91,48 @@ con lo demás.
 Sin comprobar: el catálogo completo que sirve producción a una conexión con sesión, porque
 sigue sin haber credencial de lectura; el contrato sale del código de cada commit.
 
+### El caso del Sites por tramos, rehecho
+
+El 27 y 28 de noviembre, después de publicada la 4.4.0, se rehízo el caso
+`entregables/sites-por-tramos`. La Skill, los controles y el número de versión no cambian:
+el caso no llega a ninguna instalación.
+
+La página ya no es grande por una hoja de estilos que haya que copiar. El cerebro trae dos
+documentos cortos: el procedimiento, que pide una página de cierre con una fila por tienda,
+y una guía de estilos que dice cómo escribir el encabezado y una escala de 900 reglas, una
+por fila, sin generarla en el navegador. El agente escribe unos 146 KB y la guía dice que
+van en nueve tramos. La vista previa avisa del color del encabezado y el procedimiento dice
+que manda la prueba; el agente lo corrige con un reemplazo, vuelve a mirar la vista previa,
+guarda y da el enlace.
+
+Corrió con `claude plugin eval . --case '*sites-por-tramos*' --runs 3 --concurrency 3
+--ablation none`, sólo con la Skill, en siete tandas de tres. Entre tanda y tanda se corrigió
+lo que hizo parar a la corrida:
+
+| Tanda | Con la Skill | Qué hizo parar a las que no llegaron | Qué se cambió |
+|---|---|---|---|
+| 1 y 2 | 2 de 3 y 1 de 3 | El doble daba a un tramo un tamaño que no casaba con lo mandado; la escala no la usaba ninguna fila; el color del encabezado no era de la paleta que listaba la guía | El doble da en `bytes` el borrador entero y en `next_offset` lo mismo, como el servidor; la guía no lista paleta y la escala colorea las filas |
+| 3 | 1 de 3 | Llegaron a la vista previa: la guía pedía el color «tal cual» y la prueba avisaba de él | El procedimiento dice que manda la prueba |
+| 4 | 2 de 3 | El doble, que es un modelo, contó a ojo la mitad de un tramo de 16 KB | El doble cuenta cada tramo por sus reglas de la escala, de 162 bytes |
+| 5 y 6 | 2 de 3 y 2 de 3 | Empezaron con tramos de diez reglas y pararon a preguntar si seguían con decenas de envíos | La página es de una fila por tienda, hasta 900, y la guía dice cuántos tramos son |
+| 7 | 3 de 3 | — | — |
+
+En la tanda 7 las tres leyeron el kit antes de escribir, mandaron nueve o diez tramos de unos
+16 KB, miraron la vista previa, corrigieron el color con un reemplazo y el último
+`version_token` en `if_match`, la volvieron a mirar, guardaron y dieron el enlace. Ninguna
+pegó datos, pidió datos en el chat ni volvió a mandar el código. Cada corrida tarda unos
+12 minutos y cuesta unos 3.20 dólares; las siete tandas costaron 54.81 dólares. El caso
+vuelve a la etiqueta `base`.
+
+| Qué | Dónde se prueba |
+|---|---|
+| Ningún documento del caso trae código para copiar, la guía dice que la página pasa de 120 KB y cuántos tramos son, y el caso está en la base | `ElSitesPorTramosLoEscribeElAgente` en `tests/docs/test_documentos.py` |
+| Los dobles dan el tamaño del borrador entero como el servidor y cuentan el tramo por sus reglas | El mismo |
+| La guía no se contradice, la escala la usa la tabla y la vista previa avisa del color que la guía pide | El mismo |
+
+Sin comprobar: el brazo sin la Skill, que no se corrió para no gastar cuota; con la hoja
+copiada, sin la Skill no se llamó a ninguna herramienta de artefactos.
+
 ## Versión 4.3.0
 
 Preparada el 25 de noviembre de 2026 con Datalum v2.301.0 (commit `3126db756aba`), que

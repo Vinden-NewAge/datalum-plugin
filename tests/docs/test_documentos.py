@@ -353,6 +353,93 @@ class LaVersion440(unittest.TestCase):
         self.assertIn("No publiques el tablero en el catálogo de Datalum", read("evals/entregables/tablero-html-externo/mocks/datalum/brain_read.md"))
 
 
+class ElSitesPorTramosLoEscribeElAgente(unittest.TestCase):
+    """El caso del Sites por tramos medía poco: la página era grande por una hoja de
+    estilos de 250 KB que el agente tenía que copiar de ocho documentos, y en tres corridas
+    ninguna llegó al reemplazo, al guardado ni a la url. Ahora la página es grande por el
+    código que el agente escribe a partir de una guía corta, y el caso vuelve a la base."""
+
+    CASE = ROOT / "evals/entregables/sites-por-tramos"
+
+    def docs(self) -> dict[str, dict]:
+        return {
+            p.stem: json.loads(p.read_text(encoding="utf-8"))
+            for p in sorted((self.CASE / "mocks/datalum/docs").glob("*.json"))
+        }
+
+    def test_ningun_documento_del_cerebro_trae_codigo_para_copiar(self):
+        docs = self.docs()
+        total = sum(len(p.read_bytes()) for p in (self.CASE / "mocks/datalum/docs").glob("*.json"))
+        self.assertLess(total, 16 * 1024, "los documentos del caso pasan de 16 KB")
+        for name, doc in docs.items():
+            self.assertLess(len(doc["body"].encode("utf-8")), 8 * 1024, name)
+
+    def test_el_indice_sirve_los_mismos_documentos_que_hay(self):
+        docs = set(self.docs())
+        index = json.loads(read("evals/entregables/sites-por-tramos/mocks/datalum/brain_index.md"))
+        listed = {e["concept_id"] for g in index["groups"] for e in g["entries"]}
+        self.assertEqual(listed, docs)
+        use_agent = json.loads(read("evals/entregables/sites-por-tramos/mocks/datalum/use_agent.md"))
+        listed = {e["concept_id"] for g in use_agent["index"]["groups"] for e in g["entries"]}
+        self.assertEqual(listed, docs)
+        self.assertEqual(index["docs"], len(docs))
+        self.assertEqual(use_agent["index"]["docs"], len(docs))
+
+    def test_la_pagina_no_cabe_en_una_llamada_y_la_guia_lo_dice(self):
+        guide = flat(" ".join(d["body"] for d in self.docs().values()))
+        self.assertIn("pasa de 120 KB", guide)
+        self.assertIn("no la generes con código en el navegador", guide.lower())
+        # Las corridas que empezaron con tramos de diez reglas pararon a preguntar si seguían
+        # con decenas de envíos: la guía dice cuántos son.
+        self.assertIn("En tramos de 100 reglas, unos 16 KB cada uno, son nueve tramos", guide)
+
+    def test_la_vista_previa_avisa_de_algo_que_la_guia_pide_escribir(self):
+        guide = " ".join(d["body"] for d in self.docs().values())
+        color = re.search(r"\.cierre-encabezado \{\s*color: (#[0-9a-f]{6});", guide).group(1)
+        save = read("evals/entregables/sites-por-tramos/mocks/datalum/save_artifact_edit.md")
+        self.assertIn(f"(.cierre-encabezado) usa el color {color}", save)
+
+    def test_los_dobles_dan_el_tamano_del_borrador_entero_como_el_servidor(self):
+        # En dos corridas el agente paró porque el doble daba un tamaño que no casaba con lo
+        # que había mandado. El servidor da en `bytes` el borrador entero y en `next_offset`
+        # lo mismo; el doble no aproxima.
+        upsert = read("evals/entregables/sites-por-tramos/mocks/datalum/upsert_artifact.md")
+        self.assertNotIn("aproximada vale", upsert)
+        self.assertIn("bytes igual a ese mismo next_offset", upsert)
+        # Y el doble, que es un modelo, cuenta mal a ojo un tramo de 16 KB: lo cuenta por
+        # reglas de la escala, cuyo tamaño medio es el de la guía.
+        rules = "".join(
+            f".cierre-tono-{n:03d} {{\n  color: hsl({n % 360} 45% 22%);\n  background: hsl({n % 360} 45% 96%);\n"
+            f"  border-left: 4px solid hsl({n % 360} 45% 48%);\n  padding: 6px 12px;\n  margin: 0 0 4px;\n}}\n"
+            for n in range(900)
+        )
+        self.assertGreater(len(rules.encode()), 120 * 1024)
+        self.assertIn(f"mide {round(len(rules.encode()) / 900)} bytes", upsert)
+        draft = read("evals/entregables/sites-por-tramos/mocks/datalum/get_artifact.md")
+        self.assertIn('"bytes": <el último next_offset que devolvió upsert_artifact>', draft)
+
+    def test_la_guia_no_se_contradice_ni_pide_reglas_que_la_pagina_no_usa(self):
+        # En otras dos el agente paró a preguntar: la escala no la usaba ninguna fila y el
+        # color del encabezado no era de la paleta que la propia guía listaba.
+        docs = self.docs()
+        self.assertNotIn("Paleta de la marca", docs["pub-marca"]["body"])
+        self.assertIn("lleva la clase cierre-tono-NNN", docs["pub-marca"]["body"])
+        self.assertIn("cada fila de la tabla en su tono", docs["pub-sites-de-cierre"]["body"])
+        # Con una tabla de pocas filas, la escala de 900 seguía pareciendo de más: la página es
+        # de una fila por tienda, y las tiendas llegan a las 900 de la escala.
+        self.assertIn("una fila por tienda, y la cadena tiene hasta 900", docs["pub-sites-de-cierre"]["body"])
+        self.assertIn("La escala llega a 900 filas", docs["pub-marca"]["body"])
+        # Y en otras dos llegó a la vista previa y paró: la guía pedía el color del encabezado
+        # «tal cual» y la prueba avisaba de él. El procedimiento dice cuál de los dos manda.
+        self.assertNotIn("tal cual", docs["pub-marca"]["body"])
+        self.assertIn("si avisa de un color que viene de la guía, manda la prueba", docs["pub-sites-de-cierre"]["body"])
+
+    def test_el_caso_esta_en_la_base(self):
+        head = read("evals/entregables/sites-por-tramos/prompt.md").split("---", 2)[1]
+        tags = re.search(r"^tags:\s*\[(.*)\]", head, re.M).group(1)
+        self.assertIn("base", [t.strip() for t in tags.split(",")])
+
+
 class LaVersion430(unittest.TestCase):
     """Desde Datalum v2.301.0 los tableros se llaman artefactos, de tipo Dashboard o Sites,
     y cinco herramientas toman el lugar de los ocho nombres de antes. La Skill se activa
