@@ -389,6 +389,9 @@ class ElSitesPorTramosLoEscribeElAgente(unittest.TestCase):
         guide = flat(" ".join(d["body"] for d in self.docs().values()))
         self.assertIn("pasa de 120 KB", guide)
         self.assertIn("no la generes con código en el navegador", guide.lower())
+        # Las corridas que empezaron con tramos de diez reglas pararon a preguntar si seguían
+        # con decenas de envíos: la guía dice cuántos son.
+        self.assertIn("En tramos de 100 reglas, unos 16 KB cada uno, son nueve tramos", guide)
 
     def test_la_vista_previa_avisa_de_algo_que_la_guia_pide_escribir(self):
         guide = " ".join(d["body"] for d in self.docs().values())
